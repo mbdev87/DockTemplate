@@ -253,25 +253,12 @@ Happy coding! 🚀");
             
             Logger.Info($"[DockFactory] Opening document: {fileName} from {filePath}");
             
-            // Check if this is an image file and generate a demonstration error
+            // Check if this is an image file and log a warning
             var imageExtensions = new[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg" };
             if (imageExtensions.Contains(extension))
             {
-                _errorService.AddError(
-                    $"Cannot open binary file '{fileName}' in text editor", 
-                    filePath, 
-                    1, 
-                    1, 
-                    "IMG001");
-                    
-                _errorService.AddWarning(
-                    $"File '{fileName}' is an image file. Consider using an image viewer instead.", 
-                    filePath, 
-                    1, 
-                    1, 
-                    "IMG002");
-                    
-                Logger.Warn($"[DockFactory] Attempted to open image file as text: {fileName}");
+                Logger.Error($"Cannot open binary file '{fileName}' in text editor");
+                Logger.Warn($"File '{fileName}' is an image file. Consider using an image viewer instead.");
             }
             
             // Create new document view model
@@ -287,12 +274,7 @@ Happy coding! 🚀");
                 }
                 catch (Exception ex)
                 {
-                    _errorService.AddError(
-                        $"Failed to read file '{fileName}': {ex.Message}", 
-                        filePath, 
-                        1, 
-                        1, 
-                        "FILE001");
+                    Logger.Error(ex, $"Failed to read file '{fileName}'");
                     document.SetContent($"Error reading file: {ex.Message}");
                 }
             }
@@ -329,8 +311,7 @@ Happy coding! 🚀");
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"[DockFactory] Error navigating to {filePath}:{line}");
-            _errorService.AddError($"Failed to navigate to {System.IO.Path.GetFileName(filePath)}:{line}", filePath, line, 0, "NAV001");
+            Logger.Error(ex, $"Failed to navigate to {System.IO.Path.GetFileName(filePath)}:{line}");
         }
     }
 }

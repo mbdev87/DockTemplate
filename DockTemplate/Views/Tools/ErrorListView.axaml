@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:DockTemplate.ViewModels.Tools"
              xmlns:services="using:DockTemplate.Services"
+             xmlns:local="using:DockTemplate.Views.Tools"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="300"
              x:Class="DockTemplate.Views.Tools.ErrorListView"
              x:DataType="vm:ErrorListViewModel">
@@ -39,6 +40,9 @@
                            Foreground="{DynamicResource TextForegroundColor}" />
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="⚡" ToolTip.Tip="Generate Test Errors" 
+                            Width="24" Height="24" FontSize="10" Padding="2" Margin="0,0,4,0"
+                            x:Name="TestErrorsButton" />
                     <Button Content="🗑️" ToolTip.Tip="Clear All" Command="{Binding ClearErrorsCommand}" 
                             Width="24" Height="24" FontSize="10" Padding="2" />
                 </StackPanel>
@@ -52,6 +56,7 @@
                   VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                   Background="{DynamicResource EditorBackground}" FontSize="11" RowHeight="22"
                   Foreground="{DynamicResource TextForegroundColor}" CanUserSortColumns="True"
+                  CanUserReorderColumns="True" CanUserResizeColumns="True"
                   x:Name="ErrorDataGrid">
 
             <DataGrid.Styles>
@@ -66,6 +71,10 @@
                 </Style>
                 <Style Selector="DataGridRow:selected">
                     <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight2}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                </Style>
+                <Style Selector="DataGridRow:selected DataGridCell TextBlock">
+                    <Setter Property="Foreground" Value="White"/>
                 </Style>
                 <Style Selector="DataGridColumnHeader">
                     <Setter Property="Background" Value="{DynamicResource TextControlBackground}"/>
@@ -93,12 +102,32 @@
             </DataGrid.Styles>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Level" Width="60" Binding="{Binding Level}" />
-                <DataGridTextColumn Header="Code" Width="80" Binding="{Binding Exception}" />
+                <DataGridTemplateColumn Header="" Width="40" CanUserReorder="False" CanUserResize="True" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" FontWeight="Bold">
+                                <TextBlock.Text>
+                                    <Binding Path="Level">
+                                        <Binding.Converter>
+                                            <local:ErrorLevelToIconConverter />
+                                        </Binding.Converter>
+                                    </Binding>
+                                </TextBlock.Text>
+                                <TextBlock.Foreground>
+                                    <Binding Path="Level">
+                                        <Binding.Converter>
+                                            <local:ErrorLevelToColorConverter />
+                                        </Binding.Converter>
+                                    </Binding>
+                                </TextBlock.Foreground>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Description" Width="300" Binding="{Binding Message}" />
-                <DataGridTextColumn Header="Source" Width="200" Binding="{Binding Source}" />
-                <DataGridTextColumn Header="Line" Width="60" Binding="{Binding Line}" />
-                <DataGridTextColumn Header="Column" Width="60" Binding="{Binding Column}" />
+                <DataGridTextColumn Header="Source" Width="250" Binding="{Binding Code}" />
+                <DataGridTextColumn Header="Source" Width="150" Binding="{Binding Source}" />
+                <DataGridTextColumn Header="Line" Width="50" Binding="{Binding Line}" />
                 <DataGridTextColumn Header="Time" Width="80" Binding="{Binding FormattedTimestamp}" />
             </DataGrid.Columns>
         </DataGrid>

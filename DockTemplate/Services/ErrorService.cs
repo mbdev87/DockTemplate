@@ -2,7 +2,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using ReactiveUI;
 using NLog;
 
@@ -15,76 +14,28 @@ public class ErrorService : ReactiveObject
 
     public ObservableCollection<ErrorEntry> Errors => _errors;
 
+    public ErrorService()
+    {
+        // Subscribe to error messages from NLog via MessageBus
+        MessageBus.Current.Listen<ErrorMessage>()
+            .Subscribe(errorMsg =>
+            {
+
+                if (errorMsg.Entry != null)
+                {
+                    _errors.Insert(0, errorMsg.Entry);
+                
+                    // Raise property changed for counts
+                    this.RaisePropertyChanged(nameof(ErrorCount));
+                    this.RaisePropertyChanged(nameof(WarningCount));
+                    this.RaisePropertyChanged(nameof(InfoCount));
+                }
+            });
+    }
+
     public int ErrorCount => _errors.Count(e => e.Level == "Error");
     public int WarningCount => _errors.Count(e => e.Level == "Warning");
     public int InfoCount => _errors.Count(e => e.Level == "Info");
-
-    public void AddError(string message, string? sourceFile = null, int line = 0, int column = 0, string code = "", [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
-    {
-        var error = new ErrorEntry
-        {
-            Message = message,
-            Source = sourceFile ?? callerFile ?? "",
-            Line = line > 0 ? line : callerLine,
-            Column = column,
-            Level = "Error",
-            Exception = code,
-            Timestamp = DateTime.Now,
-            FullException = $"{code}: {message}"
-        };
-
-        _errors.Insert(0, error); // Insert at beginning for newest first
-        Logger.Error($"[{Path.GetFileName(error.Source)}:{error.Line}] {code}: {message}");
-        
-        // Raise property changed for counts
-        this.RaisePropertyChanged(nameof(ErrorCount));
-        this.RaisePropertyChanged(nameof(WarningCount));
-        this.RaisePropertyChanged(nameof(InfoCount));
-    }
-
-    public void AddWarning(string message, string? sourceFile = null, int line = 0, int column = 0, string code = "", [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
-    {
-        var warning = new ErrorEntry
-        {
-            Message = message,
-            Source = sourceFile ?? callerFile ?? "",
-            Line = line > 0 ? line : callerLine,
-            Column = column,
-            Level = "Warning", 
-            Exception = code,
-            Timestamp = DateTime.Now,
-            FullException = $"{code}: {message}"
-        };
-
-        _errors.Insert(0, warning);
-        Logger.Warn($"[{Path.GetFileName(warning.Source)}:{warning.Line}] {code}: {message}");
-        
-        this.RaisePropertyChanged(nameof(ErrorCount));
-        this.RaisePropertyChanged(nameof(WarningCount));
-        this.RaisePropertyChanged(nameof(InfoCount));
-    }
-
-    public void AddInfo(string message, string? sourceFile = null, int line = 0, int column = 0, string code = "", [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
-    {
-        var info = new ErrorEntry
-        {
-            Message = message,
-            Source = sourceFile ?? callerFile ?? "",
-            Line = line > 0 ? line : callerLine,
-            Column = column,
-            Level = "Info",
-            Exception = code,
-            Timestamp = DateTime.Now,
-            FullException = $"{code}: {message}"
-        };
-
-        _errors.Insert(0, info);
-        Logger.Info($"[{Path.GetFileName(info.Source)}:{info.Line}] {code}: {message}");
-        
-        this.RaisePropertyChanged(nameof(ErrorCount));
-        this.RaisePropertyChanged(nameof(WarningCount));
-        this.RaisePropertyChanged(nameof(InfoCount));
-    }
 
     public void Clear()
     {
@@ -92,16 +43,46 @@ public class ErrorService : ReactiveObject
         this.RaisePropertyChanged(nameof(ErrorCount));
         this.RaisePropertyChanged(nameof(WarningCount));
         this.RaisePropertyChanged(nameof(InfoCount));
-        Logger.Info("Error list cleared");
+        // DON'T log here - would cause infinite loop!
     }
 
-    public void RemoveError(ErrorEntry error)
+    public void GenerateTestErrors()
     {
-        if (_errors.Remove(error))
+        // Add direct test error that we know will show up
+        var testError = new ErrorEntry
         {
-            this.RaisePropertyChanged(nameof(ErrorCount));
-            this.RaisePropertyChanged(nameof(WarningCount));
-            this.RaisePropertyChanged(nameof(InfoCount));
-        }
+            Message = "Test error: double click on me to jump to source",
+            Source = @"C:\git\github\claude\dock_template_root\DockTemplate\DockTemplate\Services\ErrorService.cs",
+            Line = 142, // This line number
+            Level = "Error",
+            Exception = "TEST001",
+            Timestamp = DateTime.Now,
+            FullException = "TEST001: Test error for demonstration"
+        };
+
+        _errors.Insert(0, testError);
+        
+        // Also add a warning
+        var testWarning = new ErrorEntry
+        {
+            Message = "Test warning: this is a sample warning message",
+            Source = @"C:\git\github\claude\dock_template_root\DockTemplate\DockTemplate\Views\Tools\ErrorListView.axaml.cs",
+            Line = 50,
+            Level = "Warning",
+            Exception = "WARN001",
+            Timestamp = DateTime.Now,
+            FullException = "WARN001: Test warning for demonstration"
+        };
+
+        _errors.Insert(0, testWarning);
+        
+        // Raise property changed for counts
+        this.RaisePropertyChanged(nameof(ErrorCount));
+        this.RaisePropertyChanged(nameof(WarningCount));
+        this.RaisePropertyChanged(nameof(InfoCount));
+        
+        // DON'T log here - would cause infinite loop!
+        System.Console.WriteLine($"[ErrorService] Generated {_errors.Count} test errors for Error List demonstration");
     }
+
 }

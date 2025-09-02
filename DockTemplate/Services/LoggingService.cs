@@ -29,7 +29,10 @@ public class LoggingService : ReactiveObject
         // Create custom target that feeds our UI
         var uiTarget = new UILogTarget(this);
         uiTarget.Name = "UITarget";
-        uiTarget.Layout = "${longdate} ${level:uppercase=true} ${logger:shortName=true} ${message} ${exception:format=tostring}";
+        uiTarget.Layout =
+            "${longdate} ${level:uppercase=true} ${logger:shortName=true} ${message} " +
+            "[${callsite-filename}:${callsite-linenumber} ${callsite-method}] " +
+            "${exception:format=tostring}";
         
         config.AddTarget(uiTarget);
         config.AddRule(LogLevel.Debug, LogLevel.Fatal, uiTarget);
@@ -57,22 +60,26 @@ public class LoggingService : ReactiveObject
             }
             LogEntries.Add(entry);
 
-            // If it's an error or higher, also add to error list
-            if (logEvent.Level >= LogLevel.Error && logEvent.Exception != null)
+            // If it's an error/warning/fatal, publish to MessageBus for Error List
+            if (logEvent.Level >= LogLevel.Warn)
             {
-                var errorEntry = new ErrorEntry
+                var errorMessage = new ErrorMessage
                 {
-                    Timestamp = logEvent.TimeStamp,
-                    Level = logEvent.Level.Name,
-                    Message = logEvent.FormattedMessage ?? "Unknown error",
-                    Exception = logEvent.Exception.Message,
-                    FullException = logEvent.Exception.ToString(),
-                    Source = ExtractSourceFromException(logEvent.Exception),
-                    Line = ExtractLineFromException(logEvent.Exception),
-                    Column = ExtractColumnFromException(logEvent.Exception)
+                  Entry = new ErrorEntry()
+                  {
+                      Message  = logEvent.FormattedMessage ?? "Unknown message",
+                      Level = logEvent.Level.Name,
+                      Code = logEvent.CallerFilePath,
+                      Line = logEvent.CallerLineNumber,
+                      Exception = logEvent.Exception?.Message,
+                      FullException = logEvent.Exception?.ToString(),
+                      Source = logEvent.CallerMemberName,
+                      LoggerName = logEvent.LoggerName,
+                      Timestamp = logEvent.TimeStamp
+                  }
                 };
-
-                ErrorEntries.Add(errorEntry);
+                ErrorEntries.Add(errorMessage.Entry);   
+                MessageBus.Current.SendMessage(errorMessage);
             }
         }
         catch (Exception ex)
@@ -80,76 +87,6 @@ public class LoggingService : ReactiveObject
             // Fallback logging to prevent infinite loops
             Console.WriteLine( $"[LoggingService] Error processing log entry: {ex.Message}");
         }
-    }
-
-    private string? ExtractSourceFromException(Exception exception)
-    {
-        try
-        {
-            var stackTrace = exception.StackTrace;
-            if (string.IsNullOrEmpty(stackTrace)) return null;
-
-            // Look for file paths in stack trace
-            var lines = stackTrace.Split('\n');
-            foreach (var line in lines)
-            {
-                if (line.Contains(".cs:") && line.Contains("\\"))
-                {
-                    var start = line.LastIndexOf(" in ");
-                    if (start >= 0)
-                    {
-                        var pathPart = line.Substring(start + 4);
-                        var end = pathPart.LastIndexOf(":line");
-                        if (end >= 0)
-                        {
-                            return pathPart.Substring(0, end).Trim();
-                        }
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // Ignore extraction errors
-        }
-        return null;
-    }
-
-    private int? ExtractLineFromException(Exception exception)
-    {
-        try
-        {
-            var stackTrace = exception.StackTrace;
-            if (string.IsNullOrEmpty(stackTrace)) return null;
-
-            var lines = stackTrace.Split('\n');
-            foreach (var line in lines)
-            {
-                if (line.Contains(":line "))
-                {
-                    var start = line.LastIndexOf(":line ") + 6;
-                    var end = line.Length;
-                    var lineStr = line.Substring(start, end - start).Trim();
-                    
-                    if (int.TryParse(lineStr, out int lineNumber))
-                    {
-                        return lineNumber;
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // Ignore extraction errors
-        }
-        return null;
-    }
-
-    private int? ExtractColumnFromException(Exception exception)
-    {
-        // Column information is typically not available in .NET stack traces
-        // Could be enhanced with additional debugging information
-        return null;
     }
 }
 
@@ -170,14 +107,15 @@ public class ErrorEntry
     public DateTime Timestamp { get; set; }
     public string Level { get; set; } = null!;
     public string Message { get; set; } = null!;
-    public string Exception { get; set; } = null!;
-    public string FullException { get; set; } = null!;
+    public string? Exception { get; set; } = null!;
+    public string? FullException { get; set; } = null!;
     public string? Source { get; set; }
     public int? Line { get; set; }
-    public int? Column { get; set; }
     
     public string FormattedTimestamp => Timestamp.ToString("HH:mm:ss.fff");
     public bool HasSourceLocation => !string.IsNullOrEmpty(Source) && Line.HasValue;
+    public string? Code { get; set; }
+    public string? LoggerName { get; set; }
 }
 
 // Custom NLog target that feeds our UI

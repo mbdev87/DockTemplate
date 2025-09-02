@@ -114,12 +114,12 @@ public class ErrorListViewModel : ReactiveObject, ITool
 
     private void NavigateToError(ErrorEntry? error)
     {
-        if (error == null || string.IsNullOrWhiteSpace(error.Source) || !error.Line.HasValue) return;
+        if (error == null || string.IsNullOrWhiteSpace(error.Code) || !error.Line.HasValue) return;
 
         try
         {
             Logger.Info($"[ErrorList] Navigating to {error.Source}:{error.Line}");
-            _navigateToSource?.Invoke(error.Source, error.Line.Value);
+            _navigateToSource?.Invoke(error.Code, error.Line.Value);
         }
         catch (Exception ex)
         {
@@ -134,7 +134,7 @@ public class ErrorListViewModel : ReactiveObject, ITool
         try
         {
             var fileName = System.IO.Path.GetFileName(error.Source);
-            var text = $"{error.Level}: {error.Message} ({fileName}:{error.Line}:{error.Column})";
+            var text = $"{error.Level}: {error.Message} ({fileName}:{error.Line})";
             // TODO: Copy to clipboard when Avalonia clipboard API is available
             Logger.Info($"[ErrorList] Copied error: {text}");
         }

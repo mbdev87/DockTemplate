@@ -12,10 +12,13 @@ namespace DockTemplate;
 
 sealed class Program
 {
+    public static IServiceProvider? ServiceProvider { get; private set; }
+
     [STAThread]
     public static void Main(string[] args)
     {
         using var provider = Initialize();
+        ServiceProvider = provider;
         BuildAvaloniaApp(provider).StartWithClassicDesktopLifetime(args);
     }
 
