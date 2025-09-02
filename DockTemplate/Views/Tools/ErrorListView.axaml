@@ -17,35 +17,73 @@
         </Grid.RowDefinitions>
 
         <!-- Toolbar -->
-        <Border Grid.Row="0" Background="{DynamicResource TextControlBackground}" 
-                BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="0,0,0,1" 
-                Padding="8,4">
-            <Grid>
+        <Border Grid.Row="0" 
+                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid Margin="4">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="🐛" FontSize="16" Margin="0,0,8,0" />
-                    <ComboBox Name="SeverityFilter" SelectedItem="{Binding SelectedSeverity}" 
-                              ItemsSource="{Binding SeverityLevels}" Width="80" Height="24" FontSize="11" />
-                    <TextBox Name="FilterTextBox" Text="{Binding FilterText}" Watermark="Filter errors..." 
-                             Width="150" Height="24" FontSize="11" Margin="8,0,0,0" />
-                </StackPanel>
+                <!-- Clear Button -->
+                <Button Grid.Column="0"
+                        Command="{Binding ClearErrorsCommand}"
+                        ToolTip.Tip="Clear Error List"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Margin="0,0,4,0"
+                        Height="32"
+                        Width="32"
+                        VerticalAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        FontFamily="avares://DockTemplate/Assets/FontAwesome-Solid.ttf#Font Awesome 6 Free"
+                        FontSize="11"
+                        Content="&#xf2ed;" />
 
-                <TextBlock Grid.Column="1" Text="{Binding Summary}" FontSize="11" 
-                           VerticalAlignment="Center" HorizontalAlignment="Center"
-                           Foreground="{DynamicResource TextForegroundColor}" />
+                <!-- Severity Filter -->
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding SeverityLevels}"
+                          SelectedItem="{Binding SelectedSeverity}"
+                          Width="70"
+                          Height="32"
+                          VerticalAlignment="Center"
+                          Margin="0,0,4,0"
+                          FontSize="10" />
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="⚡" ToolTip.Tip="Generate Test Errors" 
-                            Width="24" Height="24" FontSize="10" Padding="2" Margin="0,0,4,0"
-                            x:Name="TestErrorsButton" />
-                    <Button Content="🗑️" ToolTip.Tip="Clear All" Command="{Binding ClearErrorsCommand}" 
-                            Width="24" Height="24" FontSize="10" Padding="2" />
-                </StackPanel>
+                <!-- Search Filter -->
+                <TextBox Grid.Column="2"
+                         Text="{Binding FilterText}"
+                         Watermark="Filter errors..."
+                         FontSize="10"
+                         Height="32"
+                         VerticalAlignment="Center"
+                         Margin="0,0,4,0"
+                         VerticalContentAlignment="Center" />
+
+                <!-- Test Button -->
+                <Button Grid.Column="3"
+                        ToolTip.Tip="Generate Test Errors"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Margin="0,0,4,0"
+                        Height="32"
+                        Width="32"
+                        VerticalAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        FontSize="16"
+                        Content="⚡"
+                        x:Name="TestErrorsButton" />
+
+                <!-- Summary -->
+                <TextBlock Grid.Column="4" Text="{Binding Summary}" FontSize="10" 
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextForegroundColor}"
+                           Margin="4,0,0,0" />
             </Grid>
         </Border>
 

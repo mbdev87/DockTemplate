@@ -19,6 +19,7 @@ public class SolutionExplorerViewModel : ToolViewModel
 
     [Reactive] public ObservableCollection<FileSystemItemViewModel> Items { get; set; } = new();
     [Reactive] public string RootPath { get; set; } = string.Empty;
+    [Reactive] public FileSystemItemViewModel? SelectedItem { get; set; }
 
     public ICommand ExpandAllCommand { get; }
     public ICommand CollapseAllCommand { get; }
@@ -79,6 +80,70 @@ public class SolutionExplorerViewModel : ToolViewModel
         // Use the callback to open the file via DockFactory
         _openFileCallback?.Invoke(filePath);
     }
+
+    public void TrySelectAndExpandToFile(string filePath)
+    {
+        try
+        {
+            // Check if the file is within our project tree
+            if (!filePath.StartsWith(RootPath, StringComparison.OrdinalIgnoreCase))
+            {
+                System.Console.WriteLine($"[SolutionExplorer] File {filePath} is outside project tree, skipping selection");
+                return;
+            }
+
+            // Find and expand to the file
+            foreach (var rootItem in Items)
+            {
+                if (TryExpandToFileRecursive(rootItem, filePath))
+                {
+                    System.Console.WriteLine($"[SolutionExplorer] Successfully expanded to file: {filePath}");
+                    return;
+                }
+            }
+            
+            System.Console.WriteLine($"[SolutionExplorer] Could not find file in tree: {filePath}");
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"[SolutionExplorer] Error expanding to file: {ex.Message}");
+        }
+    }
+
+    private bool TryExpandToFileRecursive(FileSystemItemViewModel item, string targetPath)
+    {
+        // If this is the target file, we found it!
+        if (!item.IsDirectory && string.Equals(item.FullPath, targetPath, StringComparison.OrdinalIgnoreCase))
+        {
+            // Select the file and mark it for scrolling
+            SelectedItem = item;
+            item.IsSelected = true;
+            item.ShouldScrollIntoView = true;
+            
+            System.Console.WriteLine($"[SolutionExplorer] File selected: {item.Name}");
+            return true;
+        }
+
+        // If this is a directory and the target path starts with our path, expand and recurse
+        if (item.IsDirectory && targetPath.StartsWith(item.FullPath, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!item.IsExpanded)
+            {
+                item.IsExpanded = true;
+            }
+
+            // Search children
+            foreach (var child in item.Children)
+            {
+                if (TryExpandToFileRecursive(child, targetPath))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 public class FileSystemItemViewModel : ReactiveObject
@@ -91,6 +156,8 @@ public class FileSystemItemViewModel : ReactiveObject
     [Reactive] public string FullPath { get; set; } = string.Empty;
     [Reactive] public bool IsDirectory { get; set; }
     [Reactive] public bool IsExpanded { get; set; }
+    [Reactive] public bool IsSelected { get; set; }
+    [Reactive] public bool ShouldScrollIntoView { get; set; }
     [Reactive] public ObservableCollection<FileSystemItemViewModel> Children { get; set; } = new();
     
     public ICommand ToggleExpandCommand { get; }

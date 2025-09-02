@@ -70,6 +70,7 @@
     <ScrollViewer Grid.Row="1">
       <TreeView Name="FileTree"
                 ItemsSource="{Binding Items}"
+                SelectedItem="{Binding SelectedItem}"
                 Background="Transparent"
                 Padding="4,2">
         
@@ -105,9 +106,10 @@
             <Setter Property="MinHeight" Value="20" />
           </Style>
           
-          <!-- Bind IsExpanded for FileSystemItemViewModel items -->
+          <!-- Bind IsExpanded and IsSelected for FileSystemItemViewModel items -->
           <Style Selector="TreeViewItem" x:DataType="vm:FileSystemItemViewModel">
             <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
           </Style>
           
           <Style Selector="TreeViewItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">

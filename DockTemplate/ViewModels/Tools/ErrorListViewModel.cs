@@ -80,8 +80,7 @@ public class ErrorListViewModel : ReactiveObject, ITool
         _errorService.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(_errorService.ErrorCount) ||
-                e.PropertyName == nameof(_errorService.WarningCount) ||
-                e.PropertyName == nameof(_errorService.InfoCount))
+                e.PropertyName == nameof(_errorService.WarningCount))
             {
                 Dispatcher.UIThread.Post(() =>
                 {

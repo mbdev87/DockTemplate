@@ -301,17 +301,62 @@ Happy coding! 🚀");
         {
             Logger.Info($"[DockFactory] Navigating to {filePath}:{line}");
             
-            // First, open the document
+            // Chain of cool events!
+            
+            // 1. Try to find and highlight file in Solution Explorer (if it exists there)
+            TryHighlightInSolutionExplorer(filePath);
+            
+            // 2. Open the document in editor
             OpenDocument(filePath);
             
-            // TODO: Scroll to specific line in editor
+            // 3. TODO: Scroll to specific line and highlight it
             // This would require integration with the text editor control
             // For now, we just open the file
+            
+            Logger.Info($"[DockFactory] Navigation completed for {System.IO.Path.GetFileName(filePath)}:{line}");
             
         }
         catch (Exception ex)
         {
             Logger.Error(ex, $"Failed to navigate to {System.IO.Path.GetFileName(filePath)}:{line}");
         }
+    }
+
+    private void TryHighlightInSolutionExplorer(string filePath)
+    {
+        try
+        {
+            // Find the Solution Explorer tool in the dock layout
+            var solutionExplorer = FindSolutionExplorerViewModel(_rootDock);
+            if (solutionExplorer != null)
+            {
+                // Try to expand and highlight the file (if it exists in the project tree)
+                solutionExplorer.TrySelectAndExpandToFile(filePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't let Solution Explorer issues break navigation
+            System.Console.WriteLine($"[DockFactory] Could not highlight in Solution Explorer: {ex.Message}");
+        }
+    }
+
+    private SolutionExplorerViewModel? FindSolutionExplorerViewModel(IDockable? dock)
+    {
+        if (dock == null) return null;
+        
+        if (dock is SolutionExplorerViewModel solutionExplorer)
+            return solutionExplorer;
+        
+        if (dock is IDock dockContainer && dockContainer.VisibleDockables != null)
+        {
+            foreach (var child in dockContainer.VisibleDockables)
+            {
+                var result = FindSolutionExplorerViewModel(child);
+                if (result != null) return result;
+            }
+        }
+        
+        return null;
     }
 }

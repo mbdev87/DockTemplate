@@ -78,6 +78,7 @@ public class ErrorLevelToIconConverter : IValueConverter
         {
             "Error" => "❌",
             "Fatal" => "💀", 
+            "Warn" => "⚠️",
             "Warning" => "⚠️",
             _ => "ℹ️"
         };
@@ -97,6 +98,7 @@ public class ErrorLevelToColorConverter : IValueConverter
         {
             "Error" => Brushes.Red,
             "Fatal" => Brushes.DarkRed,
+            "Warn" => Brushes.Orange,
             "Warning" => Brushes.Orange,
             _ => Brushes.Blue
         };
