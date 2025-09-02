@@ -20,11 +20,11 @@ Perfect for anyone who wants a "just works" baseline with batteries included to 
 - Light/Dark theme switching
 - Solid ReactiveUI + DI architecture
 - Charting and data visualization examples in development
+- Error List - double click on Error in Errors tab to jump to source
 
 **Will there be more?**
 Yes, this project will be perpetually expanded with snippets I find useful in my other pet projects. 
 Coming soon:
-- Error List is currently a placeholder - DataGrid version coming soon
 - More real-world integration patterns being added
 - .NET template for auto-generation of the base for your tools
 
