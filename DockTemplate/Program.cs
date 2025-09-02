@@ -1,0 +1,57 @@
+﻿using System;
+using Avalonia;
+using Avalonia.ReactiveUI;
+using Microsoft.Extensions.DependencyInjection;
+using ReactiveUI;
+using DockTemplate.ViewModels;
+using DockTemplate.Views;
+using DockTemplate.Services;
+
+namespace DockTemplate;
+
+sealed class Program
+{
+    [STAThread]
+    public static void Main(string[] args)
+    {
+        using var provider = Initialize();
+        BuildAvaloniaApp(provider).StartWithClassicDesktopLifetime(args);
+    }
+
+    private static ServiceProvider Initialize()
+    {
+        var services = new ServiceCollection();
+        ConfigureServices(services);
+        return services.BuildServiceProvider();
+    }
+
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<App>();
+        services.AddSingleton<IViewLocator, ViewLocator>();
+        services.AddSingleton<TextMateService>();
+        services.AddSingleton<LoggingService>();
+        services.AddSingleton<IThemeService, ThemeService>();
+        
+        services.AddTransient<DockFactory>();
+        services.AddTransient<MainWindowViewModel>();
+    }
+
+    public static AppBuilder BuildAvaloniaApp(IServiceProvider provider)
+    {
+        return AppBuilder.Configure(provider.GetRequiredService<App>)
+            .UsePlatformDetect()
+            .WithInterFont()
+            .UseReactiveUI()
+            .LogToTrace();
+    }
+
+    public static AppBuilder BuildAvaloniaApp()
+    {
+        return AppBuilder.Configure(() => Initialize().GetRequiredService<App>())
+            .UsePlatformDetect()
+            .WithInterFont()
+            .UseReactiveUI()
+            .LogToTrace();
+    }
+}

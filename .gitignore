@@ -6,7 +6,8 @@
 ## has more thorough IDE-specific entries.
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
-
+.DS_Store
+.idea 
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -23,6 +24,7 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+*.sln.DotSettings.user
 # .NET Core
 project.lock.json
 project.fragment.lock.json

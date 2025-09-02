@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DockTemplate.ViewModels"
+        xmlns:dc="using:Dock.Avalonia.Controls"
+        xmlns:dm="using:Dock.Model.Core"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="680"
+        x:Class="DockTemplate.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        x:Name="MainWindowView"
+        UseLayoutRounding="True" RenderOptions.BitmapInterpolationMode="HighQuality"
+        WindowState="Normal" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI, SF Pro Display, Noto Sans, Cantarel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="DockTemplate - Visual Studio Layout" Height="680" Width="1200">
+
+    <Window.Resources>
+        <StreamGeometry x:Key="DarkTheme">M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Zm0-2V4a8 8 0 1 1 0 16Z</StreamGeometry>
+    </Window.Resources>
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Menu and Toolbar -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+            <Menu Grid.Column="0" VerticalAlignment="Center" FontSize="12" Height="20">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_New Layout" Command="{Binding NewLayout}" />
+                </MenuItem>
+                <MenuItem Header="_Window" DataContext="{Binding Layout}">
+                    <MenuItem Header="_Exit Windows" Command="{Binding ExitWindows}" />
+                    <Separator />
+                    <MenuItem Header="_Show Windows" Command="{Binding ShowWindows}" />
+                </MenuItem>
+            </Menu>
+            
+       
+        </Grid>
+
+        <!-- Main Dock Area -->
+        <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
+                        Grid.Row="1" Margin="4" />
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="{DynamicResource SystemAccentColor}" 
+                BorderBrush="{DynamicResource SystemAccentColorDark2}" BorderThickness="0,1,0,0">
+           <Grid ColumnDefinitions="Auto, *, 200">
+               <TextBlock Grid.Column="0" FontSize="11" Text="Ready" Margin="8,4" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" />
+            
+               <Button HorizontalContentAlignment="Right" x:Name="ThemeButton" Grid.Column="2" Background="Transparent"
+                       HorizontalAlignment="Right" Margin="0" Foreground="White" MaxHeight="16">
+                   <StackPanel Orientation="Horizontal"><TextBlock FontSize="10" Foreground="White">Change theme</TextBlock><PathIcon Width="16" Height="16"  Data="{StaticResource DarkTheme}"/></StackPanel>
+               </Button>
+           </Grid>
+        </Border>
+    </Grid>
+
+</Window>

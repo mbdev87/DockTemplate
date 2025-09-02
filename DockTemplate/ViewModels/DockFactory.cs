@@ -1,0 +1,276 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using DockTemplate.ViewModels.Documents;
+using DockTemplate.ViewModels.Tools;
+using DockTemplate.Models.Documents;
+using DockTemplate.Models.Tools;
+using DockTemplate.Models;
+using DockTemplate.Services;
+using Dock.Avalonia.Controls;
+using Dock.Model.Controls;
+using Dock.Model.Core;
+using Dock.Model.Mvvm;
+using Dock.Model.Mvvm.Controls;
+using NLog;
+
+namespace DockTemplate.ViewModels;
+
+public class DockFactory : Factory
+{
+    private IRootDock? _rootDock;
+    private IDocumentDock? _documentDock;
+    private readonly TextMateService _textMateService;
+    private readonly LoggingService _loggingService;
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    public DockFactory(TextMateService textMateService, LoggingService loggingService)
+    {
+        _textMateService = textMateService;
+        _loggingService = loggingService;
+    }
+
+    public override IRootDock CreateLayout()
+    {
+        var readmeDocument = new DocumentViewModel("Readme", "Readme.txt", _textMateService);
+
+        // Set informative README content
+        readmeDocument.SetContent(@"🔥 DockTemplate - Batteries Included Avalonia Starter
+================================================================
+
+Welcome to DockTemplate! This is your jumpstart into building beautiful 
+Avalonia applications with a professional IDE-like interface.
+
+🎯 WHAT IS THIS PROJECT?
+========================
+DockTemplate is a ""batteries included"" Avalonia application template that gives you:
+• A complete dockable interface system (like Visual Studio)
+• Built-in Solution Explorer with gorgeous Material Design icons
+• Real-time logging output with filtering and search
+• Text editor with syntax highlighting
+• Error list with source navigation
+• Professional light/dark theme switching
+• All the boring setup done for you!
+
+✨ KEY FEATURES
+===============
+🗂️  Solution Explorer - Navigate your files with beautiful icons
+📝  Text Editor - Syntax highlighting for 50+ file types
+📊  Output Tool - Real-time logs with filtering and auto-scroll
+🐛  Error List - Click errors to jump to source code
+🎨  Material Design - Crisp icons with VS Code-inspired colors
+🌙  Theme System - Light/Dark mode switching
+⚡  ReactiveUI - Modern MVVM with reactive patterns
+
+🔗 BUILT WITH THESE AMAZING LIBRARIES
+=====================================
+• Avalonia UI Framework: https://avaloniaui.net/
+• Dock Layout System: https://github.com/wieslawsoltes/Dock
+• Material Design Icons: https://pictogrammers.com/library/mdi/
+• FontAwesome Icons: https://fontawesome.com/
+• ReactiveUI MVVM: https://reactiveui.net/
+• AvaloniaEdit: https://github.com/AvaloniaUI/AvaloniaEdit
+• TextMate Grammars: https://github.com/microsoft/vscode-textmate
+
+🚀 GETTING STARTED
+==================
+1. Open files using the Solution Explorer (left panel)
+2. Check the Output tool (bottom) for real-time application logs
+3. Switch themes using the theme selector
+4. Start building your amazing Avalonia app!
+
+💡 PRO TIPS
+===========
+• The Solution Explorer shows different colored icons for each file type
+• Use Ctrl+Shift+O to see all available commands
+• The Output tool filters by log level - try ""Error"" or ""Debug""
+• All tools are dockable - drag them around to customize your layout
+
+🎉 HAVE FUN BUILDING!
+====================
+This template gives you everything you need to focus on building features
+instead of setting up infrastructure. Delete what you don't need, 
+add what you do need, and create something awesome!
+
+Questions? Check out the libraries above or dive into the source code.
+Everything is well-documented and ready to customize.
+
+Happy coding! 🚀");
+        
+        var solutionExplorer = new SolutionExplorerViewModel(_textMateService, OpenDocument);
+        var properties = new ToolViewModel("Properties", "Properties");
+        var toolbox = new ToolViewModel("Toolbox", "Toolbox");
+        var output = new OutputViewModel(_loggingService);
+        var errorList = new ToolViewModel("ErrorList", "Error List");
+        var editor = new ToolViewModel("Editor", "Editor");
+
+        // Set Context content for tools
+        properties.Context = "📝 Properties - Inspect and edit object details";
+        toolbox.Context = "🔧 Toolbox - Drag and drop Avalonia controls";
+        output.Context = "📊 Output - Real-time application logs with filtering";
+        errorList.Context = "🐛 Error List - Click errors to navigate to source";
+        editor.Context = "⚡ Editor - Advanced text editing with syntax highlighting";
+
+        var leftDock = new ProportionalDock
+        {
+            Proportion = 0.2,
+            Orientation = Orientation.Vertical,
+            ActiveDockable = null,
+            VisibleDockables = CreateList<IDockable>
+            (
+                new ToolDock
+                {
+                    ActiveDockable = solutionExplorer,
+                    VisibleDockables = CreateList<IDockable>(solutionExplorer, editor),
+                    Alignment = Alignment.Left,
+                }
+            ),
+        };
+
+        var rightDock = new ProportionalDock
+        {
+            Proportion = 0.2,
+            Orientation = Orientation.Vertical,
+            ActiveDockable = null,
+            VisibleDockables = CreateList<IDockable>
+            (
+                new ToolDock
+                {
+                    ActiveDockable = toolbox,
+                    VisibleDockables = CreateList<IDockable>(toolbox),
+                    Alignment = Alignment.Top,
+                },
+                new ProportionalDockSplitter(),
+                new ToolDock
+                {
+                    ActiveDockable = properties,
+                    VisibleDockables = CreateList<IDockable>(properties),
+                    Alignment = Alignment.Right,
+                }
+            ),
+        };
+
+        var bottomDock = new ToolDock
+        {
+            Proportion = 0.2,
+            ActiveDockable = output,
+            VisibleDockables = CreateList<IDockable>(output, errorList),
+            Alignment = Alignment.Bottom,
+        };
+
+        var documentDock = new DocumentDock
+        {
+            IsCollapsable = false,
+            ActiveDockable = readmeDocument,
+            VisibleDockables = CreateList<IDockable>(readmeDocument),
+            CanCreateDocument = true,
+        };
+
+        var mainLayout = new ProportionalDock
+        {
+            Orientation = Orientation.Vertical,
+            VisibleDockables = CreateList<IDockable>
+            (
+                new ProportionalDock
+                {
+                    Orientation = Orientation.Horizontal,
+                    VisibleDockables = CreateList<IDockable>
+                    (
+                        leftDock,
+                        new ProportionalDockSplitter(),
+                        documentDock,
+                        new ProportionalDockSplitter(),
+                        rightDock
+                    )
+                },
+                new ProportionalDockSplitter(),
+                bottomDock
+            )
+        };
+
+        var rootDock = CreateRootDock();
+
+        rootDock.IsCollapsable = false;
+        rootDock.ActiveDockable = mainLayout;
+        rootDock.DefaultDockable = mainLayout;
+        rootDock.VisibleDockables = CreateList<IDockable>(mainLayout);
+
+        rootDock.LeftPinnedDockables = CreateList<IDockable>();
+        rootDock.RightPinnedDockables = CreateList<IDockable>();
+        rootDock.TopPinnedDockables = CreateList<IDockable>();
+        rootDock.BottomPinnedDockables = CreateList<IDockable>();
+
+        _documentDock = documentDock;
+        _rootDock = rootDock;
+
+        return rootDock;
+    }
+
+    public override void InitLayout(IDockable layout)
+    {
+        ContextLocator = new Dictionary<string, Func<object?>>
+        {
+            ["SolutionExplorer"] = () => new SolutionExplorerModel(),
+            ["Properties"] = () => new PropertiesModel(),
+            ["Toolbox"] = () => new PropertiesModel { Name = "Toolbox", Content = "🔧 Avalonia Controls:\n\n📋 Layout:\n• Panel\n• Grid\n• StackPanel\n• WrapPanel\n• DockPanel\n\n🎛️ Input:\n• Button\n• TextBox\n• ComboBox\n• CheckBox\n• RadioButton\n\n📝 Display:\n• TextBlock\n• Label\n• Image\n• TreeView\n• ListBox" },
+            ["Output"] = () => new PropertiesModel { Name = "Output", Content = "📊 Output Window\n==========================================\n\nWelcome to DockTemplate!\n\n✅ Application initialized successfully\n📁 Solution Explorer loaded\n🎨 Material Design icons active\n🌙 Theme system ready\n\n🔍 Use the dropdown above to filter by log level\n🔎 Use the search box to find specific messages\n\nStart building your Avalonia app! 🚀" },
+            ["ErrorList"] = () => new PropertiesModel { Name = "Error List", Content = "🐛 Error List\n==========================================\n\n✅ No errors found!\n\n⚠️  0 Errors\n📝 0 Warnings  \nℹ️  0 Messages\n\n🎉 Your code is clean and ready to go!" },
+            ["Editor"] = () => new EditorToolModel()
+        };
+
+        DockableLocator = new Dictionary<string, Func<IDockable?>>()
+        {
+            ["Root"] = () => _rootDock,
+            ["Documents"] = () => _documentDock
+        };
+
+        HostWindowLocator = new Dictionary<string, Func<IHostWindow?>>
+        {
+            [nameof(IDockWindow)] = () => new HostWindow()
+        };
+
+        base.InitLayout(layout);
+    }
+
+    public void OpenDocument(string filePath)
+    {
+        if (_documentDock == null)
+        {
+            Logger.Info("[DockFactory] Document dock not initialized");
+            return;
+        }
+
+        try
+        {
+            var fileName = Path.GetFileName(filePath);
+            var documentId = $"File_{fileName}_{DateTime.Now:yyyyMMdd_HHmmss}";
+            
+            Logger.Info($"[DockFactory] Opening document: {fileName} from {filePath}");
+            
+            // Create new document view model
+            var document = new DocumentViewModel(documentId, fileName, _textMateService);
+            
+            // Load file content
+            if (File.Exists(filePath))
+            {
+                var content = File.ReadAllText(filePath);
+                document.SetContent(content);
+            }
+            
+            // Add to document dock at the beginning (pushing others to the right)
+            var visibleDockables = _documentDock.VisibleDockables?.ToList() ?? new List<IDockable>();
+            visibleDockables.Insert(0, document);
+            _documentDock.VisibleDockables = CreateList(visibleDockables.ToArray());
+            
+            // Set as active document
+            _documentDock.ActiveDockable = document;
+            
+            Logger.Info($"[DockFactory] Document opened successfully: {fileName}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[DockFactory] Error opening document {filePath}: {ex.Message}");
+        }
+    }
+}

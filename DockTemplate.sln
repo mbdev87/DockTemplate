@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockTemplate", "DockTemplate\DockTemplate.csproj", "{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
