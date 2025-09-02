@@ -10,7 +10,6 @@ Perfect for anyone who wants a "just works" baseline with batteries included to 
 
 <img src="docs/img/dashboard.png" alt="Dashboard" />
 
-
 ## Current Status
 
 - Complete dockable IDE layout with working panels
@@ -22,12 +21,19 @@ Perfect for anyone who wants a "just works" baseline with batteries included to 
 - Charting and data visualization examples in development
 - Error List - double click on Error in Errors tab to jump to source
 
+#### Double click on Error to jump to source
+
+<img src="docs/img/click_to_jump.png" alt="Jump to source" />
+
+
+
+
 **Will there be more?**
 Yes, this project will be perpetually expanded with snippets I find useful in my other pet projects. 
 Coming soon:
 - More real-world integration patterns being added
 - .NET template for auto-generation of the base for your tools
-
+- list will be expanded as we go :)
 
 ## Built With Amazing Libraries
 
