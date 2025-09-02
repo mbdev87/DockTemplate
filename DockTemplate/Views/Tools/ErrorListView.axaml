@@ -11,7 +11,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="32" />    <!-- Toolbar -->
+            <RowDefinition Height="Auto" />    <!-- Toolbar -->
             <RowDefinition Height="*" />     <!-- DataGrid -->
             <RowDefinition Height="24" />    <!-- Status Bar -->
         </Grid.RowDefinitions>
@@ -75,7 +75,7 @@
                         Width="32"
                         VerticalAlignment="Center"
                         VerticalContentAlignment="Center"
-                        FontSize="16"
+                        FontSize="11"
                         Content="⚡"
                         x:Name="TestErrorsButton" />
 
