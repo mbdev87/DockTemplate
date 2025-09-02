@@ -2,9 +2,13 @@
 
 Perfect for anyone who wants a "just works" baseline with batteries included to start their project. 
 
+#### Main window
 
 <img src="docs/img/dock_template_overview.png" alt="The App" />
 
+#### Dashboard
+
+<img src="docs/img/dashboard.png" alt="Dashboard" />
 
 
 ## Current Status
@@ -35,7 +39,9 @@ Coming soon:
 | [FontAwesome](https://fontawesome.com/) | Icon system | Reliable icon fallbacks |
 | [ReactiveUI](https://reactiveui.net/) | MVVM framework | Modern reactive patterns |
 | [AvaloniaEdit](https://github.com/AvaloniaUI/AvaloniaEdit) | Text editor component | Syntax highlighting magic |
-| [NLog](https://nlog-project.org/) | Logging framework | Professional logging system |
+| [NLog](https://nlog-project.org/) | Logging framework | Professional logging system | 
+| [ScottPlot](https://github.com/ScottPlot/ScottPlot) | Charting library | Very easy to use  |
+
 
 
 ## Learning Resources

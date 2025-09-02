@@ -7,6 +7,7 @@ using DockTemplate.ViewModels.Tools;
 using DockTemplate.Models.Documents;
 using DockTemplate.Models.Tools;
 using DockTemplate.Models;
+using DockTemplate.Views;
 using DockTemplate.Views.Documents;
 using DockTemplate.Views.Tools;
 using DockTemplate.Views.Models;
@@ -26,7 +27,9 @@ public class ViewLocator : IDataTemplate, IViewLocator
         {
             DocumentViewModel => new DocumentView(),
             SolutionExplorerViewModel => new SolutionExplorerView(),
+            DashboardViewModel => new DashboardView(),
             OutputViewModel => new OutputView(),
+            ErrorListViewModel => new ErrorListView(),
             ToolViewModel => new ToolView(),
             DocumentModel => new DocumentModelView(),
             SolutionExplorerModel => new SolutionExplorerModelView(),

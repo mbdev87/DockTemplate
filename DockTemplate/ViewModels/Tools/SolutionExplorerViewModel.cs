@@ -275,7 +275,6 @@ public class FileSystemItemViewModel : ReactiveObject
     {
         if (IsDirectory)
         {
-            Logger.Info($"[FileSystemItem] Expanding {Name}");
             IsExpanded = true;
             LoadChildren();
             
@@ -288,7 +287,6 @@ public class FileSystemItemViewModel : ReactiveObject
 
     public void CollapseAll()
     {
-        Logger.Info($"[FileSystemItem] Collapsing {Name}");
         IsExpanded = false;
         
         foreach (var child in Children)

@@ -22,18 +22,21 @@ public class DockFactory : Factory
     private IRootDock? _rootDock;
     private IDocumentDock? _documentDock;
     private readonly TextMateService _textMateService;
-    private readonly LoggingService _loggingService;
+    private readonly LoggingDataService _loggingDataService;
+    private readonly ErrorService _errorService;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public DockFactory(TextMateService textMateService, LoggingService loggingService)
+    public DockFactory(TextMateService textMateService, LoggingDataService loggingDataService, ErrorService errorService)
     {
         _textMateService = textMateService;
-        _loggingService = loggingService;
+        _loggingDataService = loggingDataService;
+        _errorService = errorService;
     }
 
     public override IRootDock CreateLayout()
     {
         var readmeDocument = new DocumentViewModel("Readme", "Readme.txt", _textMateService);
+        var dashboardDocument = new DashboardViewModel();
 
         // Set informative README content
         readmeDocument.SetContent(@"🔥 DockTemplate - Batteries Included Avalonia Starter
@@ -101,8 +104,8 @@ Happy coding! 🚀");
         var solutionExplorer = new SolutionExplorerViewModel(_textMateService, OpenDocument);
         var properties = new ToolViewModel("Properties", "Properties");
         var toolbox = new ToolViewModel("Toolbox", "Toolbox");
-        var output = new OutputViewModel(_loggingService);
-        var errorList = new ToolViewModel("ErrorList", "Error List");
+        var output = new OutputViewModel(_loggingDataService);
+        var errorList = new ErrorListViewModel(_errorService, NavigateToSourceLine);
         var editor = new ToolViewModel("Editor", "Editor");
 
         // Set Context content for tools
@@ -163,7 +166,7 @@ Happy coding! 🚀");
         {
             IsCollapsable = false,
             ActiveDockable = readmeDocument,
-            VisibleDockables = CreateList<IDockable>(readmeDocument),
+            VisibleDockables = CreateList<IDockable>(readmeDocument, dashboardDocument),
             CanCreateDocument = true,
         };
 
@@ -212,6 +215,7 @@ Happy coding! 🚀");
         ContextLocator = new Dictionary<string, Func<object?>>
         {
             ["SolutionExplorer"] = () => new SolutionExplorerModel(),
+            ["Dashboard"] = () => new PropertiesModel { Name = "Dashboard", Content = "📊 Project Analytics Dashboard\n==========================================\n\nAnalyzing project files...\n\n📁 File System Scan:\n• Counting files by type\n• Measuring file sizes\n• Analyzing code lines\n\n📈 Interactive Charts:\n• File type distribution (pie chart)\n• File sizes comparison (bar chart) \n• Line count trends (line chart)\n\n📋 Sortable Data Grid:\n• All files with details\n• Click headers to sort\n• Multi-column sorting\n\n🔄 Click Refresh to update data" },
             ["Properties"] = () => new PropertiesModel(),
             ["Toolbox"] = () => new PropertiesModel { Name = "Toolbox", Content = "🔧 Avalonia Controls:\n\n📋 Layout:\n• Panel\n• Grid\n• StackPanel\n• WrapPanel\n• DockPanel\n\n🎛️ Input:\n• Button\n• TextBox\n• ComboBox\n• CheckBox\n• RadioButton\n\n📝 Display:\n• TextBlock\n• Label\n• Image\n• TreeView\n• ListBox" },
             ["Output"] = () => new PropertiesModel { Name = "Output", Content = "📊 Output Window\n==========================================\n\nWelcome to DockTemplate!\n\n✅ Application initialized successfully\n📁 Solution Explorer loaded\n🎨 Material Design icons active\n🌙 Theme system ready\n\n🔍 Use the dropdown above to filter by log level\n🔎 Use the search box to find specific messages\n\nStart building your Avalonia app! 🚀" },
@@ -245,8 +249,30 @@ Happy coding! 🚀");
         {
             var fileName = Path.GetFileName(filePath);
             var documentId = $"File_{fileName}_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
             
             Logger.Info($"[DockFactory] Opening document: {fileName} from {filePath}");
+            
+            // Check if this is an image file and generate a demonstration error
+            var imageExtensions = new[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg" };
+            if (imageExtensions.Contains(extension))
+            {
+                _errorService.AddError(
+                    $"Cannot open binary file '{fileName}' in text editor", 
+                    filePath, 
+                    1, 
+                    1, 
+                    "IMG001");
+                    
+                _errorService.AddWarning(
+                    $"File '{fileName}' is an image file. Consider using an image viewer instead.", 
+                    filePath, 
+                    1, 
+                    1, 
+                    "IMG002");
+                    
+                Logger.Warn($"[DockFactory] Attempted to open image file as text: {fileName}");
+            }
             
             // Create new document view model
             var document = new DocumentViewModel(documentId, fileName, _textMateService);
@@ -254,8 +280,21 @@ Happy coding! 🚀");
             // Load file content
             if (File.Exists(filePath))
             {
-                var content = File.ReadAllText(filePath);
-                document.SetContent(content);
+                try
+                {
+                    var content = File.ReadAllText(filePath);
+                    document.SetContent(content);
+                }
+                catch (Exception ex)
+                {
+                    _errorService.AddError(
+                        $"Failed to read file '{fileName}': {ex.Message}", 
+                        filePath, 
+                        1, 
+                        1, 
+                        "FILE001");
+                    document.SetContent($"Error reading file: {ex.Message}");
+                }
             }
             
             // Add to document dock at the beginning (pushing others to the right)
@@ -271,6 +310,27 @@ Happy coding! 🚀");
         catch (Exception ex)
         {
             Logger.Error(ex, $"[DockFactory] Error opening document {filePath}: {ex.Message}");
+        }
+    }
+
+    public void NavigateToSourceLine(string filePath, int line)
+    {
+        try
+        {
+            Logger.Info($"[DockFactory] Navigating to {filePath}:{line}");
+            
+            // First, open the document
+            OpenDocument(filePath);
+            
+            // TODO: Scroll to specific line in editor
+            // This would require integration with the text editor control
+            // For now, we just open the file
+            
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[DockFactory] Error navigating to {filePath}:{line}");
+            _errorService.AddError($"Failed to navigate to {System.IO.Path.GetFileName(filePath)}:{line}", filePath, line, 0, "NAV001");
         }
     }
 }

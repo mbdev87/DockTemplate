@@ -6,6 +6,7 @@ using ReactiveUI;
 using DockTemplate.ViewModels;
 using DockTemplate.Views;
 using DockTemplate.Services;
+using DockTemplate.ViewModels.Tools;
 
 namespace DockTemplate;
 
@@ -27,12 +28,15 @@ sealed class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<ErrorService>();
         services.AddSingleton<App>();
         services.AddSingleton<IViewLocator, ViewLocator>();
         services.AddSingleton<TextMateService>();
         services.AddSingleton<LoggingService>();
+        services.AddSingleton<LoggingDataService>();
         services.AddSingleton<IThemeService, ThemeService>();
-        
+        services.AddTransient<ErrorListViewModel>();
+
         services.AddTransient<DockFactory>();
         services.AddTransient<MainWindowViewModel>();
     }

@@ -16,7 +16,7 @@ namespace DockTemplate.ViewModels.Tools;
 public class OutputViewModel : ReactiveObject, ITool
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private readonly LoggingService _loggingService;
+    private readonly LoggingDataService _loggingDataService;
     
     // ITool implementation
     [Reactive] public string Id { get; set; } = "Output";
@@ -48,100 +48,40 @@ public class OutputViewModel : ReactiveObject, ITool
     [Reactive] public string? DockGroup { get; set; }
 
     // OutputViewModel specific properties
-    [Reactive] public ObservableCollection<LogEntry> LogEntries { get; set; } = new();
+    public ObservableCollection<LogEntry> LogEntries => _loggingDataService.FilteredEntries;
     [Reactive] public bool AutoScroll { get; set; } = true;
-    [Reactive] public string FilterText { get; set; } = string.Empty;
-    [Reactive] public string SelectedLogLevel { get; set; } = "All";
+    
+    public string FilterText
+    {
+        get => _loggingDataService.FilterText;
+        set => _loggingDataService.FilterText = value;
+    }
+    
+    public string SelectedLogLevel
+    {
+        get => _loggingDataService.SelectedLogLevel;
+        set => _loggingDataService.SelectedLogLevel = value;
+    }
     
     public ICommand ClearLogsCommand { get; }
     public ICommand ToggleAutoScrollCommand { get; }
     
-    public string[] LogLevels { get; } = { "All", "Debug", "Info", "Warn", "Error", "Fatal" };
+    public string[] LogLevels => _loggingDataService.LogLevels;
     
-    public OutputViewModel(LoggingService loggingService)
+    public OutputViewModel(LoggingDataService loggingDataService)
     {
-        _loggingService = loggingService;
+        _loggingDataService = loggingDataService;
         
         ClearLogsCommand = ReactiveCommand.Create(ClearLogs);
         ToggleAutoScrollCommand = ReactiveCommand.Create(() => AutoScroll = !AutoScroll);
         
-        // Subscribe to logging service changes
-        _loggingService.LogEntries.CollectionChanged += OnLogEntriesChanged;
-        
-        // Initial load of existing entries
-        RefreshFilteredEntries();
-        
-        // Watch for filter changes
-        this.WhenAnyValue(x => x.FilterText, x => x.SelectedLogLevel)
-            .Subscribe(_ => 
-            {
-                Console.WriteLine($"[OutputViewModel] Filter changed - Level: '{SelectedLogLevel}', Text: '{FilterText}'");
-                RefreshFilteredEntries();
-            });
-            
         Logger.Info("OutputViewModel initialized");
     }
 
-    private void OnLogEntriesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        RefreshFilteredEntries();
-    }
-
-    private void RefreshFilteredEntries()
-    {
-        try
-        {
-            var allEntries = _loggingService.LogEntries.ToList();
-            var filtered = allEntries.AsEnumerable();
-            
-            Console.WriteLine($"[OutputViewModel] Filtering {allEntries.Count} entries, Level='{SelectedLogLevel}', Filter='{FilterText}'");
-            
-            // Filter by log level
-            if (SelectedLogLevel != "All" && !string.IsNullOrEmpty(SelectedLogLevel))
-            {
-                filtered = filtered.Where(entry => entry.Level.Equals(SelectedLogLevel, StringComparison.OrdinalIgnoreCase));
-            }
-            
-            // Filter by text
-            if (!string.IsNullOrWhiteSpace(FilterText))
-            {
-                var filterLower = FilterText.ToLowerInvariant();
-                filtered = filtered.Where(entry => 
-                    entry.Message.ToLowerInvariant().Contains(filterLower) ||
-                    entry.Logger.ToLowerInvariant().Contains(filterLower) ||
-                    (entry.Exception?.ToLowerInvariant().Contains(filterLower) ?? false));
-            }
-            
-            var filteredList = filtered.TakeLast(500).ToList(); // Limit displayed entries for performance
-            
-            Console.WriteLine($"[OutputViewModel] After filtering: {filteredList.Count} entries");
-            
-            // Update collection efficiently by comparing current vs new
-            if (LogEntries.Count != filteredList.Count || !LogEntries.SequenceEqual(filteredList))
-            {
-                // Ensure UI updates happen on the UI thread
-                Dispatcher.UIThread.Post(() =>
-                {
-                    LogEntries.Clear();
-                    foreach (var entry in filteredList)
-                    {
-                        LogEntries.Add(entry);
-                    }
-                }, DispatcherPriority.Background);
-                
-                Console.WriteLine($"[OutputViewModel] Scheduled UI collection update to {filteredList.Count} entries");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[OutputViewModel] Error refreshing entries: {ex.Message}");
-        }
-    }
 
     private void ClearLogs()
     {
-        _loggingService.LogEntries.Clear();
-        Dispatcher.UIThread.Post(() => LogEntries.Clear(), DispatcherPriority.Background);
+        _loggingDataService.ClearLogs();
         Logger.Info("Output logs cleared");
     }
     

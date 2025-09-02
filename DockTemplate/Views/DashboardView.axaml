@@ -1,0 +1,236 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:scottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+             xmlns:vm="using:DockTemplate.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="DockTemplate.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+
+    <ScrollViewer>
+        <Grid Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />   <!-- Header -->
+                <RowDefinition Height="Auto" />   <!-- Summary Cards -->
+                <RowDefinition Height="300" />    <!-- Charts Row -->
+                <RowDefinition Height="10" />     <!-- Spacing -->
+                <RowDefinition Height="*" />      <!-- Data Grid -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Border Grid.Row="0" Background="{DynamicResource TextControlBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="📊" FontSize="20" Margin="0,0,10,0" />
+                        <TextBlock Text="Project Analytics Dashboard" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SystemAccentColor}" />
+                        <TextBlock Text=" - File System Analysis" FontSize="14" Foreground="{DynamicResource TextForegroundColor}" 
+                                   Margin="5,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Content="🔄 Refresh" FontSize="12"
+                            Background="{DynamicResource SystemAccentColorDark1}"
+                            Foreground="White" CornerRadius="4" Padding="12,6"
+                            Command="{Binding RefreshCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- Summary Cards -->
+            <Grid Grid.Row="1" Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Total Files Card -->
+                <Border Grid.Column="0" Background="{DynamicResource TextControlBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Padding="15" Margin="0,0,10,0">
+                    <StackPanel>
+                        <TextBlock Text="📁 Total Files" FontSize="12" Foreground="{DynamicResource TextForegroundColor}" FontWeight="Bold" />
+                        <TextBlock Text="{Binding TotalFiles}" FontSize="24" FontWeight="Bold" 
+                                   Foreground="{DynamicResource SystemAccentColor}" Margin="0,5,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Total Size Card -->
+                <Border Grid.Column="1" Background="{DynamicResource TextControlBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Padding="15" Margin="5,0">
+                    <StackPanel>
+                        <TextBlock Text="💾 Total Size" FontSize="12" Foreground="{DynamicResource TextForegroundColor}" FontWeight="Bold" />
+                        <TextBlock Text="{Binding TotalSizeFormatted}" FontSize="24" FontWeight="Bold" 
+                                   Foreground="#22C55E" Margin="0,5,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- File Types Card -->
+                <Border Grid.Column="2" Background="{DynamicResource TextControlBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Padding="15" Margin="10,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="🏷️ File Types" FontSize="12" Foreground="{DynamicResource TextForegroundColor}" FontWeight="Bold" />
+                        <TextBlock Text="{Binding FileTypeStats.Count}" FontSize="24" FontWeight="Bold" 
+                                   Foreground="#F59E0B" Margin="0,5,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Charts Row -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Pie Chart Section -->
+                <Border Grid.Column="0" Background="{DynamicResource EditorBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="1" CornerRadius="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="35" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Pie Chart Header -->
+                        <Border Grid.Row="0" Background="{DynamicResource TextControlBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}"
+                                BorderThickness="0,0,0,1" CornerRadius="8,8,0,0" Padding="12,0">
+                            <TextBlock Text="File Types Distribution" FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextForegroundColor}" VerticalAlignment="Center" />
+                        </Border>
+
+                        <!-- Pie Chart -->
+                        <scottPlot:AvaPlot Grid.Row="1" Name="PieChart" Margin="5" />
+                    </Grid>
+                </Border>
+
+                <!-- Bar Chart Section -->
+                <Border Grid.Column="2" Background="{DynamicResource EditorBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="1" CornerRadius="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="35" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Bar Chart Header -->
+                        <Border Grid.Row="0" Background="{DynamicResource TextControlBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}"
+                                BorderThickness="0,0,0,1" CornerRadius="8,8,0,0" Padding="12,0">
+                            <TextBlock Text="File Sizes &amp; Line Counts" FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextForegroundColor}" VerticalAlignment="Center" />
+                        </Border>
+
+                        <!-- Bar Chart -->
+                        <scottPlot:AvaPlot Grid.Row="1" Name="BarChart" Margin="5" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Data Grid Section -->
+            <Border Grid.Row="4" Background="{DynamicResource EditorBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="1" CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="35" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- DataGrid Header -->
+                    <Border Grid.Row="0" Background="{DynamicResource TextControlBackground}" BorderBrush="{DynamicResource TextControlBorderBrush}"
+                            BorderThickness="0,0,0,1" CornerRadius="8,8,0,0" Padding="12,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="File Details" FontWeight="Bold" 
+                                       Foreground="{DynamicResource TextForegroundColor}" VerticalAlignment="Center" />
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Files.Count}" FontSize="12" Foreground="{DynamicResource TextForegroundColor}" />
+                                <TextBlock Text=" files" FontSize="12" Foreground="{DynamicResource EditorForeground}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- DataGrid -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Files}"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column" IsReadOnly="True"
+                              BorderThickness="0"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalAlignment="Stretch"
+                              HorizontalAlignment="Stretch"
+                              Background="{DynamicResource EditorBackground}"
+                              FontSize="12"
+                              RowHeight="28"
+                              Foreground="{DynamicResource TextForegroundColor}"
+                              CanUserSortColumns="True">
+                        
+                        <DataGrid.Styles>
+                            <Style Selector="DataGridRow">
+                                <Setter Property="Background" Value="{DynamicResource TextControlBackground}"/>
+                            </Style>
+                            <Style Selector="DataGridRow:nth-child(2n)">
+                                <Setter Property="Background" Value="{DynamicResource EditorBackground}"/>
+                            </Style>
+                            <Style Selector="DataGridRow:pointerover">
+                                <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight3}"/>
+                            </Style>
+                            <Style Selector="DataGridRow:selected">
+                                <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight2}"/>
+                            </Style>
+                            <Style Selector="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{DynamicResource TextControlBackground}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextForegroundColor}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Padding" Value="10,6"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}"/>
+                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                            </Style>
+                            <Style Selector="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="10,4"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                            </Style>
+                            <Style Selector="DataGridCell TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource TextForegroundColor}"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGrid.Styles>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Width="200" Binding="{Binding Name}" />
+                            <DataGridTextColumn Header="Type" Width="120" Binding="{Binding Type}" />
+                            <DataGridTextColumn Header="Extension" Width="100" Binding="{Binding Extension}" />
+                            <DataGridTextColumn Header="Size" Width="100" Binding="{Binding SizeFormatted}" />
+                            <DataGridTextColumn Header="Lines" Width="80" Binding="{Binding Lines}" />
+                            <DataGridTextColumn Header="Modified" Width="150" Binding="{Binding ModifiedFormatted}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    
+                    <!-- No Data Overlay -->
+                    <Border Grid.Row="1" Background="#1E1E1E" 
+                            IsVisible="{Binding !Files.Count}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="📂" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                            <TextBlock Text="No files found in current directory" 
+                                       FontSize="14" Foreground="#CCCCCC" HorizontalAlignment="Center" />
+                            <TextBlock Text="Click refresh to scan the project files" 
+                                       FontSize="12" Foreground="#888888" HorizontalAlignment="Center" Margin="0,5,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                </Grid>
+            </Border>
+
+        </Grid>
+    </ScrollViewer>
+</UserControl>
