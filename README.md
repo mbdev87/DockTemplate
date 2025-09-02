@@ -19,12 +19,12 @@ Perfect for anyone who wants a "just works" baseline with batteries included to 
 - File explorer with intelligent file type recognition
 - Light/Dark theme switching
 - Solid ReactiveUI + DI architecture
+- Charting and data visualization examples in development
 
 **Will there be more?**
 Yes, this project will be perpetually expanded with snippets I find useful in my other pet projects. 
 Coming soon:
 - Error List is currently a placeholder - DataGrid version coming soon
-- Charting and data visualization examples in development
 - More real-world integration patterns being added
 - .NET template for auto-generation of the base for your tools
 
