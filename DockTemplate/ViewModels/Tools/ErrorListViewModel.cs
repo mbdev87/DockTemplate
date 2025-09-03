@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Windows.Input;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -9,15 +11,41 @@ using Avalonia.Threading;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using DockTemplate.Services;
+using DockTemplate.Messages;
 using NLog;
 
 namespace DockTemplate.ViewModels.Tools;
 
-public class ErrorListViewModel : ReactiveObject, ITool
+public class PendingHighlightRequest
+{
+    public string FilePath { get; set; }
+    public int LineNumber { get; set; }
+    public string ErrorMessage { get; set; }
+    public string ErrorLevel { get; set; }
+    public DateTime RequestTime { get; set; } = DateTime.Now;
+
+    public PendingHighlightRequest(string filePath, int lineNumber, string errorMessage, string errorLevel)
+    {
+        FilePath = filePath;
+        LineNumber = lineNumber;
+        ErrorMessage = errorMessage;
+        ErrorLevel = errorLevel;
+    }
+
+    public override string ToString()
+    {
+        return $"PendingHighlight(File:{System.IO.Path.GetFileName(FilePath)}, Line:{LineNumber})";
+    }
+}
+
+public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ErrorService _errorService;
     private readonly Action<string, int>? _navigateToSource;
+    private readonly CompositeDisposable _disposables = new();
+    
+    private static readonly ConcurrentDictionary<string, PendingHighlightRequest> _pendingHighlights = new();
 
     // ITool implementation
     [Reactive] public string Id { get; set; } = "ErrorList";
@@ -102,6 +130,10 @@ public class ErrorListViewModel : ReactiveObject, ITool
             }, DispatcherPriority.Background);
         };
 
+        MessageBus.Current.Listen<EditorReadyMessage>()
+            .Subscribe(message => OnEditorReady(message))
+            .DisposeWith(_disposables);
+
         Logger.Info("ErrorListViewModel initialized");
     }
 
@@ -145,7 +177,45 @@ public class ErrorListViewModel : ReactiveObject, ITool
 
     public void OnErrorDoubleClicked(ErrorEntry error)
     {
+        var filePath = error.Code ?? "unknown";
+        var lineNumber = error.Line ?? 1;
+        
+        var navigationMessage = new ErrorNavigationMessage(
+            filePath,
+            lineNumber,
+            error.Message ?? "unknown error",
+            error.Level ?? "Error"
+        );
+        
+        MessageBus.Current.SendMessage(navigationMessage);
+        
+        var pendingRequest = new PendingHighlightRequest(
+            filePath, 
+            lineNumber, 
+            error.Message ?? "unknown error",
+            error.Level ?? "Error"
+        );
+        
+        _pendingHighlights.TryAdd(filePath, pendingRequest);
         NavigateToError(error);
+    }
+
+    private void OnEditorReady(EditorReadyMessage message)
+    {
+        if (_pendingHighlights.TryRemove(message.FilePath, out var pendingRequest))
+        {
+            var navigationMessage = new ErrorNavigationMessage(
+                pendingRequest.FilePath,
+                pendingRequest.LineNumber,
+                pendingRequest.ErrorMessage,
+                pendingRequest.ErrorLevel
+            );
+            
+            Dispatcher.UIThread.Post(() =>
+            {
+                MessageBus.Current.SendMessage(navigationMessage);
+            }, DispatcherPriority.Background);
+        }
     }
 
     // ITool interface methods
@@ -192,4 +262,9 @@ public class ErrorListViewModel : ReactiveObject, ITool
 
     public void SetPointerScreenPosition(double x, double y) { }
     public virtual void OnPointerScreenPositionChanged(double x, double y) { }
+
+    public void Dispose()
+    {
+        _disposables?.Dispose();
+    }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using DockTemplate.ViewModels.Documents;
 using DockTemplate.ViewModels.Tools;
 using DockTemplate.Models.Documents;
@@ -239,6 +240,11 @@ Happy coding! 🚀");
 
     public void OpenDocument(string filePath)
     {
+        OpenDocument(filePath, null);
+    }
+
+    public void OpenDocument(string filePath, int? targetLine)
+    {
         if (_documentDock == null)
         {
             Logger.Info("[DockFactory] Document dock not initialized");
@@ -248,10 +254,43 @@ Happy coding! 🚀");
         try
         {
             var fileName = Path.GetFileName(filePath);
-            var documentId = $"File_{fileName}_{DateTime.Now:yyyyMMdd_HHmmss}";
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             
-            Logger.Info($"[DockFactory] Opening document: {fileName} from {filePath}");
+            Logger.Info($"[DockFactory] Opening document: {fileName} from {filePath}" + 
+                       (targetLine.HasValue ? $" at line {targetLine.Value}" : ""));
+            
+            // Check if document is already open
+            var existingDocument = FindExistingDocument(filePath);
+            if (existingDocument != null)
+            {
+                Logger.Info($"[DockFactory] Found existing document: {fileName}");
+                
+                // Focus existing document (even if already active)
+                Logger.Info($"[DockFactory] Setting ActiveDockable to existing document: {existingDocument.Title}");
+                _documentDock.ActiveDockable = existingDocument;
+                
+                // Navigate to specific line if specified - force this even if document is already active
+                if (targetLine.HasValue && targetLine.Value > 0)
+                {
+                    Logger.Info($"[DockFactory] About to navigate existing document {existingDocument.Title} to line {targetLine.Value}");
+                    
+                    // Use dispatcher to ensure proper timing
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        Logger.Info($"[DockFactory] Dispatcher executing - calling NavigateToLine on {existingDocument.Title}");
+                        existingDocument.NavigateToLine(targetLine.Value, $"Error/Warning click to line {targetLine.Value}");
+                        Logger.Info($"[DockFactory] NavigateToLine call completed for {existingDocument.Title}");
+                    }, Avalonia.Threading.DispatcherPriority.Background);
+                }
+                else
+                {
+                    Logger.Info($"[DockFactory] No target line specified for existing document {existingDocument.Title}");
+                }
+                
+                Logger.Info($"[DockFactory] Focused existing document: {fileName}" + 
+                           (targetLine.HasValue ? $" with line {targetLine.Value} highlighted" : ""));
+                return;
+            }
             
             // Check if this is an image file and log a warning
             var imageExtensions = new[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg" };
@@ -259,10 +298,15 @@ Happy coding! 🚀");
             {
                 Logger.Error($"Cannot open binary file '{fileName}' in text editor");
                 Logger.Warn($"File '{fileName}' is an image file. Consider using an image viewer instead.");
+                return;
             }
             
-            // Create new document view model
+            // Create new document view model with file path as ID for tracking
+            var documentId = filePath; // Use full path as unique identifier
             var document = new DocumentViewModel(documentId, fileName, _textMateService);
+            
+            // Store the file path for future lookups
+            document.FilePath = filePath;
             
             // Load file content
             if (File.Exists(filePath))
@@ -271,6 +315,12 @@ Happy coding! 🚀");
                 {
                     var content = File.ReadAllText(filePath);
                     document.SetContent(content);
+                    
+                    // Navigate to specific line if specified
+                    if (targetLine.HasValue && targetLine.Value > 0)
+                    {
+                        document.NavigateToLine(targetLine.Value, $"New document at line {targetLine.Value}");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -287,12 +337,29 @@ Happy coding! 🚀");
             // Set as active document
             _documentDock.ActiveDockable = document;
             
-            Logger.Info($"[DockFactory] Document opened successfully: {fileName}");
+            Logger.Info($"[DockFactory] Document opened successfully: {fileName}" + 
+                       (targetLine.HasValue ? $" with line {targetLine.Value} highlighted" : ""));
         }
         catch (Exception ex)
         {
             Logger.Error(ex, $"[DockFactory] Error opening document {filePath}: {ex.Message}");
         }
+    }
+
+    private DocumentViewModel? FindExistingDocument(string filePath)
+    {
+        if (_documentDock?.VisibleDockables == null) return null;
+        
+        foreach (var dockable in _documentDock.VisibleDockables)
+        {
+            if (dockable is DocumentViewModel doc && 
+                string.Equals(doc.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return doc;
+            }
+        }
+        
+        return null;
     }
 
     public void NavigateToSourceLine(string filePath, int line)
@@ -301,19 +368,15 @@ Happy coding! 🚀");
         {
             Logger.Info($"[DockFactory] Navigating to {filePath}:{line}");
             
-            // Chain of cool events!
+            // Chain of awesome events! 🚀
             
             // 1. Try to find and highlight file in Solution Explorer (if it exists there)
             TryHighlightInSolutionExplorer(filePath);
             
-            // 2. Open the document in editor
-            OpenDocument(filePath);
+            // 2. Open the document in editor with line highlighting and scrolling
+            OpenDocument(filePath, line);
             
-            // 3. TODO: Scroll to specific line and highlight it
-            // This would require integration with the text editor control
-            // For now, we just open the file
-            
-            Logger.Info($"[DockFactory] Navigation completed for {System.IO.Path.GetFileName(filePath)}:{line}");
+            Logger.Info($"[DockFactory] Navigation completed for {System.IO.Path.GetFileName(filePath)}:{line} with line highlighting");
             
         }
         catch (Exception ex)

@@ -3,6 +3,7 @@ using System.IO;
 using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.TextMate;
@@ -21,6 +22,8 @@ public class DocumentViewModel : Document, IDisposable
     [Reactive] public TextDocument Document { get; set; } = new();
     [Reactive] public string CurrentLanguage { get; set; } = "plaintext";
     [Reactive] public bool HasUnsavedChanges { get; set; }
+    [Reactive] public DockTemplate.Models.NavigationRequest? NavigationRequest { get; set; }
+    [Reactive] public string? FilePath { get; set; }
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly CompositeDisposable _disposables = new();
@@ -74,6 +77,19 @@ public class DocumentViewModel : Document, IDisposable
     {
         Document.Text = content;
         HasUnsavedChanges = false;
+    }
+
+    public void NavigateToLine(int lineNumber, string? context = null)
+    {
+        var newRequest = new DockTemplate.Models.NavigationRequest(lineNumber, context);
+        
+        Logger.Info($"[{Title}] NavigateToLine called - {newRequest}");
+        Logger.Info($"[{Title}] Previous request: {NavigationRequest?.ToString() ?? "null"}");
+        
+        // Always create a new navigation request object - this guarantees PropertyChanged fires
+        NavigationRequest = newRequest;
+        
+        Logger.Info($"[{Title}] Set new navigation request: {newRequest}");
     }
 
 

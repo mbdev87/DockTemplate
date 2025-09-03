@@ -34,6 +34,7 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
     private readonly CompositeDisposable _disposables = new();
     private string _currentFilePath = string.Empty;
     private TextEditor? _textEditor;
+    private DockTemplate.Views.Documents.LineHighlightRenderer? _lineHighlightRenderer;
 
     public EditorToolViewModel()
     {
@@ -55,6 +56,11 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         // Subscribe to theme changes
         MessageBus.Current.Listen<ThemeChangedMessage>()
             .Subscribe(message => ApplySyntaxHighlighting())
+            .DisposeWith(_disposables);
+
+        // Subscribe to error navigation messages
+        MessageBus.Current.Listen<DockTemplate.Messages.ErrorNavigationMessage>()
+            .Subscribe(message => HandleErrorNavigation(message))
             .DisposeWith(_disposables);
 
         ReinstallTextMate();
@@ -274,6 +280,98 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         {
             StatusText = $"Error opening {filePath}: {ex.Message}";
         }
+    }
+
+    private void HandleErrorNavigation(DockTemplate.Messages.ErrorNavigationMessage message)
+    {
+        // Only process if this editor is for the target file
+        if (!string.IsNullOrEmpty(_currentFilePath) && 
+            string.Equals(_currentFilePath, message.FilePath, StringComparison.OrdinalIgnoreCase))
+        {
+            Logger.Info($"[EditorToolViewModel] Received error navigation for MY file: {message}");
+            NavigateToLine(message.LineNumber);
+        }
+        else
+        {
+            Logger.Info($"[EditorToolViewModel] Ignoring error navigation for different file. My file: {_currentFilePath}, Target: {message.FilePath}");
+        }
+    }
+
+    private void NavigateToLine(int lineNumber)
+    {
+        if (_textEditor == null)
+        {
+            Logger.Warn($"[EditorToolViewModel] Cannot navigate - no text editor available");
+            return;
+        }
+
+        try
+        {
+            Logger.Info($"[EditorToolViewModel] Navigating to line {lineNumber}");
+
+            // Ensure line highlighting renderer is set up
+            SetupLineHighlighting();
+
+            // Clear old highlight
+            if (_lineHighlightRenderer != null)
+            {
+                var oldLine = _lineHighlightRenderer.HighlightedLine;
+                _lineHighlightRenderer.HighlightedLine = null;
+                Logger.Info($"[EditorToolViewModel] Cleared old highlight (was line {oldLine})");
+            }
+
+            // Validate line number
+            if (lineNumber <= 0 || lineNumber > _textEditor.Document.LineCount)
+            {
+                Logger.Warn($"[EditorToolViewModel] Invalid line number: {lineNumber} (max: {_textEditor.Document.LineCount})");
+                return;
+            }
+
+            // Get the line and set caret
+            var line = _textEditor.Document.GetLineByNumber(lineNumber);
+            _textEditor.CaretOffset = line.Offset;
+            
+            // Scroll to line and focus
+            _textEditor.ScrollToLine(lineNumber);
+            _textEditor.Focus();
+
+            // Set new highlight and force redraw
+            if (_lineHighlightRenderer != null)
+            {
+                _lineHighlightRenderer.HighlightedLine = lineNumber;
+                Logger.Info($"[EditorToolViewModel] Set highlight to line {lineNumber}");
+
+                // Force complete redraw by removing and re-adding renderer
+                _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+                _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+                
+                // Force visual refresh
+                _textEditor.TextArea.TextView.InvalidateVisual();
+                
+                Logger.Info($"[EditorToolViewModel] Forced renderer refresh for line {lineNumber}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[EditorToolViewModel] Error navigating to line {lineNumber}");
+        }
+    }
+
+    private void SetupLineHighlighting()
+    {
+        if (_textEditor == null) return;
+
+        // Remove existing renderer if any
+        if (_lineHighlightRenderer != null)
+        {
+            _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+        }
+
+        // Create and add new renderer
+        _lineHighlightRenderer = new DockTemplate.Views.Documents.LineHighlightRenderer();
+        _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+        
+        Logger.Info($"[EditorToolViewModel] Set up line highlighting renderer");
     }
 
     public void Dispose()
