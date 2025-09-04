@@ -94,7 +94,8 @@
         <DataTemplate DataType="core:IDockable">
           <TextBlock Text="{Binding Title}" 
                      VerticalAlignment="Center"
-                     Padding="2"  />
+                     Padding="2"
+                     FontSize="12" />
         </DataTemplate>
       </Setter>
     </Style>
@@ -102,13 +103,47 @@
     <Style Selector="ToolControl">
       <Setter Property="HeaderTemplate">
         <DataTemplate DataType="core:IDockable">
-          <TextBlock Text="{Binding Title}" Padding="2" />
+          <TextBlock Text="{Binding Title}" 
+                     Padding="2"
+                     FontSize="12" />
         </DataTemplate>
       </Setter>
     </Style>
 
     <Style Selector="ToolChromeControl">
       <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Fix font sizes for collapsed tool titles and other dock controls -->
+    <Style Selector="ToolChromeControl TextBlock">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    
+    <Style Selector="DockTarget TextBlock">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    
+    <!-- Target collapsed/minimized tool tabs specifically -->
+    <Style Selector="ToolTabStripItem TextBlock">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    
+    <Style Selector="ToolTabStrip TextBlock">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    
+    <!-- Catch any remaining dock framework text elements -->
+    <Style Selector="DockControl TextBlock">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    
+    <!-- Ensure consistent font sizes across all dock-related text -->
+    <Style Selector="DocumentControl TextBlock">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    
+    <Style Selector="ToolControl TextBlock">  
+      <Setter Property="FontSize" Value="12" />
     </Style>
 
     <!-- 🎛️ ScrollViewer & Scrollbars -->
