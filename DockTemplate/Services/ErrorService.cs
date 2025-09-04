@@ -16,20 +16,36 @@ public class ErrorService : ReactiveObject
 
     public ErrorService()
     {
-        // Subscribe to error messages from NLog via MessageBus
+        // Subscribe to single error messages from NLog via MessageBus
         MessageBus.Current.Listen<ErrorMessage>()
             .Subscribe(errorMsg =>
             {
-
                 if (errorMsg.Entry != null)
                 {
                     _errors.Insert(0, errorMsg.Entry);
-                
-                    // Raise property changed for counts
-                    this.RaisePropertyChanged(nameof(ErrorCount));
-                    this.RaisePropertyChanged(nameof(WarningCount));
+                    UpdateCounts();
                 }
             });
+
+        // Subscribe to batched error messages from LogBatchingService
+        MessageBus.Current.Listen<BatchedErrorMessage>()
+            .Subscribe(batchedMsg =>
+            {
+                if (batchedMsg.Entries?.Length > 0)
+                {
+                    foreach (var entry in batchedMsg.Entries.Reverse())
+                    {
+                        _errors.Insert(0, entry);
+                    }
+                    UpdateCounts();
+                }
+            });
+    }
+
+    private void UpdateCounts()
+    {
+        this.RaisePropertyChanged(nameof(ErrorCount));
+        this.RaisePropertyChanged(nameof(WarningCount));
     }
 
     public int ErrorCount => _errors.Count(e => e.Level == "Error");

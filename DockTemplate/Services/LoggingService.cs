@@ -11,12 +11,15 @@ namespace DockTemplate.Services;
 public class LoggingService : ReactiveObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private readonly LogBatchingService? _batchingService;
     
     [Reactive] public ObservableCollection<LogEntry> LogEntries { get; set; } = new();
     [Reactive] public ObservableCollection<ErrorEntry> ErrorEntries { get; set; } = new();
     
-    public LoggingService()
+    public LoggingService(LogBatchingService? batchingService = null)
     {
+        _batchingService = batchingService;
+        
         // Configure NLog with our custom target
         ConfigureNLog();
         Logger.Info("LoggingService initialized");
@@ -60,26 +63,34 @@ public class LoggingService : ReactiveObject
             }
             LogEntries.Add(entry);
 
-            // If it's an error/warning/fatal, publish to MessageBus for Error List
+            // If it's an error/warning/fatal, either batch or send immediately
             if (logEvent.Level >= LogLevel.Warn)
             {
-                var errorMessage = new ErrorMessage
+                var errorEntry = new ErrorEntry()
                 {
-                  Entry = new ErrorEntry()
-                  {
-                      Message  = logEvent.FormattedMessage ?? "Unknown message",
-                      Level = logEvent.Level.Name,
-                      Code = logEvent.CallerFilePath,
-                      Line = logEvent.CallerLineNumber,
-                      Exception = logEvent.Exception?.Message,
-                      FullException = logEvent.Exception?.ToString(),
-                      Source = logEvent.CallerMemberName,
-                      LoggerName = logEvent.LoggerName,
-                      Timestamp = logEvent.TimeStamp
-                  }
+                    Message  = logEvent.FormattedMessage ?? "Unknown message",
+                    Level = logEvent.Level.Name,
+                    Code = logEvent.CallerFilePath,
+                    Line = logEvent.CallerLineNumber,
+                    Exception = logEvent.Exception?.Message,
+                    FullException = logEvent.Exception?.ToString(),
+                    Source = logEvent.CallerMemberName,
+                    LoggerName = logEvent.LoggerName,
+                    Timestamp = logEvent.TimeStamp
                 };
-                ErrorEntries.Add(errorMessage.Entry);   
-                MessageBus.Current.SendMessage(errorMessage);
+                
+                ErrorEntries.Add(errorEntry);
+                
+                // Use batching service if available, otherwise fallback to immediate sending
+                if (_batchingService != null)
+                {
+                    _batchingService.EnqueueError(errorEntry);
+                }
+                else
+                {
+                    var errorMessage = new ErrorMessage { Entry = errorEntry };
+                    MessageBus.Current.SendMessage(errorMessage);
+                }
             }
         }
         catch (Exception ex)

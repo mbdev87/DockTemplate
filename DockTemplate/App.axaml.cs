@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -35,6 +37,16 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        if (_serviceProvider != null)
+        {
+            // Start our poor man's hosted services
+            var batchingService = _serviceProvider.GetService<LogBatchingService>();
+            if (batchingService != null)
+            {
+                _ = batchingService.StartAsync(CancellationToken.None);
+            }
+        }
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainWindowViewModel = _serviceProvider?.GetRequiredService<MainWindowViewModel>() 

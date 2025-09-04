@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using DockTemplate.ViewModels;
 using DockTemplate.Views;
@@ -19,6 +22,7 @@ sealed class Program
     {
         using var provider = Initialize();
         ServiceProvider = provider;
+        
         BuildAvaloniaApp(provider).StartWithClassicDesktopLifetime(args);
     }
 
@@ -31,6 +35,10 @@ sealed class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        services.AddLogging();
+        
+        services.AddSingleton<LogBatchingService>();
+        
         services.AddSingleton<ErrorService>();
         services.AddSingleton<App>();
         services.AddSingleton<IViewLocator, ViewLocator>();
