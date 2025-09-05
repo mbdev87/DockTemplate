@@ -6,6 +6,7 @@ using ReactiveUI.Fody.Helpers;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using DockTemplate.Services;
+using DockTemplate.Messages;
 using NLog;
 
 namespace DockTemplate.ViewModels;
@@ -15,9 +16,14 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IFactory? _factory;
     
     [Reactive] public IRootDock? Layout { get; set; }
+    [Reactive] public bool ShowDropOverlay { get; set; } = false;
+    
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public ICommand NewLayout { get; }
+    public ICommand ShowPluginManager { get; }
+    public ICommand InstallPlugin { get; }
+    public ICommand ReloadPlugins { get; }
 
     public MainWindowViewModel(DockFactory dockFactory)
     {
@@ -30,12 +36,19 @@ public class MainWindowViewModel : ViewModelBase
         {
             Logger.Info("Init layout");
             _factory?.InitLayout(layout);
+            
+            // Fire UILoadedMessage after layout is fully initialized
+            Logger.Info("UI fully loaded - sending UILoadedMessage");
+            MessageBus.Current.SendMessage(new UILoadedMessage());
         }
         Layout = layout;
 
         // Layout is ready to use directly
 
         NewLayout = ReactiveCommand.Create(ResetLayout);
+        ShowPluginManager = ReactiveCommand.Create(OpenPluginManager);
+        InstallPlugin = ReactiveCommand.Create(OpenInstallPluginDialog);
+        ReloadPlugins = ReactiveCommand.Create(ReloadAllPlugins);
     }
 
     public void InitLayout()
@@ -74,6 +87,10 @@ public class MainWindowViewModel : ViewModelBase
         {
             _factory?.InitLayout(layout);
             Layout = layout;
+            
+            // Fire UILoadedMessage after layout is reset and fully initialized
+            Logger.Info("UI reset complete - sending UILoadedMessage");
+            MessageBus.Current.SendMessage(new UILoadedMessage());
         }
     }
 
@@ -98,5 +115,45 @@ public class MainWindowViewModel : ViewModelBase
         {
             Debug.WriteLine($"[DockableRemoved] Title='{args.Dockable?.Title}'");
         };
+    }
+
+    private void OpenPluginManager()
+    {
+        Logger.Info("Opening Plugin Manager...");
+        
+        // For now, just log the loaded plugins - we'll create a proper UI later
+        var registry = Services.ComponentRegistry.Instance;
+        Logger.Info($"=== Plugin Manager ===");
+        Logger.Info($"Total plugins loaded: {registry.LoadedComponents.Count}");
+        
+        foreach (var (key, component) in registry.LoadedComponents)
+        {
+            var status = component.IsEnabled ? "✅ Enabled" : "❌ Disabled";
+            Logger.Info($"  {component.Name} v{component.Version} - {status}");
+            Logger.Info($"    Path: {component.AssemblyPath}");
+            Logger.Info($"    Loaded: {component.LoadedAt:yyyy-MM-dd HH:mm:ss}");
+        }
+        
+        // TODO: Show actual Plugin Manager window
+    }
+
+    private void OpenInstallPluginDialog()
+    {
+        Logger.Info("Opening Install Plugin dialog...");
+        // TODO: Open file dialog for .dockplugin files
+        // TODO: Support drag & drop installation
+    }
+
+    private void ReloadAllPlugins()
+    {
+        Logger.Info("Reloading all plugins...");
+        
+        // Clear registry
+        Services.ComponentRegistry.Instance.Clear();
+        
+        // Reset layout to trigger plugin reload
+        ResetLayout();
+        
+        Logger.Info("Plugin reload completed");
     }
 }

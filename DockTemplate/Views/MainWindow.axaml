@@ -13,7 +13,8 @@
         WindowState="Normal" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI, SF Pro Display, Noto Sans, Cantarel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="DockTemplate - Visual Studio Layout" Height="680" Width="1200">
+        Title="DockTemplate - Visual Studio Layout" Height="680" Width="1200"
+        DragDrop.AllowDrop="True">
 
     <Window.Resources>
         <StreamGeometry x:Key="DarkTheme">M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Zm0-2V4a8 8 0 1 1 0 16Z</StreamGeometry>
@@ -30,19 +31,39 @@
                 <MenuItem Header="_File">
                     <MenuItem Header="_New Layout" Command="{Binding NewLayout}" />
                 </MenuItem>
+                <MenuItem Header="_Plugins">
+                    <MenuItem Header="_Manage Plugins..." Command="{Binding ShowPluginManager}" />
+                    <Separator />
+                    <MenuItem Header="_Install Plugin..." Command="{Binding InstallPlugin}" />
+                    <MenuItem Header="_Reload All Plugins" Command="{Binding ReloadPlugins}" />
+                </MenuItem>
                 <MenuItem Header="_Window" DataContext="{Binding Layout}">
                     <MenuItem Header="_Exit Windows" Command="{Binding ExitWindows}" />
                     <Separator />
                     <MenuItem Header="_Show Windows" Command="{Binding ShowWindows}" />
                 </MenuItem>
             </Menu>
-            
-       
         </Grid>
 
         <!-- Main Dock Area -->
         <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
                         Grid.Row="1" Margin="4" />
+
+        <!-- Drag & Drop Overlay -->
+        <Border x:Name="DropOverlay" Grid.Row="1" 
+                Background="#AA000000" 
+                IsVisible="{Binding ShowDropOverlay}"
+                ZIndex="1000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🔌" FontSize="64" HorizontalAlignment="Center" Foreground="White" />
+                <TextBlock Text="Drop here to install plugin!" 
+                          FontSize="24" FontWeight="Bold" 
+                          HorizontalAlignment="Center" Foreground="White" Margin="0,16,0,0" />
+                <TextBlock Text="Supports .dockplugin files" 
+                          FontSize="14" 
+                          HorizontalAlignment="Center" Foreground="LightGray" Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
 
         <!-- Status Bar -->
         <Border Grid.Row="2" Background="{DynamicResource SystemAccentColor}" 

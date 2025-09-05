@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        
+        <!-- Output component to shared Components-Output folder -->
+        <OutputPath>..\..\Components-Output\$(Configuration)\</OutputPath>
+    </PropertyGroup>
+
+    <!-- Avalonia Resource Include for AXAML files -->
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**" />
+
+    </ItemGroup>
+
+    <!-- Component packages -->
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.4" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.4" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.4" />
+        <PackageReference Include="ReactiveUI.Fody" Version="19.5.31" />
+        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.2.2" />
+        <PackageReference Include="ScottPlot.Avalonia" Version="5.0.56" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\DockComponent.Base\DockComponent.Base.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -9,11 +9,13 @@ using DockTemplate.Models.Documents;
 using DockTemplate.Models.Tools;
 using DockTemplate.Models;
 using DockTemplate.Services;
+using DockTemplate.Messages;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
+using ReactiveUI;
 using NLog;
 
 namespace DockTemplate.ViewModels;
@@ -26,18 +28,27 @@ public class DockFactory : Factory
     private readonly LoggingDataService _loggingDataService;
     private readonly ErrorService _errorService;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
+    // Note: Component registrations are now stored in the singleton ComponentRegistry
 
     public DockFactory(TextMateService textMateService, LoggingDataService loggingDataService, ErrorService errorService)
     {
         _textMateService = textMateService;
         _loggingDataService = loggingDataService;
         _errorService = errorService;
+        
+        // Listen for UI loaded message to integrate components after full initialization
+        MessageBus.Current.Listen<UILoadedMessage>()
+            .Subscribe(_ =>
+            {
+                Logger.Info("[DockFactory] Received UILoadedMessage - integrating components");
+                IntegrateComponentsAfterUILoad();
+            });
     }
 
     public override IRootDock CreateLayout()
     {
         var readmeDocument = new DocumentViewModel("Readme", "Readme.txt", _textMateService);
-        var dashboardDocument = new DashboardViewModel();
 
         // Set informative README content
         readmeDocument.SetContent(@"🔥 DockTemplate - Batteries Included Avalonia Starter
@@ -167,7 +178,7 @@ Happy coding! 🚀");
         {
             IsCollapsable = false,
             ActiveDockable = readmeDocument,
-            VisibleDockables = CreateList<IDockable>(readmeDocument, dashboardDocument),
+            VisibleDockables = CreateList<IDockable>(readmeDocument),
             CanCreateDocument = true,
         };
 
@@ -208,7 +219,58 @@ Happy coding! 🚀");
         _documentDock = documentDock;
         _rootDock = rootDock;
 
+        // Don't integrate components here - let the UI finish loading first
+        // Components will be integrated via MessageBus after full initialization
+
         return rootDock;
+    }
+
+    public void StoreComponents(IEnumerable<Services.ComponentRegistration> tools, IEnumerable<Services.ComponentRegistration> documents)
+    {
+        // Store components in singleton registry to avoid ephemeral state issues
+        Services.ComponentRegistry.Instance.StoreComponents(tools, documents);
+        
+        Logger.Info($"Stored {tools.Count()} component tools and {documents.Count()} component documents in global registry");
+        
+        // Components will be integrated via MessageBus after UI is fully loaded
+    }
+    
+    public void IntegrateComponentsAfterUILoad()
+    {
+        var registry = Services.ComponentRegistry.Instance;
+        Logger.Info($"IntegrateComponentsAfterUILoad called - integrating {registry.ComponentDocuments.Count} documents and {registry.ComponentTools.Count} tools");
+        
+        // Integrate component documents using the same flow as opening files
+        foreach (var componentDoc in registry.ComponentDocuments.Where(d => d.Position == DockComponent.Base.DockPosition.Document))
+        {
+            if (componentDoc.ViewModel is IDockable dockable)
+            {
+                Logger.Info($"Adding component document via dock integration: {componentDoc.Id}");
+                
+                // Use the same approach as opening a document - add to document dock
+                if (_documentDock?.VisibleDockables != null)
+                {
+                    var currentDockables = _documentDock.VisibleDockables.ToList();
+                    currentDockables.Add(dockable);
+                    _documentDock.VisibleDockables = CreateList(currentDockables.ToArray());
+                    
+                    // Set as active to make it visible
+                    _documentDock.ActiveDockable = dockable;
+                    
+                    Logger.Info($"Successfully integrated component document: {componentDoc.Id}");
+                }
+            }
+        }
+        
+        // TODO: Integrate component tools into left, right, top, bottom docks
+        if (registry.ComponentTools.Any())
+        {
+            Logger.Info($"Component tools stored but not yet integrated into dock layout: {registry.ComponentTools.Count}");
+            foreach (var tool in registry.ComponentTools)
+            {
+                Logger.Info($"  - {tool.Id} at position {tool.Position}");
+            }
+        }
     }
 
     public override void InitLayout(IDockable layout)

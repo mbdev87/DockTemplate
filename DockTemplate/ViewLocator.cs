@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using DockTemplate.ViewModels;
@@ -18,6 +19,7 @@ namespace DockTemplate;
 
 public class ViewLocator : IDataTemplate, IViewLocator
 {
+    private static readonly Dictionary<string, Type?> _typeCache = new();
     public Control? Build(object? param)
     {
         if (param is null)
@@ -27,7 +29,6 @@ public class ViewLocator : IDataTemplate, IViewLocator
         {
             DocumentViewModel => new DocumentView(),
             SolutionExplorerViewModel => new SolutionExplorerView(),
-            DashboardViewModel => new DashboardView(),
             OutputViewModel => new OutputView(),
             ErrorListViewModel => new ErrorListView(),
             ToolViewModel => new ToolView(),
@@ -42,7 +43,32 @@ public class ViewLocator : IDataTemplate, IViewLocator
     private Control? BuildByConvention(object param)
     {
         var name = param.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
+        
+        // Check cache first for performance
+        if (_typeCache.TryGetValue(name, out var cachedType))
+        {
+            if (cachedType != null)
+                return (Control)Activator.CreateInstance(cachedType)!;
+            else
+                return new TextBlock { Text = "Not Found: " + name };
+        }
+        
+        // First try Type.GetType (looks in current assembly)
         var type = Type.GetType(name);
+        
+        // If not found, search in all loaded assemblies (for component views)
+        if (type == null)
+        {
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                type = assembly.GetType(name);
+                if (type != null)
+                    break;
+            }
+        }
+        
+        // Cache the result (even if null) to avoid future lookups
+        _typeCache[name] = type;
 
         if (type != null)
         {

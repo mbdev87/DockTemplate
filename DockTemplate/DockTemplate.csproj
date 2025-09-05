@@ -43,4 +43,14 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="ScottPlot.Avalonia" Version="5.0.56" />
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DockComponent.Base\DockComponent.Base.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="NLog.config">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
 </Project>

@@ -2,6 +2,14 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockTemplate", "DockTemplate\DockTemplate.csproj", "{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{59C5CB80-4422-473F-89B8-FCD5C3DA1BB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockComponent.Dashboard", "Components\DockComponent.Dashboard\DockComponent.Dashboard.csproj", "{1757E97C-6A3F-4002-B466-F72A0713E5DE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{9D17FCEE-5E07-470F-8FE4-6B6D8363787D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DockComponent.Base", "DockComponent.Base\DockComponent.Base.csproj", "{A709CBD8-31DF-4CA7-B6A4-F27C5A8D5945}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +20,17 @@ Global
 		{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFBF4D92-42A4-49FE-A51A-9BD43ED826FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1757E97C-6A3F-4002-B466-F72A0713E5DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1757E97C-6A3F-4002-B466-F72A0713E5DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1757E97C-6A3F-4002-B466-F72A0713E5DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1757E97C-6A3F-4002-B466-F72A0713E5DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A709CBD8-31DF-4CA7-B6A4-F27C5A8D5945}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A709CBD8-31DF-4CA7-B6A4-F27C5A8D5945}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A709CBD8-31DF-4CA7-B6A4-F27C5A8D5945}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A709CBD8-31DF-4CA7-B6A4-F27C5A8D5945}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1757E97C-6A3F-4002-B466-F72A0713E5DE} = {59C5CB80-4422-473F-89B8-FCD5C3DA1BB8}
+		{A709CBD8-31DF-4CA7-B6A4-F27C5A8D5945} = {9D17FCEE-5E07-470F-8FE4-6B6D8363787D}
 	EndGlobalSection
 EndGlobal

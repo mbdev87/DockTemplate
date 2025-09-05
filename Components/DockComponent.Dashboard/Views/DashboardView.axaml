@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:scottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-             xmlns:vm="using:DockTemplate.ViewModels"
+             xmlns:vm="using:DockComponent.Dashboard.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="DockTemplate.Views.DashboardView"
+             x:Class="DockComponent.Dashboard.Views.DashboardView"
              x:DataType="vm:DashboardViewModel">
 
     <ScrollViewer>

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Avalonia;
@@ -15,6 +16,8 @@ public partial class App : Application
 {
     public static IThemeService? ThemeService { get; private set; }
     private IServiceProvider? _serviceProvider;
+    
+    public IServiceProvider? GetServiceProvider() => _serviceProvider;
     
     public App()
     {
@@ -44,6 +47,28 @@ public partial class App : Application
             if (batchingService != null)
             {
                 _ = batchingService.StartAsync(CancellationToken.None);
+            }
+            
+            // Load components after Avalonia is initialized (avoids resource loading issues)
+            var componentLoader = _serviceProvider.GetService<ComponentLoader>();
+            var componentContext = _serviceProvider.GetService<DockComponentContext>();
+            var dockFactory = _serviceProvider.GetService<DockFactory>();
+            if (componentLoader != null && componentContext != null && dockFactory != null)
+            {
+                // Ensure LocalAppData directory exists
+                Services.PluginDirectoryService.EnsureLocalAppDataDirectoryExists();
+                
+                // Load components from all plugin directories (LocalAppData + Development)
+                var pluginPaths = Services.PluginDirectoryService.GetAllPluginPaths();
+                
+                foreach (var pluginPath in pluginPaths)
+                {
+                    Console.WriteLine($"[App] Scanning for components in: {pluginPath}");
+                    componentLoader.LoadComponents(pluginPath);
+                }
+                
+                // Store loaded components for integration during layout creation
+                dockFactory.StoreComponents(componentContext.RegisteredTools, componentContext.RegisteredDocuments);
             }
         }
         
