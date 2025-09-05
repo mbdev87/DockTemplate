@@ -28,5 +28,36 @@
     <ItemGroup>
       <ProjectReference Include="..\..\DockComponent.Base\DockComponent.Base.csproj" />
     </ItemGroup>
+    
+    <!-- Post-build target to create .dockplugin file -->
+    <Target Name="CreateDockPlugin" AfterTargets="PostBuildEvent">
+        <PropertyGroup>
+            <PluginOutputDir>$(OutputPath)Plugin-Distribution</PluginOutputDir>
+            <PluginName>Dashboard-Component</PluginName>
+            <PluginZipPath>$(PluginOutputDir)\$(PluginName).dockplugin</PluginZipPath>
+        </PropertyGroup>
+        
+        <!-- Create distribution directory -->
+        <MakeDir Directories="$(PluginOutputDir)" />
+        
+        <!-- Remove old plugin file if it exists -->
+        <Delete Files="$(PluginZipPath)" Condition="Exists('$(PluginZipPath)')" />
+        
+        <!-- Create ZIP file with plugin contents -->
+        <ItemGroup>
+            <PluginFiles Include="$(OutputPath)DockComponent.Dashboard.dll" />
+            <PluginFiles Include="$(OutputPath)DockComponent.Dashboard.pdb" />
+            <PluginFiles Include="$(OutputPath)DockComponent.Base.dll" />
+        </ItemGroup>
+        
+        <Message Text="Creating .dockplugin file: $(PluginZipPath)" Importance="high" />
+        <Exec Command="powershell -Command &quot;Compress-Archive -Path '$(OutputPath)DockComponent.Dashboard.dll', '$(OutputPath)DockComponent.Dashboard.pdb', '$(OutputPath)DockComponent.Base.dll' -DestinationPath '$(PluginZipPath)' -Force&quot;" />
+        
+        <!-- Copy README.txt to distribution folder -->
+        <Copy SourceFiles="README.txt" DestinationFolder="$(PluginOutputDir)" />
+        
+        <Message Text="✅ Created plugin: $(PluginZipPath)" Importance="high" />
+        <Message Text="✅ Copied README.txt to distribution folder" Importance="high" />
+    </Target>
 
 </Project>
