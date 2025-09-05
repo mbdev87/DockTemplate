@@ -54,3 +54,8 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# DockTemplate Plugin Distribution
+# Generated .dockplugin files and distribution folders
+**/Plugin-Distribution/
+*.dockplugin
