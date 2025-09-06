@@ -31,11 +31,11 @@
     <Window.Styles>
         <!-- Dynamic margin for macOS traffic lights when acrylic is enabled -->
         <Style Selector="Grid.main-content">
-            <Setter Property="Margin" Value="0" />
+            <Setter Property="Margin" Value="0,4,0,0" />
         </Style>
         
         <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Grid.main-content">
-            <Setter Property="Margin" Value="0,14,0,0" />
+            <Setter Property="Margin" Value="0,28,0,0" />
         </Style>
         
         <!-- Smooth fade-in/fade-out animation for overlay -->
