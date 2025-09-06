@@ -92,20 +92,14 @@
         <!-- Native macOS menu bar (only shows on macOS) -->
         <NativeMenu.Menu>
             <NativeMenu>
-                <NativeMenuItem Header="DockTemplate">
-                    <NativeMenu>
-                        <NativeMenuItem Header="About DockTemplate" />
-                        <NativeMenuItemSeparator />
-                        <NativeMenuItem Header="Hide DockTemplate" Gesture="Cmd+H" />
-                        <NativeMenuItem Header="Hide Others" Gesture="Cmd+Alt+H" />
-                        <NativeMenuItem Header="Show All" />
-                        <NativeMenuItemSeparator />
-                        <NativeMenuItem Header="Quit DockTemplate" Gesture="Cmd+Q" />
-                    </NativeMenu>
-                </NativeMenuItem>
                 <NativeMenuItem Header="File">
                     <NativeMenu>
                         <NativeMenuItem Header="New Layout" Command="{Binding NewLayout}" Gesture="Cmd+N" />
+                    </NativeMenu>
+                </NativeMenuItem>
+                <NativeMenuItem Header="Edit">
+                    <NativeMenu>
+                        <!-- macOS will automatically add Cut, Copy, Paste, etc. -->
                     </NativeMenu>
                 </NativeMenuItem>
                 <NativeMenuItem Header="Plugins">
@@ -114,12 +108,6 @@
                         <NativeMenuItemSeparator />
                         <NativeMenuItem Header="Install Plugin..." Command="{Binding InstallPlugin}" />
                         <NativeMenuItem Header="Reload All Plugins" Command="{Binding ReloadPlugins}" />
-                    </NativeMenu>
-                </NativeMenuItem>
-                <NativeMenuItem Header="Window">
-                    <NativeMenu>
-                        <NativeMenuItem Header="Minimize" Gesture="Cmd+M" />
-                        <NativeMenuItem Header="Zoom" />
                     </NativeMenu>
                 </NativeMenuItem>
             </NativeMenu>
