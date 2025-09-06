@@ -105,14 +105,14 @@
                     <Setter Property="Background" Value="{DynamicResource EditorBackground}"/>
                 </Style>
                 <Style Selector="DataGridRow:pointerover">
-                    <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight3}"/>
+                    <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
                 </Style>
                 <Style Selector="DataGridRow:selected">
-                    <Setter Property="Background" Value="{DynamicResource SystemAccentColorLight2}"/>
+                    <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListMediumBrush}"/>
                     <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
                 </Style>
                 <Style Selector="DataGridRow:selected DataGridCell TextBlock">
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
                 </Style>
                 <Style Selector="DataGridColumnHeader">
                     <Setter Property="Background" Value="{DynamicResource TextControlBackground}"/>

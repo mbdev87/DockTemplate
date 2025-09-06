@@ -11,7 +11,7 @@ namespace DockTemplate.Views;
 
 public partial class MainWindow : Window
 {
-    private bool _isDark = false;
+    private bool _isDark = true; // App starts in dark theme
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public MainWindow()

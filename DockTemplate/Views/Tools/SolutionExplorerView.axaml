@@ -113,17 +113,17 @@
           </Style>
           
           <Style Selector="TreeViewItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}" />
             <Setter Property="CornerRadius" Value="2" />
           </Style>
           
           <Style Selector="TreeViewItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
-            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListAccentLowBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListMediumBrush}" />
             <Setter Property="CornerRadius" Value="2" />
           </Style>
           
           <Style Selector="TreeViewItem:selected:focus /template/ ContentPresenter#PART_HeaderPresenter">
-            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListMediumBrush}" />
             <Setter Property="CornerRadius" Value="2" />
           </Style>
 
