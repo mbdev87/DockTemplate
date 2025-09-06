@@ -4,13 +4,13 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.Media;
 using Avalonia.Styling;
-using DockTemplate.ViewModels;
+using DockComponent.Dashboard.ViewModels;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using System.Collections.Specialized;
 using Avalonia;
 
-namespace DockTemplate.Views;
+namespace DockComponent.Dashboard.Views;
 
 public partial class DashboardView : UserControl
 {

@@ -5,6 +5,7 @@
         xmlns:dm="using:Dock.Model.Core"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="680"
         x:Class="DockTemplate.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -13,7 +14,8 @@
         WindowState="Normal" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI, SF Pro Display, Noto Sans, Cantarel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="DockTemplate - Visual Studio Layout" Height="680" Width="1200">
+        Title="DockTemplate - Visual Studio Layout" Height="680" Width="1200"
+        DragDrop.AllowDrop="True">
 
     <Window.Resources>
         <StreamGeometry x:Key="DarkTheme">M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Zm0-2V4a8 8 0 1 1 0 16Z</StreamGeometry>
@@ -30,19 +32,94 @@
                 <MenuItem Header="_File">
                     <MenuItem Header="_New Layout" Command="{Binding NewLayout}" />
                 </MenuItem>
+                <MenuItem Header="_Plugins">
+                    <MenuItem Header="_Manage Plugins..." Command="{Binding ShowPluginManager}" />
+                    <Separator />
+                    <MenuItem Header="_Install Plugin..." Command="{Binding InstallPlugin}" />
+                    <MenuItem Header="_Reload All Plugins" Command="{Binding ReloadPlugins}" />
+                </MenuItem>
                 <MenuItem Header="_Window" DataContext="{Binding Layout}">
                     <MenuItem Header="_Exit Windows" Command="{Binding ExitWindows}" />
                     <Separator />
                     <MenuItem Header="_Show Windows" Command="{Binding ShowWindows}" />
                 </MenuItem>
             </Menu>
-            
-       
         </Grid>
 
         <!-- Main Dock Area -->
         <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
                         Grid.Row="1" Margin="4" />
+
+        <!-- Drag & Drop Overlay - Theme-Aware Background -->
+        <Border x:Name="DropOverlay" Grid.Row="1" 
+                Background="{DynamicResource SystemRegionBrush}" 
+                Opacity="0.98"
+                IsVisible="{Binding ShowDropOverlay}"
+                ZIndex="1000">
+            <!-- Rigid Grid Layout to Prevent Jumping -->
+            <Grid RowDefinitions="120,120,80,60,*" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"
+                  Width="400">
+                
+                <!-- Row 0: Plugin Icon -->
+                <TextBlock Grid.Row="0"
+                          Text="🔌" FontSize="80" 
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Center"
+                          Foreground="{DynamicResource SystemBaseHighColorBrush}" />
+                
+                <!-- Row 1: Main Message (Same font size for both states) -->
+                <Grid Grid.Row="1" HorizontalAlignment="Center">
+                    <!-- Drop Message (Ready State) -->
+                    <TextBlock IsVisible="{Binding !ShowSpinner}"
+                              Text="Drop plugin anywhere to install" 
+                              FontSize="24" FontWeight="Bold" 
+                              HorizontalAlignment="Center" 
+                              VerticalAlignment="Center"
+                              TextWrapping="Wrap"
+                              TextAlignment="Center"
+                              Foreground="{DynamicResource SystemBaseHighColorBrush}" />
+                    
+                    <!-- Installing Message (Processing State) -->
+                    <TextBlock IsVisible="{Binding ShowSpinner}"
+                              Text="{Binding InstallStatusText}" 
+                              FontSize="24" FontWeight="Bold" 
+                              HorizontalAlignment="Center" 
+                              VerticalAlignment="Center"
+                              TextWrapping="Wrap"
+                              TextAlignment="Center"
+                              Foreground="{DynamicResource SystemBaseHighColorBrush}" />
+                </Grid>
+                
+                <!-- Row 2: Sub Status Text -->
+                <TextBlock Grid.Row="2"
+                          Text="{Binding InstallSubText}" 
+                          FontSize="16" 
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Center"
+                          IsVisible="{Binding ShowSpinner}"
+                          Foreground="{DynamicResource SystemBaseMediumColorBrush}" />
+                          
+                <TextBlock Grid.Row="2"
+                          Text="Supports .dockplugin files" 
+                          FontSize="16" 
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Center"
+                          IsVisible="{Binding !ShowSpinner}"
+                          Foreground="{DynamicResource SystemBaseMediumColorBrush}" />
+                
+                <!-- Row 3: Progress Ring (Bottom to avoid jumping) -->
+                <avaloniaProgressRing:ProgressRing Grid.Row="3"
+                                       Width="60" 
+                                       Height="60"
+                                       IsActive="{Binding ShowSpinner}"
+                                       IsVisible="{Binding ShowSpinner}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource ThemeAccentColor}" />
+            </Grid>
+        </Border>
 
         <!-- Status Bar -->
         <Border Grid.Row="2" Background="{DynamicResource SystemAccentColor}" 

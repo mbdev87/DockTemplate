@@ -12,7 +12,7 @@ using Dock.Model.Mvvm.Controls;
 using ScottPlot;
 using ScottPlot.Avalonia;
 
-namespace DockTemplate.ViewModels;
+namespace DockComponent.Dashboard.ViewModels;
 
 public class FileInfoItem : ReactiveObject
 {

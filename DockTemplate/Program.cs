@@ -28,9 +28,26 @@ sealed class Program
 
     private static ServiceProvider Initialize()
     {
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        return services.BuildServiceProvider();
+        try
+        {
+            Console.WriteLine("[Initialize] Creating service collection...");
+            var services = new ServiceCollection();
+            
+            Console.WriteLine("[Initialize] Configuring services...");
+            ConfigureServices(services);
+            
+            Console.WriteLine("[Initialize] Building service provider...");
+            var provider = services.BuildServiceProvider();
+            
+            Console.WriteLine("[Initialize] Service provider built successfully");
+            return provider;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Initialize] ERROR: {ex.Message}");
+            Console.WriteLine($"[Initialize] Stack trace: {ex.StackTrace}");
+            throw;
+        }
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -38,6 +55,7 @@ sealed class Program
         services.AddLogging();
         
         services.AddSingleton<LogBatchingService>();
+        services.AddSingleton<PluginInstallationService>();
         
         services.AddSingleton<ErrorService>();
         services.AddSingleton<App>();
@@ -48,9 +66,16 @@ sealed class Program
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddTransient<ErrorListViewModel>();
 
+        // Component loading system is now done in App.axaml.cs after Avalonia initialization
+        // This avoids loading Avalonia resources before the UI framework is ready
+        services.AddSingleton<DockComponentContext>(provider => 
+            new DockComponentContext(provider.GetRequiredService<DockFactory>(), services));
+        services.AddSingleton<ComponentLoader>();
+
         services.AddTransient<DockFactory>();
         services.AddTransient<MainWindowViewModel>();
     }
+
 
     public static AppBuilder BuildAvaloniaApp(IServiceProvider provider)
     {
