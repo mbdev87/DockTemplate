@@ -46,28 +46,16 @@ public class PluginInstallationService : BackgroundService
         try
         {
             Logger.Info($"Starting plugin installation: {message.PluginFileName}");
-            
-            // Notify UI that installation started
             MessageBus.Current.SendMessage(new PluginInstallationStartedMessage(message.PluginFileName));
-            
-            // Wait 1.5 seconds to let user see the spinner animation (stabilization period)
-            Logger.Info($"Waiting 1.5 seconds for stabilization before installing {message.PluginFileName}...");
-            await Task.Delay(1500);
-            
-            // Now actually install the plugin
-            Logger.Info($"1.5-second stabilization complete, now installing {message.PluginFileName}");
+            await Task.Delay(500);
             await InstallPluginAsync(message.PluginPath);
-            
-            // Notify UI that installation completed successfully
+            await Task.Delay(500);
             MessageBus.Current.SendMessage(new PluginInstallationCompletedMessage(message.PluginFileName, true));
-            
             Logger.Info($"Plugin installation completed: {message.PluginFileName}");
         }
         catch (Exception ex)
         {
             Logger.Error(ex, $"Failed to install plugin: {message.PluginFileName}");
-            
-            // Notify UI that installation failed
             MessageBus.Current.SendMessage(new PluginInstallationCompletedMessage(
                 message.PluginFileName, false, ex.Message));
         }
