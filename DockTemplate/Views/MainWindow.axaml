@@ -25,7 +25,7 @@
 
     <Window.Resources>
         <StreamGeometry x:Key="DarkTheme">M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Zm0-2V4a8 8 0 1 1 0 16Z</StreamGeometry>
-        <StreamGeometry x:Key="AcrylicIcon">M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z</StreamGeometry>
+        <StreamGeometry x:Key="AcrylicIcon">M4 4h8v8H4V4zm4 4h8v8H8V8zm4 4h8v8h-8v-8z</StreamGeometry>
     </Window.Resources>
 
     <Window.Styles>
@@ -89,33 +89,75 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
         
-        <Grid RowDefinitions="Auto,*,Auto" Classes="main-content">
-            <!-- Menu and Toolbar -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
-            <Menu Grid.Column="0" VerticalAlignment="Center" FontSize="12" Height="20">
-                <MenuItem Header="_File">
-                    <MenuItem Header="_New Layout" Command="{Binding NewLayout}" />
-                </MenuItem>
-                <MenuItem Header="_Plugins">
-                    <MenuItem Header="_Manage Plugins..." Command="{Binding ShowPluginManager}" />
-                    <Separator />
-                    <MenuItem Header="_Install Plugin..." Command="{Binding InstallPlugin}" />
-                    <MenuItem Header="_Reload All Plugins" Command="{Binding ReloadPlugins}" />
-                </MenuItem>
-                <MenuItem Header="_Window" DataContext="{Binding Layout}">
-                    <MenuItem Header="_Exit Windows" Command="{Binding ExitWindows}" />
-                    <Separator />
-                    <MenuItem Header="_Show Windows" Command="{Binding ShowWindows}" />
-                </MenuItem>
-            </Menu>
-        </Grid>
+        <!-- Native macOS menu bar (only shows on macOS) -->
+        <NativeMenu.Menu>
+            <NativeMenu>
+                <NativeMenuItem Header="DockTemplate">
+                    <NativeMenu>
+                        <NativeMenuItem Header="About DockTemplate" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Hide DockTemplate" Gesture="Cmd+H" />
+                        <NativeMenuItem Header="Hide Others" Gesture="Cmd+Alt+H" />
+                        <NativeMenuItem Header="Show All" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Quit DockTemplate" Gesture="Cmd+Q" />
+                    </NativeMenu>
+                </NativeMenuItem>
+                <NativeMenuItem Header="File">
+                    <NativeMenu>
+                        <NativeMenuItem Header="New Layout" Command="{Binding NewLayout}" Gesture="Cmd+N" />
+                    </NativeMenu>
+                </NativeMenuItem>
+                <NativeMenuItem Header="Plugins">
+                    <NativeMenu>
+                        <NativeMenuItem Header="Manage Plugins..." Command="{Binding ShowPluginManager}" />
+                        <NativeMenuItemSeparator />
+                        <NativeMenuItem Header="Install Plugin..." Command="{Binding InstallPlugin}" />
+                        <NativeMenuItem Header="Reload All Plugins" Command="{Binding ReloadPlugins}" />
+                    </NativeMenu>
+                </NativeMenuItem>
+                <NativeMenuItem Header="Window">
+                    <NativeMenu>
+                        <NativeMenuItem Header="Minimize" Gesture="Cmd+M" />
+                        <NativeMenuItem Header="Zoom" />
+                    </NativeMenu>
+                </NativeMenuItem>
+            </NativeMenu>
+        </NativeMenu.Menu>
+
+        <Grid x:Name="MainGrid" Classes="main-content">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            
+            <!-- In-window menu (hidden on macOS, visible on Windows/Linux) -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" x:Name="MenuBarGrid">
+                <Menu Grid.Column="0" VerticalAlignment="Center" FontSize="12" Height="20">
+                    <MenuItem Header="_File">
+                        <MenuItem Header="_New Layout" Command="{Binding NewLayout}" />
+                    </MenuItem>
+                    <MenuItem Header="_Plugins">
+                        <MenuItem Header="_Manage Plugins..." Command="{Binding ShowPluginManager}" />
+                        <Separator />
+                        <MenuItem Header="_Install Plugin..." Command="{Binding InstallPlugin}" />
+                        <MenuItem Header="_Reload All Plugins" Command="{Binding ReloadPlugins}" />
+                    </MenuItem>
+                    <MenuItem Header="_Window" DataContext="{Binding Layout}">
+                        <MenuItem Header="_Exit Windows" Command="{Binding ExitWindows}" />
+                        <Separator />
+                        <MenuItem Header="_Show Windows" Command="{Binding ShowWindows}" />
+                    </MenuItem>
+                </Menu>
+            </Grid>
 
         <!-- Main Dock Area -->
         <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
                         Grid.Row="1" Margin="4" />
 
         <!-- Drag & Drop Overlay - Theme-Aware Background with Smooth Animations -->
-        <Border x:Name="DropOverlay" Grid.Row="1" 
+        <Border x:Name="DropOverlay" Grid.Row="0" Grid.RowSpan="3"
                 Classes.drop-overlay="True"
                 Classes.show="{Binding ShowDropOverlay}"
                 ZIndex="1000">

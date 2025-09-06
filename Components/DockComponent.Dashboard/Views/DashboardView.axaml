@@ -217,14 +217,14 @@
                     </DataGrid>
                     
                     <!-- No Data Overlay -->
-                    <Border Grid.Row="1" Background="#1E1E1E" 
+                    <Border Grid.Row="0" Grid.RowSpan="2" Background="{DynamicResource EditorBackground}" 
                             IsVisible="{Binding !Files.Count}">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="📂" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,10" />
                             <TextBlock Text="No files found in current directory" 
-                                       FontSize="14" Foreground="#CCCCCC" HorizontalAlignment="Center" />
+                                       FontSize="14" Foreground="{DynamicResource EditorForeground}" HorizontalAlignment="Center" />
                             <TextBlock Text="Click refresh to scan the project files" 
-                                       FontSize="12" Foreground="#888888" HorizontalAlignment="Center" Margin="0,5,0,0" />
+                                       FontSize="12" Foreground="{DynamicResource TextForegroundColor}" HorizontalAlignment="Center" Margin="0,5,0,0" />
                         </StackPanel>
                     </Border>
 

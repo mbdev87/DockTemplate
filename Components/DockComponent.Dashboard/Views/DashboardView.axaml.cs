@@ -197,6 +197,10 @@ public partial class DashboardView : UserControl
                 }
             }
 
+            // Hide axes for pie chart (pie charts shouldn't have axes)
+            _pieChart.Plot.Axes.Frameless();
+            _pieChart.Plot.HideGrid();
+
             // Add legend with file extension labels
             var legend = _pieChart.Plot.ShowLegend();
             legend.BackgroundColor = GetThemeCardColor();
@@ -290,8 +294,9 @@ public partial class DashboardView : UserControl
 
     private ScottPlot.Color GetThemeBackgroundColor()
     {
-        // Determine if we're in dark mode
-        var isDarkMode = ActualThemeVariant == ThemeVariant.Dark;
+        // Try to get theme from Application first, then fall back to ActualThemeVariant
+        var app = Application.Current;
+        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark || ActualThemeVariant == ThemeVariant.Dark;
         
         // Use appropriate colors based on theme
         return isDarkMode ? 
@@ -301,8 +306,9 @@ public partial class DashboardView : UserControl
 
     private ScottPlot.Color GetThemeForegroundColor()
     {
-        // Determine if we're in dark mode
-        var isDarkMode = ActualThemeVariant == ThemeVariant.Dark;
+        // Try to get theme from Application first, then fall back to ActualThemeVariant
+        var app = Application.Current;
+        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark || ActualThemeVariant == ThemeVariant.Dark;
         
         // Use appropriate colors based on theme
         return isDarkMode ? 
@@ -312,8 +318,9 @@ public partial class DashboardView : UserControl
 
     private ScottPlot.Color GetThemeCardColor()
     {
-        // Determine if we're in dark mode
-        var isDarkMode = ActualThemeVariant == ThemeVariant.Dark;
+        // Try to get theme from Application first, then fall back to ActualThemeVariant
+        var app = Application.Current;
+        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark || ActualThemeVariant == ThemeVariant.Dark;
         
         // Use appropriate colors based on theme
         return isDarkMode ? 

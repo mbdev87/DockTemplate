@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Input;
 using DockTemplate.ViewModels;
@@ -16,8 +17,36 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializePlatformSpecificUI();
         InitializeThemes();
         InitializeDragDrop();
+    }
+
+    private void InitializePlatformSpecificUI()
+    {
+        // Hide in-window menu on macOS (native menu will be used instead)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            var menuBarGrid = this.FindControl<Grid>("MenuBarGrid");
+            var mainGrid = this.FindControl<Grid>("MainGrid");
+            
+            if (menuBarGrid != null)
+            {
+                menuBarGrid.IsVisible = false;
+            }
+            
+            // Set the first row (menu row) height to 0 on macOS
+            if (mainGrid != null && mainGrid.RowDefinitions.Count > 0)
+            {
+                mainGrid.RowDefinitions[0].Height = new GridLength(0);
+            }
+            
+            Logger.Info("macOS detected - using native menu bar");
+        }
+        else
+        {
+            Logger.Info($"Platform detected: {RuntimeInformation.OSDescription} - using in-window menu");
+        }
     }
 
     private void InitializeThemes()
