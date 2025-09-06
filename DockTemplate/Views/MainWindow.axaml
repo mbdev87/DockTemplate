@@ -72,7 +72,7 @@
                 <!-- Row 1: Main Message (Same font size for both states) -->
                 <Grid Grid.Row="1" HorizontalAlignment="Center">
                     <!-- Drop Message (Ready State) -->
-                    <TextBlock IsVisible="{Binding !ShowSpinner}"
+                    <TextBlock IsVisible="{Binding !IsInstallMode}"
                               Text="Drop plugin anywhere to install" 
                               FontSize="24" FontWeight="Bold" 
                               HorizontalAlignment="Center" 
@@ -82,7 +82,7 @@
                               Foreground="{DynamicResource SystemBaseHighColorBrush}" />
                     
                     <!-- Installing Message (Processing State) -->
-                    <TextBlock IsVisible="{Binding ShowSpinner}"
+                    <TextBlock IsVisible="{Binding IsInstallMode}"
                               Text="{Binding InstallStatusText}" 
                               FontSize="24" FontWeight="Bold" 
                               HorizontalAlignment="Center" 
@@ -98,7 +98,7 @@
                           FontSize="16" 
                           HorizontalAlignment="Center" 
                           VerticalAlignment="Center"
-                          IsVisible="{Binding ShowSpinner}"
+                          IsVisible="{Binding IsInstallMode}"
                           Foreground="{DynamicResource SystemBaseMediumColorBrush}" />
                           
                 <TextBlock Grid.Row="2"
@@ -106,7 +106,7 @@
                           FontSize="16" 
                           HorizontalAlignment="Center" 
                           VerticalAlignment="Center"
-                          IsVisible="{Binding !ShowSpinner}"
+                          IsVisible="{Binding !IsInstallMode}"
                           Foreground="{DynamicResource SystemBaseMediumColorBrush}" />
                 
                 <!-- Row 3: Progress Ring (Bottom to avoid jumping) -->

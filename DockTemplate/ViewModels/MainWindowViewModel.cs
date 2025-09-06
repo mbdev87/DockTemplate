@@ -19,6 +19,7 @@ public class MainWindowViewModel : ViewModelBase
     [Reactive] public IRootDock? Layout { get; set; }
     [Reactive] public bool ShowDropOverlay { get; set; } = false;
     [Reactive] public bool ShowSpinner { get; set; } = false;
+    [Reactive] public bool IsInstallMode { get; set; } = false;
     [Reactive] public string InstallStatusText { get; set; } = "Installing plugin...";
     [Reactive] public string InstallSubText { get; set; } = "Please wait while we process your plugin";
     
@@ -171,7 +172,9 @@ public class MainWindowViewModel : ViewModelBase
     private void OnPluginInstallationStarted(PluginInstallationStartedMessage message)
     {
         Logger.Info($"Plugin installation started: {message.PluginFileName}");
-        // Spinner is already started in UI, just update text
+        // Switch to install mode and start spinner
+        IsInstallMode = true;
+        ShowSpinner = true;
         InstallStatusText = "Installing plugin...";
         InstallSubText = $"Processing {message.PluginFileName}";
     }
@@ -191,6 +194,8 @@ public class MainWindowViewModel : ViewModelBase
             {
                 ShowDropOverlay = false;
                 // Reset state for next time (but only after overlay is hidden)
+                IsInstallMode = false;
+                ShowSpinner = false;
                 InstallStatusText = "Installing plugin...";
                 InstallSubText = "Please wait while we process your plugin";
             }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -205,6 +210,8 @@ public class MainWindowViewModel : ViewModelBase
             Task.Delay(2000).ContinueWith(_ =>
             {
                 ShowDropOverlay = false;
+                // Reset state for next time (but only after overlay is hidden)
+                IsInstallMode = false;
                 ShowSpinner = false;
                 InstallStatusText = "Installing plugin...";
                 InstallSubText = "Please wait while we process your plugin";
