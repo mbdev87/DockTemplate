@@ -116,10 +116,12 @@
 
         <!-- Drag & Drop Overlay - Theme-Aware Background with Smooth Animations -->
         <Border x:Name="DropOverlay" Grid.Row="1" 
-                Background="{DynamicResource SystemRegionBrush}" 
                 Classes.drop-overlay="True"
                 Classes.show="{Binding ShowDropOverlay}"
                 ZIndex="1000">
+            <Border.Background>
+                <SolidColorBrush Color="{DynamicResource RegionColor}" Opacity="0.85" />
+            </Border.Background>
             <!-- Rigid Grid Layout to Prevent Jumping -->
             <Grid RowDefinitions="120,120,80,60,*" 
                   Classes="overlay-content"
