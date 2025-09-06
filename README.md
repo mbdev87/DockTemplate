@@ -19,7 +19,9 @@ Perfect for anyone who wants a "just works" baseline with batteries included to 
 
 ### Drag & Drop Plugin Installation
 
-https://github.com/user-attachments/assets/d49686eb-415e-4f8c-8b4c-645a0c8d047e
+
+https://github.com/user-attachments/assets/188e11d2-7b6a-48a3-9a21-e7755692a52d
+
 
 *Just drag any `.dockplugin` file onto the application for instant installation with hot-loading*
 
