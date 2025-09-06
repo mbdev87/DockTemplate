@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +37,20 @@ public partial class App : Application
         if (_serviceProvider != null)
         {
             ThemeService = _serviceProvider.GetService<IThemeService>();
+        }
+        
+        InitializePlatformSpecificMenu();
+    }
+
+    private void InitializePlatformSpecificMenu()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Console.WriteLine("[App] macOS detected - Application MenuBar ready for native export");
+        }
+        else
+        {
+            Console.WriteLine("[App] Windows/Linux detected - using Window-level in-app menu");
         }
     }
 
