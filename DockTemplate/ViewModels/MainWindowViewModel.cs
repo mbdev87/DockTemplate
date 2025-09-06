@@ -9,6 +9,9 @@ using Dock.Model.Core;
 using DockTemplate.Services;
 using DockTemplate.Messages;
 using NLog;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia;
 
 namespace DockTemplate.ViewModels;
 
@@ -22,6 +25,9 @@ public class MainWindowViewModel : ViewModelBase
     [Reactive] public bool IsInstallMode { get; set; } = false;
     [Reactive] public string InstallStatusText { get; set; } = "Installing plugin...";
     [Reactive] public string InstallSubText { get; set; } = "Please wait while we process your plugin";
+    [Reactive] public bool IsAcrylicEnabled { get; set; } = true;
+    
+    // Note: Window is always acrylic-capable, we control the effect through content layering
     
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -29,6 +35,7 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand ShowPluginManager { get; }
     public ICommand InstallPlugin { get; }
     public ICommand ReloadPlugins { get; }
+    public ICommand ToggleAcrylic { get; }
 
     public MainWindowViewModel(DockFactory dockFactory)
     {
@@ -54,6 +61,10 @@ public class MainWindowViewModel : ViewModelBase
         ShowPluginManager = ReactiveCommand.Create(OpenPluginManager);
         InstallPlugin = ReactiveCommand.Create(OpenInstallPluginDialog);
         ReloadPlugins = ReactiveCommand.Create(ReloadAllPlugins);
+        ToggleAcrylic = ReactiveCommand.Create(() => 
+        {
+            IsAcrylicEnabled = !IsAcrylicEnabled;
+        });
         
         // Subscribe to plugin installation messages
         MessageBus.Current.Listen<PluginInstallationStartedMessage>()
@@ -181,19 +192,16 @@ public class MainWindowViewModel : ViewModelBase
     
     private void OnPluginInstallationCompleted(PluginInstallationCompletedMessage message)
     {
-        Logger.Info($"Plugin installation completed: {message.PluginFileName}, Success: {message.Success}");
-        
         if (message.Success)
         {
-            ShowSpinner = false;
-            InstallStatusText = "✅ Plugin installed!";
-            InstallSubText = "Ready to use";
+            Logger.Info($"✅ Plugin installation completed: {message.PluginFileName}");
             
-            // Hide overlay immediately after brief success display (no flash back to drop state)
-            Task.Delay(1000).ContinueWith(_ =>
+            // Just fade out while still spinning - no success message flash
+            ShowDropOverlay = false;
+            
+            // Reset state after fade-out animation completes (300ms)
+            Task.Delay(300).ContinueWith(_ =>
             {
-                ShowDropOverlay = false;
-                // Reset state for next time (but only after overlay is hidden)
                 IsInstallMode = false;
                 ShowSpinner = false;
                 InstallStatusText = "Installing plugin...";
@@ -202,19 +210,24 @@ public class MainWindowViewModel : ViewModelBase
         }
         else
         {
+            Logger.Error($"❌ Plugin installation failed: {message.PluginFileName} - {message.ErrorMessage}");
+            
             ShowSpinner = false;
             InstallStatusText = "❌ Installation failed";
             InstallSubText = message.ErrorMessage ?? "Please try again";
             
-            // Hide overlay after error display
+            // Show error for a bit longer so user can read it
             Task.Delay(2000).ContinueWith(_ =>
             {
                 ShowDropOverlay = false;
-                // Reset state for next time (but only after overlay is hidden)
-                IsInstallMode = false;
-                ShowSpinner = false;
-                InstallStatusText = "Installing plugin...";
-                InstallSubText = "Please wait while we process your plugin";
+                // Reset state after fade-out animation completes
+                Task.Delay(300).ContinueWith(__ =>
+                {
+                    IsInstallMode = false;
+                    ShowSpinner = false;
+                    InstallStatusText = "Installing plugin...";
+                    InstallSubText = "Please wait while we process your plugin";
+                }, TaskScheduler.FromCurrentSynchronizationContext());
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
     }

@@ -10,23 +10,87 @@
         x:Class="DockTemplate.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         x:Name="MainWindowView"
-        UseLayoutRounding="True" RenderOptions.BitmapInterpolationMode="HighQuality"
+        UseLayoutRounding="True" 
+        RenderOptions.BitmapInterpolationMode="HighQuality"
         WindowState="Normal" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI, SF Pro Display, Noto Sans, Cantarel"
         Icon="/Assets/avalonia-logo.ico"
         Title="DockTemplate - Visual Studio Layout" Height="680" Width="1200"
-        DragDrop.AllowDrop="True">
+        DragDrop.AllowDrop="True"
+        
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="{Binding IsAcrylicEnabled}"
+        >
 
     <Window.Resources>
         <StreamGeometry x:Key="DarkTheme">M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Zm0-2V4a8 8 0 1 1 0 16Z</StreamGeometry>
+        <StreamGeometry x:Key="AcrylicIcon">M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z</StreamGeometry>
     </Window.Resources>
+
+    <Window.Styles>
+        <!-- Dynamic margin for macOS traffic lights when acrylic is enabled -->
+        <Style Selector="Grid.main-content">
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        
+        <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Grid.main-content">
+            <Setter Property="Margin" Value="0,14,0,0" />
+        </Style>
+        
+        <!-- Smooth fade-in/fade-out animation for overlay -->
+        <Style Selector="Border.drop-overlay">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.drop-overlay.show">
+            <Setter Property="Opacity" Value="0.98" />
+            <Setter Property="IsHitTestVisible" Value="True" />
+        </Style>
+        
+        <!-- Smooth scale animation for the content -->
+        <Style Selector="Grid.overlay-content">
+            <Setter Property="RenderTransform" Value="scale(0.95)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.25" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.drop-overlay.show Grid.overlay-content">
+            <Setter Property="RenderTransform" Value="scale(1.0)" />
+        </Style>
+    </Window.Styles>
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Menu and Toolbar -->
+    <Panel>
+        <!-- Theme background (when acrylic is disabled) -->
+        <Border IsVisible="{Binding !IsAcrylicEnabled}" 
+                Background="{DynamicResource SystemRegionBrush}" />
+        
+        <!-- Acrylic Background (only when enabled) - Theme-aware -->
+        <ExperimentalAcrylicBorder IsVisible="{Binding IsAcrylicEnabled}" IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="{DynamicResource AcrylicFallbackColor}"
+                    TintOpacity="1"
+                    MaterialOpacity="0.75" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        
+        <Grid RowDefinitions="Auto,*,Auto" Classes="main-content">
+            <!-- Menu and Toolbar -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
             <Menu Grid.Column="0" VerticalAlignment="Center" FontSize="12" Height="20">
                 <MenuItem Header="_File">
@@ -50,14 +114,15 @@
         <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
                         Grid.Row="1" Margin="4" />
 
-        <!-- Drag & Drop Overlay - Theme-Aware Background -->
+        <!-- Drag & Drop Overlay - Theme-Aware Background with Smooth Animations -->
         <Border x:Name="DropOverlay" Grid.Row="1" 
                 Background="{DynamicResource SystemRegionBrush}" 
-                Opacity="0.98"
-                IsVisible="{Binding ShowDropOverlay}"
+                Classes.drop-overlay="True"
+                Classes.show="{Binding ShowDropOverlay}"
                 ZIndex="1000">
             <!-- Rigid Grid Layout to Prevent Jumping -->
             <Grid RowDefinitions="120,120,80,60,*" 
+                  Classes="overlay-content"
                   HorizontalAlignment="Center" 
                   VerticalAlignment="Center"
                   Width="400">
@@ -124,15 +189,28 @@
         <!-- Status Bar -->
         <Border Grid.Row="2" Background="{DynamicResource SystemAccentColor}" 
                 BorderBrush="{DynamicResource SystemAccentColorDark2}" BorderThickness="0,1,0,0">
-           <Grid ColumnDefinitions="Auto, *, 200">
+           <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                <TextBlock Grid.Column="0" FontSize="11" Text="Ready" Margin="8,4" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" />
             
-               <Button HorizontalContentAlignment="Right" x:Name="ThemeButton" Grid.Column="2" Background="Transparent"
-                       HorizontalAlignment="Right" Margin="0" Foreground="White" MaxHeight="16">
-                   <StackPanel Orientation="Horizontal"><TextBlock FontSize="10" Foreground="White">Change theme</TextBlock><PathIcon Width="16" Height="16"  Data="{StaticResource DarkTheme}"/></StackPanel>
+               <!-- Acrylic Toggle Button -->
+               <Button x:Name="AcrylicButton" Grid.Column="2" Background="Transparent"
+                       HorizontalAlignment="Right" Margin="4,0" Foreground="White" MaxHeight="16" 
+                       Command="{Binding ToggleAcrylic}">
+                   <StackPanel Orientation="Horizontal">
+                       <PathIcon Width="16" Height="16" Data="{StaticResource AcrylicIcon}" Margin="4,0,0,0" />
+                   </StackPanel>
+               </Button>
+               
+               <!-- Theme Toggle Button -->
+               <Button HorizontalContentAlignment="Right" x:Name="ThemeButton" Grid.Column="3" Background="Transparent"
+                       HorizontalAlignment="Right" Margin="4,0" Foreground="White" MaxHeight="16">
+                   <StackPanel Orientation="Horizontal">
+                       <PathIcon Width="16" Height="16" Data="{StaticResource DarkTheme}" Margin="4,0,0,0" />
+                   </StackPanel>
                </Button>
            </Grid>
         </Border>
-    </Grid>
+        </Grid>
+    </Panel>
 
 </Window>

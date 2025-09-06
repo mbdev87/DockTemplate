@@ -4,7 +4,7 @@
              xmlns:local="using:DockTemplate"
              xmlns:core="clr-namespace:Dock.Model.Core;assembly=Dock.Model"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
