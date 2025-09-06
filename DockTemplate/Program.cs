@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -79,19 +80,23 @@ sealed class Program
 
     public static AppBuilder BuildAvaloniaApp(IServiceProvider provider)
     {
-        return AppBuilder.Configure(provider.GetRequiredService<App>)
+        var builder = AppBuilder.Configure(provider.GetRequiredService<App>)
             .UsePlatformDetect()
             .WithInterFont()
             .UseReactiveUI()
             .LogToTrace();
+            
+        return builder;
     }
 
     public static AppBuilder BuildAvaloniaApp()
     {
-        return AppBuilder.Configure(() => Initialize().GetRequiredService<App>())
+        var builder = AppBuilder.Configure(() => Initialize().GetRequiredService<App>())
             .UsePlatformDetect()
             .WithInterFont()
             .UseReactiveUI()
             .LogToTrace();
+            
+        return builder;
     }
 }
