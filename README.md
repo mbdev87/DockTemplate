@@ -17,7 +17,11 @@ Perfect for anyone who wants a "just works" baseline with batteries included to 
 - Charting and data visualization examples in development
 - Error List - double click on Error in Errors tab to jump to source
 
+### Drag & Drop Plugin Installation
 
+https://github.com/user-attachments/assets/d49686eb-415e-4f8c-8b4c-645a0c8d047e
+
+*Just drag any `.dockplugin` file onto the application for instant installation with hot-loading*
 
 #### Dashboard
 
