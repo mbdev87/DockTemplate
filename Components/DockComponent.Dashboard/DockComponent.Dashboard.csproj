@@ -51,7 +51,33 @@
         </ItemGroup>
         
         <Message Text="Creating .dockplugin file: $(PluginZipPath)" Importance="high" />
-        <Exec Command="powershell -Command &quot;Compress-Archive -Path '$(OutputPath)DockComponent.Dashboard.dll', '$(OutputPath)DockComponent.Dashboard.pdb', '$(OutputPath)DockComponent.Base.dll' -DestinationPath '$(PluginZipPath)' -Force&quot;" />
+        <Message Text="Output path: $(OutputPath)" Importance="high" />
+        <Message Text="Files to include:" Importance="high" />
+        <Message Text="  - $(OutputPath)DockComponent.Dashboard.dll" Importance="high" />
+        <Message Text="  - $(OutputPath)DockComponent.Dashboard.pdb" Importance="high" />
+        <Message Text="  - $(OutputPath)DockComponent.Base.dll" Importance="high" />
+        
+        <!-- Check if required files exist before creating ZIP -->
+        <Error Condition="!Exists('$(OutputPath)DockComponent.Dashboard.dll')" Text="Required file not found: $(OutputPath)DockComponent.Dashboard.dll" />
+        <Error Condition="!Exists('$(OutputPath)DockComponent.Base.dll')" Text="Required file not found: $(OutputPath)DockComponent.Base.dll" />
+        
+        <!-- Create temporary directory for plugin contents -->
+        <PropertyGroup>
+            <TempPluginDir>$(OutputPath)temp-plugin</TempPluginDir>
+        </PropertyGroup>
+        <RemoveDir Directories="$(TempPluginDir)" />
+        <MakeDir Directories="$(TempPluginDir)" />
+        
+        <!-- Copy files to temp directory -->
+        <Copy SourceFiles="$(OutputPath)DockComponent.Dashboard.dll" DestinationFolder="$(TempPluginDir)" />
+        <Copy SourceFiles="$(OutputPath)DockComponent.Dashboard.pdb" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)DockComponent.Dashboard.pdb')" />
+        <Copy SourceFiles="$(OutputPath)DockComponent.Base.dll" DestinationFolder="$(TempPluginDir)" />
+        
+        <!-- Create ZIP using MSBuild ZipDirectory task (cross-platform) -->
+        <ZipDirectory SourceDirectory="$(TempPluginDir)" DestinationFile="$(PluginZipPath)" Overwrite="true" />
+        
+        <!-- Clean up temp directory -->
+        <RemoveDir Directories="$(TempPluginDir)" />
         
         <!-- Copy README.txt to distribution folder -->
         <Copy SourceFiles="README.txt" DestinationFolder="$(PluginOutputDir)" />
