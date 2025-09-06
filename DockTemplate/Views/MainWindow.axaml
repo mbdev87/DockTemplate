@@ -160,6 +160,7 @@
         <Border x:Name="DropOverlay" Grid.Row="0" Grid.RowSpan="3"
                 Classes.drop-overlay="True"
                 Classes.show="{Binding ShowDropOverlay}"
+                Margin="-50"
                 ZIndex="1000">
             <Border.Background>
                 <SolidColorBrush Color="{DynamicResource RegionColor}" Opacity="0.85" />
