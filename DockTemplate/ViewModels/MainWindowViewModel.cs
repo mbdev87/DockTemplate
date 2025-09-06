@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -17,6 +18,9 @@ public class MainWindowViewModel : ViewModelBase
     
     [Reactive] public IRootDock? Layout { get; set; }
     [Reactive] public bool ShowDropOverlay { get; set; } = false;
+    [Reactive] public bool ShowSpinner { get; set; } = false;
+    [Reactive] public string InstallStatusText { get; set; } = "Installing plugin...";
+    [Reactive] public string InstallSubText { get; set; } = "Please wait while we process your plugin";
     
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -49,6 +53,13 @@ public class MainWindowViewModel : ViewModelBase
         ShowPluginManager = ReactiveCommand.Create(OpenPluginManager);
         InstallPlugin = ReactiveCommand.Create(OpenInstallPluginDialog);
         ReloadPlugins = ReactiveCommand.Create(ReloadAllPlugins);
+        
+        // Subscribe to plugin installation messages
+        MessageBus.Current.Listen<PluginInstallationStartedMessage>()
+            .Subscribe(OnPluginInstallationStarted);
+            
+        MessageBus.Current.Listen<PluginInstallationCompletedMessage>()
+            .Subscribe(OnPluginInstallationCompleted);
     }
 
     public void InitLayout()
@@ -155,5 +166,49 @@ public class MainWindowViewModel : ViewModelBase
         ResetLayout();
         
         Logger.Info("Plugin reload completed");
+    }
+    
+    private void OnPluginInstallationStarted(PluginInstallationStartedMessage message)
+    {
+        Logger.Info($"Plugin installation started: {message.PluginFileName}");
+        // Spinner is already started in UI, just update text
+        InstallStatusText = "Installing plugin...";
+        InstallSubText = $"Processing {message.PluginFileName}";
+    }
+    
+    private void OnPluginInstallationCompleted(PluginInstallationCompletedMessage message)
+    {
+        Logger.Info($"Plugin installation completed: {message.PluginFileName}, Success: {message.Success}");
+        
+        if (message.Success)
+        {
+            ShowSpinner = false;
+            InstallStatusText = "✅ Plugin installed!";
+            InstallSubText = "Ready to use";
+            
+            // Hide overlay immediately after brief success display (no flash back to drop state)
+            Task.Delay(1000).ContinueWith(_ =>
+            {
+                ShowDropOverlay = false;
+                // Reset state for next time (but only after overlay is hidden)
+                InstallStatusText = "Installing plugin...";
+                InstallSubText = "Please wait while we process your plugin";
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+        else
+        {
+            ShowSpinner = false;
+            InstallStatusText = "❌ Installation failed";
+            InstallSubText = message.ErrorMessage ?? "Please try again";
+            
+            // Hide overlay after error display
+            Task.Delay(2000).ContinueWith(_ =>
+            {
+                ShowDropOverlay = false;
+                ShowSpinner = false;
+                InstallStatusText = "Installing plugin...";
+                InstallSubText = "Please wait while we process your plugin";
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
     }
 }

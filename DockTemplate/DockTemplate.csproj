@@ -27,9 +27,11 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.4" />
+        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
         <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.2.2" />
         <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
         <PackageReference Include="NLog" Version="6.0.3" />
         <PackageReference Include="ReactiveUI.Fody" Version="19.5.31" />

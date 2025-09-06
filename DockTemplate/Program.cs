@@ -55,6 +55,7 @@ sealed class Program
         services.AddLogging();
         
         services.AddSingleton<LogBatchingService>();
+        services.AddSingleton<PluginInstallationService>();
         
         services.AddSingleton<ErrorService>();
         services.AddSingleton<App>();

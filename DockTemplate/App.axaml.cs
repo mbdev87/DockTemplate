@@ -49,6 +49,12 @@ public partial class App : Application
                 _ = batchingService.StartAsync(CancellationToken.None);
             }
             
+            var pluginInstallationService = _serviceProvider.GetService<PluginInstallationService>();
+            if (pluginInstallationService != null)
+            {
+                _ = pluginInstallationService.StartAsync(CancellationToken.None);
+            }
+            
             // Load components after Avalonia is initialized (avoids resource loading issues)
             var componentLoader = _serviceProvider.GetService<ComponentLoader>();
             var componentContext = _serviceProvider.GetService<DockComponentContext>();
