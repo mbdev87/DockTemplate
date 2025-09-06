@@ -33,6 +33,9 @@ https://github.com/user-attachments/assets/188e11d2-7b6a-48a3-9a21-e7755692a52d
 
 <img src="docs/img/click_to_jump.png" alt="Jump to source" />
 
+#### Cross platform
+
+<img src="docs/img/windows_overview.png" alt="Jump to source" />
 
 **Will there be more?**
 Yes, this project will be perpetually expanded with snippets I find useful in my other pet projects. 
