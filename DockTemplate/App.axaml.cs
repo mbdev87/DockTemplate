@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using DockTemplate.ViewModels;
 using DockTemplate.Views;
 using DockTemplate.Services;
+using DockComponent.Base;
 
 namespace DockTemplate;
 
@@ -28,6 +29,7 @@ public partial class App : Application
     public App(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
+        Console.WriteLine($"[App] Constructor with IServiceProvider: {(_serviceProvider != null ? "SUCCESS" : "NULL")}");
     }
 
     public override void Initialize()
@@ -56,41 +58,53 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Console.WriteLine($"[App] OnFrameworkInitializationCompleted called with _serviceProvider: {(_serviceProvider != null ? "SUCCESS" : "NULL")}");
         if (_serviceProvider != null)
         {
-            // Start our poor man's hosted services
-            var batchingService = _serviceProvider.GetService<LogBatchingService>();
-            if (batchingService != null)
-            {
-                _ = batchingService.StartAsync(CancellationToken.None);
-            }
-            
+            // Start hosted services manually (poor man's hosted services)
+            Console.WriteLine("[App] DEBUG: Attempting to get PluginInstallationService from DI...");
             var pluginInstallationService = _serviceProvider.GetService<PluginInstallationService>();
+            Console.WriteLine($"[App] DEBUG: PluginInstallationService resolved: {(pluginInstallationService != null ? "SUCCESS" : "NULL")}");
             if (pluginInstallationService != null)
             {
+                // Start the plugin installation service
                 _ = pluginInstallationService.StartAsync(CancellationToken.None);
+                Console.WriteLine("[App] ✅ PluginInstallationService started");
+            }
+            else
+            {
+                Console.WriteLine("[App] ❌ PluginInstallationService is NULL - service not registered properly!");
             }
             
-            // Load components after Avalonia is initialized (avoids resource loading issues)
-            var componentLoader = _serviceProvider.GetService<ComponentLoader>();
-            var componentContext = _serviceProvider.GetService<DockComponentContext>();
+            // AUTHOR MODE - Direct component registration + plugin loading
             var dockFactory = _serviceProvider.GetService<DockFactory>();
-            if (componentLoader != null && componentContext != null && dockFactory != null)
+            if (dockFactory != null)
             {
-                // Ensure LocalAppData directory exists
-                Services.PluginDirectoryService.EnsureLocalAppDataDirectoryExists();
+                Console.WriteLine("[App] AUTHOR MODE - Registering components directly from DI container");
                 
-                // Load components from all plugin directories (LocalAppData + Development)
-                var pluginPaths = Services.PluginDirectoryService.GetAllPluginPaths();
+                // Register built-in components now that DockFactory is available
+                Program.RegisterAllComponents();
                 
-                foreach (var pluginPath in pluginPaths)
+                Console.WriteLine("[App] ✅ Built-in component registration complete");
+                
+                // Also load any installed plugins from LocalAppData
+                var componentLoader = _serviceProvider.GetService<ComponentLoader>();
+                if (componentLoader != null)
                 {
-                    Console.WriteLine($"[App] Scanning for components in: {pluginPath}");
-                    componentLoader.LoadComponents(pluginPath);
+                    var localAppDataPath = Services.PluginDirectoryService.GetLocalAppDataPluginPath();
+                    if (Directory.Exists(localAppDataPath))
+                    {
+                        Console.WriteLine($"[App] Loading installed plugins from: {localAppDataPath}");
+                        componentLoader.LoadComponents(localAppDataPath);
+                        Console.WriteLine("[App] ✅ Installed plugin loading complete");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[App] No installed plugins directory found");
+                    }
                 }
                 
-                // Store loaded components for integration during layout creation
-                dockFactory.StoreComponents(componentContext.RegisteredTools, componentContext.RegisteredDocuments);
+                Console.WriteLine("[App] ✅ All components available for debugging");
             }
         }
         
@@ -106,4 +120,5 @@ public partial class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
+    
 }

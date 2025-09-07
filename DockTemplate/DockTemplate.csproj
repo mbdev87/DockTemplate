@@ -6,6 +6,7 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -48,6 +49,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DockComponent.Base\DockComponent.Base.csproj" />
+      <ProjectReference Include="..\Components\DockComponent.Editor\DockComponent.Editor.csproj" />
+      <ProjectReference Include="..\Components\DockComponent.SolutionExplorer\DockComponent.SolutionExplorer.csproj" />
+      <ProjectReference Include="..\Components\DockComponent.Output\DockComponent.Output.csproj" />
+      <ProjectReference Include="..\Components\DockComponent.ErrorList\DockComponent.ErrorList.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -9,12 +9,11 @@ namespace DockTemplate.Services;
 
 public class ThemeService : IThemeService
 {
-    private readonly TextMateService? _textMateService;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public ThemeService(TextMateService? textMateService = null)
+    public ThemeService()
     {
-        _textMateService = textMateService;
+        // TextMate service integration removed - handled by Editor component
     }
     public void Switch(int index)
     {
@@ -34,9 +33,9 @@ public class ThemeService : IThemeService
 
         Application.Current.RequestedThemeVariant = newTheme;
 
-        // Update TextMate service directly for immediate response
-        _textMateService?.UpdateTheme(newTheme);
-
+        // Theme changes will be handled by components via MessageBus
+        // TextMate service integration removed - handled by Editor component
+        
         // Broadcast theme change to all subscribers (for UI updates, etc.)
         MessageBus.Current.SendMessage(new ThemeChangedMessage(newTheme));
         

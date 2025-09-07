@@ -107,7 +107,6 @@
                         <NativeMenuItem Header="Manage Plugins..." Command="{Binding ShowPluginManager}" />
                         <NativeMenuItemSeparator />
                         <NativeMenuItem Header="Install Plugin..." Command="{Binding InstallPlugin}" />
-                        <NativeMenuItem Header="Reload All Plugins" Command="{Binding ReloadPlugins}" />
                     </NativeMenu>
                 </NativeMenuItem>
             </NativeMenu>
@@ -130,7 +129,6 @@
                         <MenuItem Header="_Manage Plugins..." Command="{Binding ShowPluginManager}" />
                         <Separator />
                         <MenuItem Header="_Install Plugin..." Command="{Binding InstallPlugin}" />
-                        <MenuItem Header="_Reload All Plugins" Command="{Binding ReloadPlugins}" />
                     </MenuItem>
                     <MenuItem Header="_Window" DataContext="{Binding Layout}">
                         <MenuItem Header="_Exit Windows" Command="{Binding ExitWindows}" />

@@ -51,12 +51,47 @@ public class ComponentRegistry
         return true;
     }
 
-    public void StoreComponents(IEnumerable<ComponentRegistration> tools, IEnumerable<ComponentRegistration> documents)
+    public void StoreComponents(IReadOnlyCollection<ComponentRegistration> tools, IReadOnlyCollection<ComponentRegistration> documents)
     {
+        // Clear existing registrations to prevent duplicates
+        _componentTools.Clear();
+        _componentDocuments.Clear();
+        
         _componentTools.AddRange(tools);
         _componentDocuments.AddRange(documents);
         
-        Logger.Info($"[ComponentRegistry] Stored {tools.Count()} component tools and {documents.Count()} component documents globally");
+        Logger.Info($"[ComponentRegistry] Stored {tools.Count()} component tools and {documents.Count()} component documents globally (replaced existing)");
+    }
+    
+    public void AddComponents(IEnumerable<ComponentRegistration> tools, IEnumerable<ComponentRegistration> documents)
+    {
+        foreach (var tool in tools)
+        {
+            // Check for duplicates by ComponentInstanceId
+            if (!_componentTools.Any(t => t.ComponentInstanceId == tool.ComponentInstanceId && t.Id == tool.Id))
+            {
+                _componentTools.Add(tool);
+                Logger.Info($"[ComponentRegistry] Added tool: {tool.Id} (Instance: {tool.ComponentInstanceId})");
+            }
+            else
+            {
+                Logger.Info($"[ComponentRegistry] Tool {tool.Id} (Instance: {tool.ComponentInstanceId}) already registered - skipping");
+            }
+        }
+        
+        foreach (var document in documents)
+        {
+            // Check for duplicates by ComponentInstanceId
+            if (!_componentDocuments.Any(d => d.ComponentInstanceId == document.ComponentInstanceId && d.Id == document.Id))
+            {
+                _componentDocuments.Add(document);
+                Logger.Info($"[ComponentRegistry] Added document: {document.Id} (Instance: {document.ComponentInstanceId})");
+            }
+            else
+            {
+                Logger.Info($"[ComponentRegistry] Document {document.Id} (Instance: {document.ComponentInstanceId}) already registered - skipping");
+            }
+        }
     }
 
     public IReadOnlyList<ComponentRegistration> ComponentTools => _componentTools.AsReadOnly();

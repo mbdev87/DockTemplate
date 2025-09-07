@@ -15,6 +15,7 @@ public interface IDockComponent
 {
     string Name { get; }
     string Version { get; }
+    Guid InstanceId { get; } // Unique runtime identifier to prevent duplicates
     void Register(IDockComponentContext context);
 }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using DockComponent.Base;
 using ReactiveUI;
 using DockTemplate.Services;
 
@@ -83,7 +84,6 @@ public class LoggingDataService : ReactiveObject
                 var filterLower = FilterText.ToLowerInvariant();
                 filtered = filtered.Where(entry => 
                     entry.Message.ToLowerInvariant().Contains(filterLower) ||
-                    entry.Logger.ToLowerInvariant().Contains(filterLower) ||
                     (entry.Exception?.ToLowerInvariant().Contains(filterLower) ?? false));
             }
             

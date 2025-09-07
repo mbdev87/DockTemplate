@@ -1,0 +1,468 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
+using System.Text.Json;
+using Avalonia;
+using Avalonia.Styling;
+using Avalonia.Threading;
+using AvaloniaEdit;
+using AvaloniaEdit.Document;
+using AvaloniaEdit.TextMate;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+using TextMateSharp.Grammars;
+using DockComponent.Base;
+using DockComponent.Editor.Messages;
+using DockComponent.Editor.Transport.EditorComponent;
+using DockComponent.Editor.Transport.ErrorListComponent;
+using DockComponent.Editor.Transport.UIComponent;
+using Dock.Model.Mvvm.Controls;
+using NLog;
+
+namespace DockComponent.Editor.ViewModels;
+
+public class EditorToolViewModel : ViewModelBase, IDisposable
+{
+    [Reactive] public TextDocument Document { get; set; } = new();
+    [Reactive] public TextMate.Installation? TextMateInstallation { get; set; }
+    [Reactive] public string CurrentFileName { get; set; } = "untitled.txt";
+    [Reactive] public string CurrentLanguage { get; set; } = "plaintext";
+    [Reactive] public bool HasUnsavedChanges { get; set; }
+    [Reactive] public string StatusText { get; set; } = "Ready";
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    public ReactiveCommand<Unit, Unit> OpenFileCommand { get; }
+    public ReactiveCommand<Unit, Unit> SaveFileCommand { get; }
+    public ReactiveCommand<Unit, Unit> SaveAsCommand { get; }
+    public ReactiveCommand<Unit, Unit> NewFileCommand { get; }
+
+    private readonly CompositeDisposable _disposables = new();
+    private string _currentFilePath = string.Empty;
+    private TextEditor? _textEditor;
+    private DockComponent.Editor.Views.LineHighlightRenderer? _lineHighlightRenderer;
+
+    public EditorToolViewModel()
+    {
+        OpenFileCommand = ReactiveCommand.CreateFromTask(OpenFileAsync);
+        SaveFileCommand = ReactiveCommand.CreateFromTask(SaveFileAsync, 
+            this.WhenAnyValue(x => x.HasUnsavedChanges));
+        SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsFileAsync);
+        NewFileCommand = ReactiveCommand.Create(NewFile);
+
+        Document.TextChanged += (_, _) =>
+        {
+            if (!string.IsNullOrEmpty(_currentFilePath))
+            {
+                HasUnsavedChanges = true;
+                StatusText = "Modified";
+            }
+        };
+
+        // Subscribe to theme changes
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name == "UIComponent_ThemeChanged")
+            .Subscribe(message => ApplySyntaxHighlighting())
+            .DisposeWith(_disposables);
+
+        // Subscribe to error navigation messages
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name == "ErrorListComponent_ErrorClicked")
+            .Subscribe(message => HandleErrorNavigation(message))
+            .DisposeWith(_disposables);
+
+        // Subscribe to file navigation messages from SolutionExplorer
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name == "Editor_NavigateToSource")
+            .Subscribe(message => HandleFileNavigation(message))
+            .DisposeWith(_disposables);
+
+        ReinstallTextMate();
+    }
+
+    public void SetupTextMateForEditor(TextEditor textEditor)
+    {
+        try
+        {
+            _textEditor = textEditor;
+            ReinstallTextMate();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"Error setting up TextMate: {ex.Message}");
+            StatusText = "Syntax highlighting unavailable";
+        }
+    }
+
+    private void ReinstallTextMate()
+    {
+        if (_textEditor == null) return;
+
+        try
+        {
+            // Get current theme - check both ActualThemeVariant and RequestedThemeVariant
+            var currentApp = Application.Current;
+            var actualTheme = currentApp?.ActualThemeVariant;
+            var requestedTheme = currentApp?.RequestedThemeVariant;
+            
+            // Determine if we're in dark mode
+            var isDark = (actualTheme == ThemeVariant.Dark) || 
+                        (actualTheme == null && requestedTheme == ThemeVariant.Dark);
+            
+            var themeName = isDark ? ThemeName.DarkPlus : ThemeName.LightPlus;
+            
+            Logger.Info($"[Editor] Reinstalling TextMate: ActualTheme={actualTheme}, RequestedTheme={requestedTheme}, Using={themeName}");
+            
+            // Dispose old installation if it exists
+            var old = TextMateInstallation;
+            
+            // Create new registry options with current theme
+            var registryOptions = new RegistryOptions(themeName);
+            
+            // Reinstall TextMate completely
+            TextMateInstallation = _textEditor.InstallTextMate(registryOptions);
+            
+            // Apply grammar for current language
+            var fileExtension = GetFileExtensionForLanguage(CurrentLanguage);
+            var language = registryOptions.GetLanguageByExtension(fileExtension);
+            
+            if (language != null)
+            {
+                TextMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(language.Id));
+                Logger.Info($"[Editor] Applied grammar for {CurrentLanguage}");
+            }
+            
+            // Force refresh the editor content to trigger highlighting
+            if (!string.IsNullOrEmpty(Document.Text))
+            {
+                var currentText = Document.Text;
+                var cursorPosition = _textEditor.CaretOffset;
+                Document.Text = string.Empty;
+                Document.Text = currentText;
+                _textEditor.CaretOffset = cursorPosition;
+                Logger.Info($"[Editor] Forced content refresh");
+            }
+            old?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"Error reinstalling TextMate: {ex.Message}");
+            StatusText = "Syntax highlighting unavailable";
+        }
+    }
+
+    private void ApplySyntaxHighlighting()
+    {
+        // Use the more aggressive reinstall approach
+        ReinstallTextMate();
+    }
+
+    private string GetFileExtensionForLanguage(string language)
+    {
+        return language.ToLower() switch
+        {
+            "csharp" or "c#" => ".cs",
+            "markdown" => ".md",
+            "plaintext" => ".txt",
+            "json" => ".json",
+            "xml" => ".xml",
+            "javascript" => ".js",
+            "typescript" => ".ts",
+            "python" => ".py",
+            "powershell" => ".ps1",
+            "bash" => ".sh",
+            "batch" => ".bat",
+            _ => ".txt"
+        };
+    }
+
+    private string DetectLanguageFromExtension(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".cs" => "csharp",
+            ".md" => "markdown", 
+            ".txt" => "plaintext",
+            ".json" => "json",
+            ".xml" => "xml",
+            ".js" => "javascript",
+            ".ts" => "typescript",
+            ".py" => "python",
+            ".ps1" => "powershell",
+            ".sh" => "bash",
+            ".bat" => "batch",
+            _ => "plaintext"
+        };
+    }
+
+    private async Task OpenFileAsync()
+    {
+        try
+        {
+            // In a real implementation, use OpenFileDialog
+            // For now, simulate with a hardcoded file for demo
+            var filePath = @"C:\temp\sample.cs"; // This would come from file dialog
+            
+            if (File.Exists(filePath))
+            {
+                var content = await File.ReadAllTextAsync(filePath);
+                Document.Text = content;
+                CurrentFileName = Path.GetFileName(filePath);
+                CurrentLanguage = DetectLanguageFromExtension(CurrentFileName);
+                _currentFilePath = filePath;
+                HasUnsavedChanges = false;
+                StatusText = $"Opened: {CurrentFileName}";
+                ApplySyntaxHighlighting();
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Error opening file: {ex.Message}";
+        }
+    }
+
+    private async Task SaveFileAsync()
+    {
+        if (string.IsNullOrEmpty(_currentFilePath))
+        {
+            await SaveAsFileAsync();
+            return;
+        }
+
+        try
+        {
+            await File.WriteAllTextAsync(_currentFilePath, Document.Text);
+            HasUnsavedChanges = false;
+            StatusText = $"Saved: {CurrentFileName}";
+            
+            // Emit file saved message
+            FileSavedHelper.Emit(_currentFilePath, CurrentFileName);
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Error saving file: {ex.Message}";
+        }
+    }
+
+    private async Task SaveAsFileAsync()
+    {
+        try
+        {
+            // In a real implementation, use SaveFileDialog
+            // For now, simulate with a temp file
+            var fileName = CurrentFileName == "untitled.txt" ? "new_file.txt" : CurrentFileName;
+            var filePath = Path.Combine(Path.GetTempPath(), fileName);
+            
+            await File.WriteAllTextAsync(filePath, Document.Text);
+            CurrentFileName = Path.GetFileName(filePath);
+            _currentFilePath = filePath;
+            HasUnsavedChanges = false;
+            StatusText = $"Saved as: {CurrentFileName}";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Error saving file: {ex.Message}";
+        }
+    }
+
+    private void NewFile()
+    {
+        Document.Text = string.Empty;
+        CurrentFileName = "untitled.txt";
+        CurrentLanguage = "plaintext";
+        _currentFilePath = string.Empty;
+        HasUnsavedChanges = false;
+        StatusText = "New file";
+        ApplySyntaxHighlighting();
+    }
+
+    public async Task<bool> OpenFileWithPath(string filePath)
+    {
+        try
+        {
+            if (!File.Exists(filePath))
+            {
+                Logger.Warn($"[EditorToolViewModel] File does not exist, ignoring request: {filePath}");
+                StatusText = $"File not found: {Path.GetFileName(filePath)}";
+                return false;
+            }
+
+            var content = await File.ReadAllTextAsync(filePath);
+            Document.Text = content;
+            CurrentFileName = Path.GetFileName(filePath);
+            CurrentLanguage = DetectLanguageFromExtension(CurrentFileName);
+            _currentFilePath = filePath;
+            HasUnsavedChanges = false;
+            StatusText = $"Opened: {CurrentFileName}";
+            ApplySyntaxHighlighting();
+            
+            // Emit file opened message
+            FileOpenedHelper.Emit(_currentFilePath, CurrentFileName, CurrentLanguage);
+            Logger.Info($"[EditorToolViewModel] Successfully opened file: {filePath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[EditorToolViewModel] Error opening file: {filePath}");
+            StatusText = $"Error opening {Path.GetFileName(filePath)}: {ex.Message}";
+            return false;
+        }
+    }
+
+    private void HandleErrorNavigation(ComponentMessage message)
+    {
+        try
+        {
+            var errorMsg = ErrorClickedHelper.TryParse(message.Payload);
+            if (errorMsg == null)
+            {
+                Logger.Warn($"[EditorToolViewModel] Failed to parse error navigation message");
+                return;
+            }
+            
+            // Only process if this editor is for the target file
+            if (!string.IsNullOrEmpty(_currentFilePath) && 
+                string.Equals(_currentFilePath, errorMsg.FilePath, StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Info($"[EditorToolViewModel] Received error navigation for MY file: {errorMsg.FilePath}:{errorMsg.LineNumber}");
+                NavigateToLine(errorMsg.LineNumber);
+            }
+            else
+            {
+                Logger.Info($"[EditorToolViewModel] Ignoring error navigation for different file. My file: {_currentFilePath}, Target: {errorMsg.FilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[EditorToolViewModel] Error processing error navigation message: {ex.Message}");
+        }
+    }
+
+    private void HandleFileNavigation(ComponentMessage message)
+    {
+        try
+        {
+            var navMsg = NavigateToSourceMessageTransport.Parse(message);
+            if (navMsg == null)
+            {
+                Logger.Warn($"[EditorToolViewModel] Failed to parse file navigation message");
+                return;
+            }
+            
+            Logger.Info($"[EditorToolViewModel] Received file navigation request: {navMsg.FilePath}:{navMsg.LineNumber}");
+            
+            // Load the file on UI thread
+            Dispatcher.UIThread.Post(async () =>
+            {
+                // Only proceed if file was successfully opened
+                bool fileOpened = await OpenFileWithPath(navMsg.FilePath);
+                if (!fileOpened)
+                {
+                    Logger.Warn($"[EditorToolViewModel] File not opened, ignoring line navigation request: {navMsg.FilePath}");
+                    return;
+                }
+                
+                // Small delay to ensure UI is updated before navigation
+                await Task.Delay(100);
+                
+                // Navigate to the specific line if requested
+                if (navMsg.LineNumber > 0)
+                {
+                    Logger.Info($"[EditorToolViewModel] Attempting line navigation to {navMsg.LineNumber}");
+                    NavigateToLine(navMsg.LineNumber);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[EditorToolViewModel] Error processing file navigation message: {ex.Message}");
+        }
+    }
+
+    private void NavigateToLine(int lineNumber)
+    {
+        if (_textEditor == null)
+        {
+            Logger.Warn($"[EditorToolViewModel] Cannot navigate - no text editor available");
+            return;
+        }
+
+        try
+        {
+            Logger.Info($"[EditorToolViewModel] Navigating to line {lineNumber}");
+
+            // Ensure line highlighting renderer is set up
+            SetupLineHighlighting();
+
+            // Clear old highlight
+            if (_lineHighlightRenderer != null)
+            {
+                var oldLine = _lineHighlightRenderer.HighlightedLine;
+                _lineHighlightRenderer.HighlightedLine = null;
+                Logger.Info($"[EditorToolViewModel] Cleared old highlight (was line {oldLine})");
+            }
+
+            // Validate line number
+            if (lineNumber <= 0 || lineNumber > _textEditor.Document.LineCount)
+            {
+                Logger.Warn($"[EditorToolViewModel] Invalid line number: {lineNumber} (max: {_textEditor.Document.LineCount})");
+                return;
+            }
+
+            // Get the line and set caret
+            var line = _textEditor.Document.GetLineByNumber(lineNumber);
+            _textEditor.CaretOffset = line.Offset;
+            
+            // Scroll to line and focus
+            _textEditor.ScrollToLine(lineNumber);
+            _textEditor.Focus();
+
+            // Set new highlight and force redraw
+            if (_lineHighlightRenderer != null)
+            {
+                _lineHighlightRenderer.HighlightedLine = lineNumber;
+                Logger.Info($"[EditorToolViewModel] Set highlight to line {lineNumber}");
+
+                // Force complete redraw by removing and re-adding renderer
+                _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+                _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+                
+                // Force visual refresh
+                _textEditor.TextArea.TextView.InvalidateVisual();
+                
+                Logger.Info($"[EditorToolViewModel] Forced renderer refresh for line {lineNumber}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[EditorToolViewModel] Error navigating to line {lineNumber}");
+        }
+    }
+
+    private void SetupLineHighlighting()
+    {
+        if (_textEditor == null) return;
+
+        // Remove existing renderer if any
+        if (_lineHighlightRenderer != null)
+        {
+            _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+        }
+
+        // Create and add new renderer
+        _lineHighlightRenderer = new DockComponent.Editor.Views.LineHighlightRenderer();
+        _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+        
+        Logger.Info($"[EditorToolViewModel] Set up line highlighting renderer");
+    }
+
+    public void Dispose()
+    {
+        TextMateInstallation?.Dispose();
+        _disposables?.Dispose();
+    }
+}

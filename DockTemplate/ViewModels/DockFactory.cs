@@ -2,10 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using DockTemplate.ViewModels.Documents;
-using DockTemplate.ViewModels.Tools;
-using DockTemplate.Models.Documents;
+using Microsoft.Extensions.DependencyInjection;
+using DockComponent.Base;
+//using DockComponent.Editor.ViewModels.Documents; // Moved to Editor component
+using DockComponent.Editor.ViewModels;
+using DockComponent.SolutionExplorer.ViewModels;
+using DockComponent.Output.ViewModels;
+using DockComponent.ErrorList.ViewModels;
+//using DockTemplate.Models.Documents; // Removed
 using DockTemplate.Models.Tools;
 using DockTemplate.Models;
 using DockTemplate.Services;
@@ -24,19 +31,21 @@ public class DockFactory : Factory
 {
     private IRootDock? _rootDock;
     private IDocumentDock? _documentDock;
-    private readonly TextMateService _textMateService;
-    private readonly LoggingDataService _loggingDataService;
-    private readonly ErrorService _errorService;
+    private IToolDock? _leftDock;
+    private IProportionalDock? _rightDock;
+    private IToolDock? _bottomDock;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
     // Note: Component registrations are now stored in the singleton ComponentRegistry
+    // This factory creates MINIMAL layout - components will add themselves dynamically
 
-    public DockFactory(TextMateService textMateService, LoggingDataService loggingDataService, ErrorService errorService)
+    public DockFactory()
     {
-        _textMateService = textMateService;
-        _loggingDataService = loggingDataService;
-        _errorService = errorService;
-        
+        // Listen for navigation messages from components
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name == "Editor_NavigateToSource")
+            .Subscribe(HandleNavigationMessage);
+            
         // Listen for UI loaded message to integrate components after full initialization
         MessageBus.Current.Listen<UILoadedMessage>()
             .Subscribe(_ =>
@@ -45,143 +54,88 @@ public class DockFactory : Factory
                 IntegrateComponentsAfterUILoad();
             });
     }
+    
+    private void HandleNavigationMessage(ComponentMessage message)
+    {
+        try
+        {
+            var navigationData = JsonSerializer.Deserialize<NavigationMessageData>(message.Payload);
+            if (navigationData != null)
+            {
+                Logger.Info($"[DockFactory] Received navigation message for {navigationData.FilePath}:{navigationData.LineNumber}");
+                NavigateToSourceLine(navigationData.FilePath, navigationData.LineNumber);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[DockFactory] Failed to handle navigation message: {ex.Message}");
+        }
+    }
+    
+    // Simple class to deserialize navigation messages
+    private class NavigationMessageData
+    {
+        public string FilePath { get; set; } = "";
+        public int LineNumber { get; set; }
+        public int Column { get; set; } = 0;
+        public bool HighlightLine { get; set; } = true;
+        public string? Context { get; set; }
+    }
 
     public override IRootDock CreateLayout()
     {
-        var readmeDocument = new DocumentViewModel("Readme", "Readme.txt", _textMateService);
-
-        // Set informative README content
-        readmeDocument.SetContent(@"🔥 DockTemplate - Batteries Included Avalonia Starter
-================================================================
-
-Welcome to DockTemplate! This is your jumpstart into building beautiful 
-Avalonia applications with a professional IDE-like interface.
-
-🎯 WHAT IS THIS PROJECT?
-========================
-DockTemplate is a ""batteries included"" Avalonia application template that gives you:
-• A complete dockable interface system (like Visual Studio)
-• Built-in Solution Explorer with gorgeous Material Design icons
-• Real-time logging output with filtering and search
-• Text editor with syntax highlighting
-• Error list with source navigation
-• Professional light/dark theme switching
-• All the boring setup done for you!
-
-✨ KEY FEATURES
-===============
-🗂️  Solution Explorer - Navigate your files with beautiful icons
-📝  Text Editor - Syntax highlighting for 50+ file types
-📊  Output Tool - Real-time logs with filtering and auto-scroll
-🐛  Error List - Click errors to jump to source code
-🎨  Material Design - Crisp icons with VS Code-inspired colors
-🌙  Theme System - Light/Dark mode switching
-⚡  ReactiveUI - Modern MVVM with reactive patterns
-
-🔗 BUILT WITH THESE AMAZING LIBRARIES
-=====================================
-• Avalonia UI Framework: https://avaloniaui.net/
-• Dock Layout System: https://github.com/wieslawsoltes/Dock
-• Material Design Icons: https://pictogrammers.com/library/mdi/
-• FontAwesome Icons: https://fontawesome.com/
-• ReactiveUI MVVM: https://reactiveui.net/
-• AvaloniaEdit: https://github.com/AvaloniaUI/AvaloniaEdit
-• TextMate Grammars: https://github.com/microsoft/vscode-textmate
-
-🚀 GETTING STARTED
-==================
-1. Open files using the Solution Explorer (left panel)
-2. Check the Output tool (bottom) for real-time application logs
-3. Switch themes using the theme selector
-4. Start building your amazing Avalonia app!
-
-💡 PRO TIPS
-===========
-• The Solution Explorer shows different colored icons for each file type
-• Use Ctrl+Shift+O to see all available commands
-• The Output tool filters by log level - try ""Error"" or ""Debug""
-• All tools are dockable - drag them around to customize your layout
-
-🎉 HAVE FUN BUILDING!
-====================
-This template gives you everything you need to focus on building features
-instead of setting up infrastructure. Delete what you don't need, 
-add what you do need, and create something awesome!
-
-Questions? Check out the libraries above or dive into the source code.
-Everything is well-documented and ready to customize.
-
-Happy coding! 🚀");
+        // Create completely minimal layout - NO components loaded yet
+        // Components will register themselves dynamically through the plugin system
         
-        var solutionExplorer = new SolutionExplorerViewModel(_textMateService, OpenDocument);
-        var properties = new ToolViewModel("Properties", "Properties");
-        var toolbox = new ToolViewModel("Toolbox", "Toolbox");
-        var output = new OutputViewModel(_loggingDataService);
-        var errorList = new ErrorListViewModel(_errorService, NavigateToSourceLine);
-        var editor = new ToolViewModel("Editor", "Editor");
+        Logger.Info("[DockFactory] Creating minimal empty layout - components will populate it");
 
-        // Set Context content for tools
-        properties.Context = "📝 Properties - Inspect and edit object details";
-        toolbox.Context = "🔧 Toolbox - Drag and drop Avalonia controls";
-        output.Context = "📊 Output - Real-time application logs with filtering";
-        errorList.Context = "🐛 Error List - Click errors to navigate to source";
-        editor.Context = "⚡ Editor - Advanced text editing with syntax highlighting";
-
-        var leftDock = new ProportionalDock
+        // Create empty docks that components can populate
+        var leftDock = new ToolDock
         {
             Proportion = 0.2,
-            Orientation = Orientation.Vertical,
-            ActiveDockable = null,
-            VisibleDockables = CreateList<IDockable>
-            (
-                new ToolDock
-                {
-                    ActiveDockable = solutionExplorer,
-                    VisibleDockables = CreateList<IDockable>(solutionExplorer, editor),
-                    Alignment = Alignment.Left,
-                }
-            ),
+            ActiveDockable = new DockDock(),
+            VisibleDockables = CreateList<IDockable>(),
+            Alignment = Alignment.Left,
+            IsCollapsable = true,
+            IsActive = true,
+            CanCloseLastDockable = false
         };
 
         var rightDock = new ProportionalDock
         {
             Proportion = 0.2,
             Orientation = Orientation.Vertical,
-            ActiveDockable = null,
-            VisibleDockables = CreateList<IDockable>
-            (
-                new ToolDock
-                {
-                    ActiveDockable = toolbox,
-                    VisibleDockables = CreateList<IDockable>(toolbox),
-                    Alignment = Alignment.Top,
-                },
-                new ProportionalDockSplitter(),
-                new ToolDock
-                {
-                    ActiveDockable = properties,
-                    VisibleDockables = CreateList<IDockable>(properties),
-                    Alignment = Alignment.Right,
-                }
-            ),
+            ActiveDockable = new DockDock(),
+            VisibleDockables = CreateList<IDockable>(),
+            IsCollapsable = true,
+            IsActive = true,
+            CanCloseLastDockable = false
         };
 
         var bottomDock = new ToolDock
         {
             Proportion = 0.2,
-            ActiveDockable = output,
-            VisibleDockables = CreateList<IDockable>(output, errorList),
+            ActiveDockable = new DockDock(),
+            VisibleDockables = CreateList<IDockable>(),
             Alignment = Alignment.Bottom,
+            IsCollapsable = true,
+            IsActive = true,
+            CanCloseLastDockable = false
         };
 
         var documentDock = new DocumentDock
         {
             IsCollapsable = false,
-            ActiveDockable = readmeDocument,
-            VisibleDockables = CreateList<IDockable>(readmeDocument),
+            ActiveDockable = new DockDock(),
+            VisibleDockables = CreateList<IDockable>(),
             CanCreateDocument = true,
         };
 
+        _documentDock = documentDock;
+        
+        _leftDock = leftDock;
+        _rightDock = rightDock;
+        _bottomDock = bottomDock;
         var mainLayout = new ProportionalDock
         {
             Orientation = Orientation.Vertical,
@@ -192,20 +146,20 @@ Happy coding! 🚀");
                     Orientation = Orientation.Horizontal,
                     VisibleDockables = CreateList<IDockable>
                     (
-                        leftDock,
+                            _leftDock,
                         new ProportionalDockSplitter(),
-                        documentDock,
+                        _documentDock,
                         new ProportionalDockSplitter(),
-                        rightDock
+                        _rightDock
                     )
                 },
                 new ProportionalDockSplitter(),
-                bottomDock
+                _bottomDock
             )
         };
 
         var rootDock = CreateRootDock();
-
+        _rootDock = rootDock;
         rootDock.IsCollapsable = false;
         rootDock.ActiveDockable = mainLayout;
         rootDock.DefaultDockable = mainLayout;
@@ -216,16 +170,20 @@ Happy coding! 🚀");
         rootDock.TopPinnedDockables = CreateList<IDockable>();
         rootDock.BottomPinnedDockables = CreateList<IDockable>();
 
-        _documentDock = documentDock;
-        _rootDock = rootDock;
+
+        
+        // Set factory references for proper reactive updates
+        leftDock.Factory = this;
+        rightDock.Factory = this;
+        bottomDock.Factory = this;
+        documentDock.Factory = this;
 
         // Don't integrate components here - let the UI finish loading first
         // Components will be integrated via MessageBus after full initialization
-
         return rootDock;
     }
 
-    public void StoreComponents(IEnumerable<Services.ComponentRegistration> tools, IEnumerable<Services.ComponentRegistration> documents)
+    public void StoreComponents(IReadOnlyCollection<Services.ComponentRegistration> tools, IReadOnlyCollection<Services.ComponentRegistration> documents)
     {
         // Store components in singleton registry to avoid ephemeral state issues
         Services.ComponentRegistry.Instance.StoreComponents(tools, documents);
@@ -235,17 +193,30 @@ Happy coding! 🚀");
         // Components will be integrated via MessageBus after UI is fully loaded
     }
     
+    private readonly HashSet<Guid> _integratedComponentInstances = new();
+    
     public void IntegrateComponentsAfterUILoad()
     {
         var registry = Services.ComponentRegistry.Instance;
         Logger.Info($"IntegrateComponentsAfterUILoad called - integrating {registry.ComponentDocuments.Count} documents and {registry.ComponentTools.Count} tools");
         
+        // Clear integration tracking to allow re-integration of components into fresh layout
+        _integratedComponentInstances.Clear();
+        Logger.Info($"Cleared component integration tracking - all components will be re-integrated into the new layout");
+        
         // Integrate component documents using the same flow as opening files
         foreach (var componentDoc in registry.ComponentDocuments.Where(d => d.Position == DockComponent.Base.DockPosition.Document))
         {
+            // Check if this component instance is already integrated
+            if (_integratedComponentInstances.Contains(componentDoc.ComponentInstanceId))
+            {
+                Logger.Info($"Component document {componentDoc.Id} (Instance: {componentDoc.ComponentInstanceId}) already integrated - skipping");
+                continue;
+            }
+            
             if (componentDoc.ViewModel is IDockable dockable)
             {
-                Logger.Info($"Adding component document via dock integration: {componentDoc.Id}");
+                Logger.Info($"Adding component document via dock integration: {componentDoc.Id} (Instance: {componentDoc.ComponentInstanceId})");
                 
                 // Use the same approach as opening a document - add to document dock
                 if (_documentDock?.VisibleDockables != null)
@@ -257,35 +228,119 @@ Happy coding! 🚀");
                     // Set as active to make it visible
                     _documentDock.ActiveDockable = dockable;
                     
+                    // Mark this component instance as integrated
+                    _integratedComponentInstances.Add(componentDoc.ComponentInstanceId);
+                    
                     Logger.Info($"Successfully integrated component document: {componentDoc.Id}");
                 }
             }
         }
         
-        // TODO: Integrate component tools into left, right, top, bottom docks
+        // Integrate component tools into their dock positions
         if (registry.ComponentTools.Any())
         {
-            Logger.Info($"Component tools stored but not yet integrated into dock layout: {registry.ComponentTools.Count}");
+            Logger.Info($"Integrating {registry.ComponentTools.Count} component tools into dock layout");
+            
             foreach (var tool in registry.ComponentTools)
             {
-                Logger.Info($"  - {tool.Id} at position {tool.Position}");
+                // Check if this component instance is already integrated
+                if (_integratedComponentInstances.Contains(tool.ComponentInstanceId))
+                {
+                    Logger.Info($"Component tool {tool.Id} (Instance: {tool.ComponentInstanceId}) already integrated - skipping");
+                    continue;
+                }
+                
+                if (tool.ViewModel is IDockable dockable)
+                {
+                    Logger.Info($"Integrating tool: {tool.Id} at position {tool.Position} (Instance: {tool.ComponentInstanceId})");
+                    
+                    switch (tool.Position)
+                    {
+                        case DockComponent.Base.DockPosition.Left:
+                            _leftDock?.VisibleDockables ??= new List<IDockable>();
+                            if (_leftDock?.VisibleDockables != null)
+                            {
+                                var leftDockables = _leftDock.VisibleDockables.ToList();
+                                leftDockables.Add(dockable);
+                                _leftDock.VisibleDockables = CreateList(leftDockables.ToArray());
+                                _leftDock.ActiveDockable = dockable;
+                                
+                                // Force UI refresh by setting focus to the active dockable
+                                if (_leftDock.ActiveDockable is IDockable activeDockable)
+                                {
+                                    this.SetFocusedDockable(_leftDock, activeDockable);
+                                }
+                                _leftDock.IsEmpty = _leftDock.VisibleDockables.Count == 0;
+                                
+                                // Mark this component instance as integrated
+                                _integratedComponentInstances.Add(tool.ComponentInstanceId);
+
+                                Logger.Info($"Successfully integrated {tool.Id} into left dock with UI refresh");
+                            }
+                            break;
+                            
+                        case DockComponent.Base.DockPosition.Right:
+                            if (_rightDock?.VisibleDockables != null)
+                            {
+                                var rightDockables = _rightDock.VisibleDockables.ToList();
+                                rightDockables.Add(dockable);
+                                _rightDock.VisibleDockables = CreateList(rightDockables.ToArray());
+                                _rightDock.ActiveDockable = dockable;
+                                
+                                // Force UI refresh by setting focus to the active dockable
+                                if (_rightDock.ActiveDockable is IDockable activeDockable)
+                                {
+                                    this.SetFocusedDockable(_rightDock, activeDockable);
+                                }
+                                _rightDock.IsEmpty = _rightDock.VisibleDockables.Count == 0;
+                                
+                                // Mark this component instance as integrated
+                                _integratedComponentInstances.Add(tool.ComponentInstanceId);
+
+                                Logger.Info($"Successfully integrated {tool.Id} into right dock with UI refresh");
+                            }
+                            break;
+                            
+                        case DockComponent.Base.DockPosition.Bottom:
+                            if (_bottomDock?.VisibleDockables != null)
+                            {
+                                var bottomDockables = _bottomDock.VisibleDockables.ToList();
+                                bottomDockables.Add(dockable);
+                                _bottomDock.VisibleDockables = CreateList(bottomDockables.ToArray());
+                                _bottomDock.ActiveDockable = dockable;
+                                
+                                // Force UI refresh by setting focus to the active dockable
+                                if (_bottomDock.ActiveDockable is IDockable activeDockable)
+                                {
+                                    this.SetFocusedDockable(_bottomDock, activeDockable);
+                                }
+
+                                //_bottomDock.Title = "Bottom";
+                                _bottomDock.IsEmpty = _bottomDock.VisibleDockables.Count == 0;
+                                
+                                // Mark this component instance as integrated
+                                _integratedComponentInstances.Add(tool.ComponentInstanceId);
+                                
+                                Logger.Info($"Successfully integrated {tool.Id} into bottom dock with UI refresh");
+                            }
+                            break;
+                            
+                        default:
+                            Logger.Warn($"Unknown dock position for tool {tool.Id}: {tool.Position}");
+                            break;
+                    }
+                }
+                else
+                {
+                    Logger.Warn($"Tool {tool.Id} ViewModel is not IDockable: {tool.ViewModel?.GetType().Name}");
+                }
             }
         }
     }
 
     public override void InitLayout(IDockable layout)
     {
-        ContextLocator = new Dictionary<string, Func<object?>>
-        {
-            ["SolutionExplorer"] = () => new SolutionExplorerModel(),
-            ["Dashboard"] = () => new PropertiesModel { Name = "Dashboard", Content = "📊 Project Analytics Dashboard\n==========================================\n\nAnalyzing project files...\n\n📁 File System Scan:\n• Counting files by type\n• Measuring file sizes\n• Analyzing code lines\n\n📈 Interactive Charts:\n• File type distribution (pie chart)\n• File sizes comparison (bar chart) \n• Line count trends (line chart)\n\n📋 Sortable Data Grid:\n• All files with details\n• Click headers to sort\n• Multi-column sorting\n\n🔄 Click Refresh to update data" },
-            ["Properties"] = () => new PropertiesModel(),
-            ["Toolbox"] = () => new PropertiesModel { Name = "Toolbox", Content = "🔧 Avalonia Controls:\n\n📋 Layout:\n• Panel\n• Grid\n• StackPanel\n• WrapPanel\n• DockPanel\n\n🎛️ Input:\n• Button\n• TextBox\n• ComboBox\n• CheckBox\n• RadioButton\n\n📝 Display:\n• TextBlock\n• Label\n• Image\n• TreeView\n• ListBox" },
-            ["Output"] = () => new PropertiesModel { Name = "Output", Content = "📊 Output Window\n==========================================\n\nWelcome to DockTemplate!\n\n✅ Application initialized successfully\n📁 Solution Explorer loaded\n🎨 Material Design icons active\n🌙 Theme system ready\n\n🔍 Use the dropdown above to filter by log level\n🔎 Use the search box to find specific messages\n\nStart building your Avalonia app! 🚀" },
-            ["ErrorList"] = () => new PropertiesModel { Name = "Error List", Content = "🐛 Error List\n==========================================\n\n✅ No errors found!\n\n⚠️  0 Errors\n📝 0 Warnings  \nℹ️  0 Messages\n\n🎉 Your code is clean and ready to go!" },
-            ["Editor"] = () => new EditorToolModel()
-        };
-
+        
         DockableLocator = new Dictionary<string, Func<IDockable?>>()
         {
             ["Root"] = () => _rootDock,
@@ -315,8 +370,8 @@ Happy coding! 🚀");
 
         try
         {
-            var fileName = Path.GetFileName(filePath);
-            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            var fileName = System.IO.Path.GetFileName(filePath);
+            var extension = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
             
             Logger.Info($"[DockFactory] Opening document: {fileName} from {filePath}" + 
                        (targetLine.HasValue ? $" at line {targetLine.Value}" : ""));
@@ -327,11 +382,11 @@ Happy coding! 🚀");
             {
                 Logger.Info($"[DockFactory] Found existing document: {fileName}");
                 
-                // Focus existing document (even if already active)
+                // Focus existing document
                 Logger.Info($"[DockFactory] Setting ActiveDockable to existing document: {existingDocument.Title}");
                 _documentDock.ActiveDockable = existingDocument;
                 
-                // Navigate to specific line if specified - force this even if document is already active
+                // Navigate to specific line if specified
                 if (targetLine.HasValue && targetLine.Value > 0)
                 {
                     Logger.Info($"[DockFactory] About to navigate existing document {existingDocument.Title} to line {targetLine.Value}");
@@ -343,10 +398,6 @@ Happy coding! 🚀");
                         existingDocument.NavigateToLine(targetLine.Value, $"Error/Warning click to line {targetLine.Value}");
                         Logger.Info($"[DockFactory] NavigateToLine call completed for {existingDocument.Title}");
                     }, Avalonia.Threading.DispatcherPriority.Background);
-                }
-                else
-                {
-                    Logger.Info($"[DockFactory] No target line specified for existing document {existingDocument.Title}");
                 }
                 
                 Logger.Info($"[DockFactory] Focused existing document: {fileName}" + 
@@ -365,17 +416,17 @@ Happy coding! 🚀");
             
             // Create new document view model with file path as ID for tracking
             var documentId = filePath; // Use full path as unique identifier
-            var document = new DocumentViewModel(documentId, fileName, _textMateService);
+            var document = DockComponent.Editor.EditorComponent.CreateDocument(documentId, fileName);
             
             // Store the file path for future lookups
             document.FilePath = filePath;
             
             // Load file content
-            if (File.Exists(filePath))
+            if (System.IO.File.Exists(filePath))
             {
                 try
                 {
-                    var content = File.ReadAllText(filePath);
+                    var content = System.IO.File.ReadAllText(filePath);
                     document.SetContent(content);
                     
                     // Navigate to specific line if specified
@@ -408,42 +459,28 @@ Happy coding! 🚀");
         }
     }
 
-    private DocumentViewModel? FindExistingDocument(string filePath)
-    {
-        if (_documentDock?.VisibleDockables == null) return null;
-        
-        foreach (var dockable in _documentDock.VisibleDockables)
-        {
-            if (dockable is DocumentViewModel doc && 
-                string.Equals(doc.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
-            {
-                return doc;
-            }
-        }
-        
-        return null;
-    }
+    // Document handling removed - will be handled by Editor component
 
     public void NavigateToSourceLine(string filePath, int line)
     {
         try
         {
-            Logger.Info($"[DockFactory] Navigating to {filePath}:{line}");
+            Logger.Info($"[DockFactory] Navigating to source line: {filePath}:{line}");
             
-            // Chain of awesome events! 🚀
+            // 🚀 DIRECT APPROACH: DockFactory handles document opening directly like reference project
             
-            // 1. Try to find and highlight file in Solution Explorer (if it exists there)
-            TryHighlightInSolutionExplorer(filePath);
+            // 1. Send message to SolutionExplorer to highlight file (if it exists there)
+            BroadcastFileSelectionMessage(filePath);
             
-            // 2. Open the document in editor with line highlighting and scrolling
+            // 2. DockFactory directly opens/focuses the document with line navigation
             OpenDocument(filePath, line);
             
-            Logger.Info($"[DockFactory] Navigation completed for {System.IO.Path.GetFileName(filePath)}:{line} with line highlighting");
+            Logger.Info($"[DockFactory] Navigation completed for {System.IO.Path.GetFileName(filePath)}:{line}");
             
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"Failed to navigate to {System.IO.Path.GetFileName(filePath)}:{line}");
+            Logger.Error(ex, $"Failed to navigate to {System.IO.Path.GetFileName(filePath)}:{line}: {ex.Message}");
         }
     }
 
@@ -479,6 +516,73 @@ Happy coding! 🚀");
             {
                 var result = FindSolutionExplorerViewModel(child);
                 if (result != null) return result;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Broadcast file selection message for SolutionExplorer to highlight/expand to file
+    /// </summary>
+    private void BroadcastFileSelectionMessage(string filePath)
+    {
+        try
+        {
+            // Create message for SolutionExplorer to select/highlight file
+            var fileSelectionMessage = new ComponentMessage(
+                "DockFactory_FileSelected",
+                JsonSerializer.Serialize(new { FilePath = filePath })
+            );
+            
+            MessageBus.Current.SendMessage(fileSelectionMessage);
+            Logger.Debug($"[DockFactory] Broadcasted file selection message: {System.IO.Path.GetFileName(filePath)}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn(ex, $"[DockFactory] Failed to broadcast file selection message for {filePath}");
+        }
+    }
+    
+    /// <summary>
+    /// Broadcast file navigation message for Editor component to open file and navigate to line
+    /// </summary>
+    private void BroadcastFileNavigationMessage(string filePath, int lineNumber)
+    {
+        try
+        {
+            // Create message for Editor to open file and navigate to line
+            var navigationData = new
+            {
+                FilePath = filePath,
+                LineNumber = lineNumber,
+                Context = $"Navigation from DockFactory"
+            };
+            
+            var navigationMessage = new ComponentMessage(
+                "Editor_NavigateToSource",
+                JsonSerializer.Serialize(navigationData)
+            );
+            
+            MessageBus.Current.SendMessage(navigationMessage);
+            Logger.Debug($"[DockFactory] Broadcasted file navigation message: {System.IO.Path.GetFileName(filePath)}:{lineNumber}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[DockFactory] Failed to broadcast file navigation message for {filePath}:{lineNumber}");
+        }
+    }
+    
+    private DockComponent.Editor.ViewModels.Documents.DocumentViewModel? FindExistingDocument(string filePath)
+    {
+        if (_documentDock?.VisibleDockables == null) return null;
+        
+        foreach (var dockable in _documentDock.VisibleDockables)
+        {
+            if (dockable is DockComponent.Editor.ViewModels.Documents.DocumentViewModel doc && 
+                string.Equals(doc.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return doc;
             }
         }
         

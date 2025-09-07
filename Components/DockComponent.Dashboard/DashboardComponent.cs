@@ -10,6 +10,7 @@ public class DashboardComponent : IDockComponent
 {
     public string Name => "Dashboard Component";
     public string Version => "1.0.0";
+    public Guid InstanceId { get; } = Guid.NewGuid();
 
     public void Register(IDockComponentContext context)
     {
