@@ -22,7 +22,6 @@ public class DocumentViewModel : Document, IDisposable
     [Reactive] public TextDocument Document { get; set; } = new();
     [Reactive] public string CurrentLanguage { get; set; } = "plaintext";
     [Reactive] public bool HasUnsavedChanges { get; set; }
-    [Reactive] public NavigationRequestMsg? NavigationRequest { get; set; }
     [Reactive] public string? FilePath { get; set; }
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -81,15 +80,13 @@ public class DocumentViewModel : Document, IDisposable
 
     public void NavigateToLine(int lineNumber, string? context = null)
     {
-        var newRequest = new NavigationRequestMsg(lineNumber, context);
+        Logger.Info($"[{Title}] NavigateToLine called - sending message bus navigation to line {lineNumber}");
         
-        Logger.Info($"[{Title}] NavigateToLine called - {newRequest}");
-        Logger.Info($"[{Title}] Previous request: {NavigationRequest?.ToString() ?? "null"}");
+        // Send message directly on bus - no property change nonsense
+        var navigationMsg = new ErrorNavigationMsg(FilePath ?? "", lineNumber);
+        MessageBus.Current.SendMessage(navigationMsg);
         
-        // Always create a new navigation request object - this guarantees PropertyChanged fires
-        NavigationRequest = newRequest;
-        
-        Logger.Info($"[{Title}] Set new navigation request: {newRequest}");
+        Logger.Info($"[{Title}] Navigation message sent via bus for line {lineNumber}");
     }
 
 

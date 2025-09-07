@@ -16,6 +16,7 @@ using DockComponent.ErrorList.Transport;
 using DockComponent.ErrorList.Messages;
 using DockComponent.Base;
 using System.Text.Json;
+using DockComponent.ErrorList.Messages.EditorComponent;
 using NLog;
 
 namespace DockComponent.ErrorList.ViewModels;
@@ -122,6 +123,12 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
             }
         };
         
+        // Subscribe to editor ready messages for ping-pong pattern
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name.EndsWith("_EditorReady"))
+            .Subscribe(msg => OnEditorReady(msg))
+            .DisposeWith(_disposables);
+        
         // Subscribe to errors collection changes
         _errorService.Errors.CollectionChanged += (s, e) =>
         {
@@ -132,11 +139,6 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
             }, DispatcherPriority.Background);
         };
 
-        // Subscribe to editor ready messages
-        MessageBus.Current.Listen<ComponentMessage>()
-            .Where(msg => msg.Name.EndsWith("_EditorReady"))
-            .Subscribe(msg => OnEditorReady(msg))
-            .DisposeWith(_disposables);
 
         LogInfo("✅ Error List component initialized");
     }
@@ -212,6 +214,16 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
         var navComponentMessage = NavigateToSourceMessageTransport.Create(navMessage);
         MessageBus.Current.SendMessage(navComponentMessage);
         
+        // Also send message to SolutionExplorer to expand and focus on the file
+        if (System.IO.File.Exists(filePath))
+        {
+            var expandFileMsg = new ComponentMessage(
+                "ErrorList_ExpandFile",
+                JsonSerializer.Serialize(new { FilePath = filePath })
+            );
+            MessageBus.Current.SendMessage(expandFileMsg);
+        }
+        
         var pendingRequest = new PendingHighlightRequest(
             filePath, 
             lineNumber, 
@@ -234,22 +246,23 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
             
             if (filePath != null && _pendingHighlights.TryRemove(filePath, out var pendingRequest))
             {
-                var errorClickedMsg = new ErrorClickedMsg
-                {
-                    FilePath = pendingRequest.FilePath,
-                    LineNumber = pendingRequest.LineNumber,
-                    ErrorMessage = pendingRequest.ErrorMessage,
-                    ErrorLevel = pendingRequest.ErrorLevel
-                };
+                Logger.Info($"[ErrorList] Editor ready for {System.IO.Path.GetFileName(filePath)}, sending scroll message for line {pendingRequest.LineNumber}");
+                
+                // Send ErrorNavigationMsg to trigger line highlighting in the now-ready editor
+                var scrollMsg = new ErrorNavigationMsg(
+                    pendingRequest.FilePath,
+                    pendingRequest.LineNumber
+                );
                 
                 var componentMessage = new ComponentMessage(
-                    "ErrorList_ErrorClicked",
-                    JsonSerializer.Serialize(errorClickedMsg)
+                    "ErrorList_ScrollToLine", 
+                    JsonSerializer.Serialize(scrollMsg)
                 );
                 
                 Dispatcher.UIThread.Post(() =>
                 {
                     MessageBus.Current.SendMessage(componentMessage);
+                    Logger.Info($"[ErrorList] Scroll message sent for {System.IO.Path.GetFileName(filePath)}:{pendingRequest.LineNumber}");
                 }, DispatcherPriority.Background);
             }
         }

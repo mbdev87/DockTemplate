@@ -9,6 +9,7 @@ using DockComponent.Base;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using DockComponent.SolutionExplorer.Messages;
+using DockComponent.SolutionExplorer.Transport.ErrorListComponent;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using NLog;
@@ -69,6 +70,12 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
         MessageBus.Current.Listen<ComponentMessage>()
             .Where(msg => msg.Name == SolutionExplorerMessages.REFRESH_EXPLORER)
             .Subscribe(_ => LoadDirectory())
+            .DisposeWith(_disposables);
+
+        // Listen for error navigation messages from ErrorList
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name == "ErrorList_ScrollToLine")
+            .Subscribe(message => HandleErrorNavigation(message))
             .DisposeWith(_disposables);
         
         ExpandAllCommand = ReactiveCommand.Create(ExpandAll);
@@ -148,6 +155,23 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
         catch (Exception ex)
         {
             LogError($"❌ Error handling navigate to file: {ex.Message}");
+        }
+    }
+
+    private void HandleErrorNavigation(ComponentMessage message)
+    {
+        try
+        {
+            var errorNavMsg = System.Text.Json.JsonSerializer.Deserialize<ErrorNavigationMsg>(message.Payload);
+            if (errorNavMsg != null && !string.IsNullOrEmpty(errorNavMsg.FilePath))
+            {
+                LogInfo($"🎯 Error navigation request received for {Path.GetFileName(errorNavMsg.FilePath)}:{errorNavMsg.LineNumber}", errorNavMsg.FilePath, errorNavMsg.LineNumber);
+                TrySelectAndExpandToFile(errorNavMsg.FilePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogError($"❌ Error handling error navigation: {ex.Message}");
         }
     }
     

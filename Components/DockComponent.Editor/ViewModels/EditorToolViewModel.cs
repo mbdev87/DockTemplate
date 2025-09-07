@@ -25,7 +25,7 @@ using NLog;
 
 namespace DockComponent.Editor.ViewModels;
 
-public class EditorToolViewModel : Document, IDisposable
+public class EditorToolViewModel : ViewModelBase, IDisposable
 {
     [Reactive] public TextDocument Document { get; set; } = new();
     [Reactive] public TextMate.Installation? TextMateInstallation { get; set; }

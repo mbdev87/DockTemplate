@@ -7,10 +7,12 @@ using Avalonia.Input;
 using Avalonia.Media;
 using DockComponent.Base;
 using DockComponent.ErrorList.ViewModels;
+using JetBrains.Annotations;
 
 
 namespace DockComponent.ErrorList.Views;
 
+[UsedImplicitly]
 public partial class ErrorListView : UserControl
 {
     public ErrorListView()

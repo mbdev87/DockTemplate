@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +41,11 @@ public class DockFactory : Factory
 
     public DockFactory()
     {
-        
+        // Listen for navigation messages from components
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name == "Editor_NavigateToSource")
+            .Subscribe(HandleNavigationMessage);
+            
         // Listen for UI loaded message to integrate components after full initialization
         MessageBus.Current.Listen<UILoadedMessage>()
             .Subscribe(_ =>
@@ -48,6 +53,33 @@ public class DockFactory : Factory
                 Logger.Info("[DockFactory] Received UILoadedMessage - integrating components");
                 IntegrateComponentsAfterUILoad();
             });
+    }
+    
+    private void HandleNavigationMessage(ComponentMessage message)
+    {
+        try
+        {
+            var navigationData = JsonSerializer.Deserialize<NavigationMessageData>(message.Payload);
+            if (navigationData != null)
+            {
+                Logger.Info($"[DockFactory] Received navigation message for {navigationData.FilePath}:{navigationData.LineNumber}");
+                NavigateToSourceLine(navigationData.FilePath, navigationData.LineNumber);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[DockFactory] Failed to handle navigation message: {ex.Message}");
+        }
+    }
+    
+    // Simple class to deserialize navigation messages
+    private class NavigationMessageData
+    {
+        public string FilePath { get; set; } = "";
+        public int LineNumber { get; set; }
+        public int Column { get; set; } = 0;
+        public bool HighlightLine { get; set; } = true;
+        public string? Context { get; set; }
     }
 
     public override IRootDock CreateLayout()
@@ -321,11 +353,101 @@ public class DockFactory : Factory
 
     public void OpenDocument(string filePath, int? targetLine)
     {
-        Logger.Info($"[DockFactory] Document opening requested: {filePath}" + 
-                   (targetLine.HasValue ? $" at line {targetLine.Value}" : ""));
-        
-        // Relay document opening to Editor component via message bus
-        BroadcastFileNavigationMessage(filePath, targetLine ?? 0);
+        if (_documentDock == null)
+        {
+            Logger.Info("[DockFactory] Document dock not initialized");
+            return;
+        }
+
+        try
+        {
+            var fileName = System.IO.Path.GetFileName(filePath);
+            var extension = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+            
+            Logger.Info($"[DockFactory] Opening document: {fileName} from {filePath}" + 
+                       (targetLine.HasValue ? $" at line {targetLine.Value}" : ""));
+            
+            // Check if document is already open
+            var existingDocument = FindExistingDocument(filePath);
+            if (existingDocument != null)
+            {
+                Logger.Info($"[DockFactory] Found existing document: {fileName}");
+                
+                // Focus existing document
+                Logger.Info($"[DockFactory] Setting ActiveDockable to existing document: {existingDocument.Title}");
+                _documentDock.ActiveDockable = existingDocument;
+                
+                // Navigate to specific line if specified
+                if (targetLine.HasValue && targetLine.Value > 0)
+                {
+                    Logger.Info($"[DockFactory] About to navigate existing document {existingDocument.Title} to line {targetLine.Value}");
+                    
+                    // Use dispatcher to ensure proper timing
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        Logger.Info($"[DockFactory] Dispatcher executing - calling NavigateToLine on {existingDocument.Title}");
+                        existingDocument.NavigateToLine(targetLine.Value, $"Error/Warning click to line {targetLine.Value}");
+                        Logger.Info($"[DockFactory] NavigateToLine call completed for {existingDocument.Title}");
+                    }, Avalonia.Threading.DispatcherPriority.Background);
+                }
+                
+                Logger.Info($"[DockFactory] Focused existing document: {fileName}" + 
+                           (targetLine.HasValue ? $" with line {targetLine.Value} highlighted" : ""));
+                return;
+            }
+            
+            // Check if this is an image file and log a warning
+            var imageExtensions = new[] { ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg" };
+            if (imageExtensions.Contains(extension))
+            {
+                Logger.Error($"Cannot open binary file '{fileName}' in text editor");
+                Logger.Warn($"File '{fileName}' is an image file. Consider using an image viewer instead.");
+                return;
+            }
+            
+            // Create new document view model with file path as ID for tracking
+            var documentId = filePath; // Use full path as unique identifier
+            var document = DockComponent.Editor.EditorComponent.CreateDocument(documentId, fileName);
+            
+            // Store the file path for future lookups
+            document.FilePath = filePath;
+            
+            // Load file content
+            if (System.IO.File.Exists(filePath))
+            {
+                try
+                {
+                    var content = System.IO.File.ReadAllText(filePath);
+                    document.SetContent(content);
+                    
+                    // Navigate to specific line if specified
+                    if (targetLine.HasValue && targetLine.Value > 0)
+                    {
+                        document.NavigateToLine(targetLine.Value, $"New document at line {targetLine.Value}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, $"Failed to read file '{fileName}'");
+                    document.SetContent($"Error reading file: {ex.Message}");
+                }
+            }
+            
+            // Add to document dock at the beginning (pushing others to the right)
+            var visibleDockables = _documentDock.VisibleDockables?.ToList() ?? new List<IDockable>();
+            visibleDockables.Insert(0, document);
+            _documentDock.VisibleDockables = CreateList(visibleDockables.ToArray());
+            
+            // Set as active document
+            _documentDock.ActiveDockable = document;
+            
+            Logger.Info($"[DockFactory] Document opened successfully: {fileName}" + 
+                       (targetLine.HasValue ? $" with line {targetLine.Value} highlighted" : ""));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, $"[DockFactory] Error opening document {filePath}: {ex.Message}");
+        }
     }
 
     // Document handling removed - will be handled by Editor component
@@ -334,22 +456,22 @@ public class DockFactory : Factory
     {
         try
         {
-            Logger.Info($"[DockFactory] Relaying navigation request to components: {filePath}:{line}");
+            Logger.Info($"[DockFactory] Navigating to source line: {filePath}:{line}");
             
-            // 🚀 NEW APPROACH: DockFactory acts as message relay hub instead of direct handler
+            // 🚀 DIRECT APPROACH: DockFactory handles document opening directly like reference project
             
             // 1. Send message to SolutionExplorer to highlight file (if it exists there)
             BroadcastFileSelectionMessage(filePath);
             
-            // 2. Send message to Editor component to open document with line navigation  
-            BroadcastFileNavigationMessage(filePath, line);
+            // 2. DockFactory directly opens/focuses the document with line navigation
+            OpenDocument(filePath, line);
             
-            Logger.Info($"[DockFactory] Message relay completed for {System.IO.Path.GetFileName(filePath)}:{line} - components will handle");
+            Logger.Info($"[DockFactory] Navigation completed for {System.IO.Path.GetFileName(filePath)}:{line}");
             
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"Failed to relay navigation messages for {System.IO.Path.GetFileName(filePath)}:{line}: {ex.Message}");
+            Logger.Error(ex, $"Failed to navigate to {System.IO.Path.GetFileName(filePath)}:{line}: {ex.Message}");
         }
     }
 
@@ -440,5 +562,21 @@ public class DockFactory : Factory
         {
             Logger.Error(ex, $"[DockFactory] Failed to broadcast file navigation message for {filePath}:{lineNumber}");
         }
+    }
+    
+    private DockComponent.Editor.ViewModels.Documents.DocumentViewModel? FindExistingDocument(string filePath)
+    {
+        if (_documentDock?.VisibleDockables == null) return null;
+        
+        foreach (var dockable in _documentDock.VisibleDockables)
+        {
+            if (dockable is DockComponent.Editor.ViewModels.Documents.DocumentViewModel doc && 
+                string.Equals(doc.FilePath, filePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return doc;
+            }
+        }
+        
+        return null;
     }
 }

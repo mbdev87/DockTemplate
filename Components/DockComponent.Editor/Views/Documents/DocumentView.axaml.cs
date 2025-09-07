@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -10,7 +11,10 @@ using AvaloniaEdit;
 using AvaloniaEdit.Rendering;
 using DockComponent.Editor.ViewModels.Documents;
 using DockComponent.Editor.Transport;
+using DockComponent.Base;
+using JetBrains.Annotations;
 using ReactiveUI;
+// ReSharper disable PartialTypeWithSinglePart
 
 namespace DockComponent.Editor.Views.Documents;
 
@@ -31,17 +35,21 @@ public partial class DocumentView : UserControl, IDisposable
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine($"[DocumentView] OnLoaded called");
         if (DataContext is DocumentViewModel viewModel)
         {
+            System.Diagnostics.Debug.WriteLine($"[DocumentView] OnLoaded for document: {viewModel.Title}");
             viewModel.SetupTextMateForEditor(TextEditor);
             SetupLineHighlighting(viewModel);
             SubscribeToThemeChanges(viewModel);
             
             _isEditorReady = true;
+            System.Diagnostics.Debug.WriteLine($"[DocumentView] Editor ready for {viewModel.Title}");
             AnnounceReady(viewModel, "OnLoaded");
             
             if (_pendingHighlightLine.HasValue)
             {
+                System.Diagnostics.Debug.WriteLine($"[DocumentView] Processing pending highlight line: {_pendingHighlightLine.Value}");
                 HighlightLine(_pendingHighlightLine.Value);
                 _pendingHighlightLine = null;
             }
@@ -50,6 +58,7 @@ public partial class DocumentView : UserControl, IDisposable
 
     private void OnDataContextChanged(object? sender, System.EventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine($"[DocumentView] DataContext changed to: {(DataContext as DocumentViewModel)?.Title ?? "null"}");
         _isEditorReady = false;
         _pendingHighlightLine = null;
     }
@@ -66,11 +75,19 @@ public partial class DocumentView : UserControl, IDisposable
     {
         if (viewModel.FilePath != null)
         {
+            // Send as ComponentMessage for cross-component communication
             var readyMessage = new EditorReadyMsg(
                 viewModel.FilePath, 
                 viewModel.Title
             );
-            MessageBus.Current.SendMessage(readyMessage);
+            
+            var componentMessage = new ComponentMessage(
+                "Editor_EditorReady",
+                System.Text.Json.JsonSerializer.Serialize(readyMessage)
+            );
+            
+            MessageBus.Current.SendMessage(componentMessage);
+            System.Diagnostics.Debug.WriteLine($"[DocumentView] Sent Editor_EditorReady for {viewModel.FilePath}");
         }
     }
 
@@ -88,20 +105,32 @@ public partial class DocumentView : UserControl, IDisposable
             })
             .DisposeWith(_disposables);
 
-        MessageBus.Current.Listen<ErrorNavigationMsg>()
+        // Listen for ComponentMessage from ErrorList containing ErrorNavigationMsg
+        MessageBus.Current.Listen<ComponentMessage>()
+            .Where(msg => msg.Name == "ErrorList_ScrollToLine")
             .Subscribe(message =>
             {
-                if (viewModel.FilePath != null && 
-                    string.Equals(viewModel.FilePath, message.FilePath, StringComparison.OrdinalIgnoreCase))
+                try
                 {
-                    if (_isEditorReady)
+                    var errorNavMsg = System.Text.Json.JsonSerializer.Deserialize<ErrorNavigationMsg>(message.Payload);
+                    if (errorNavMsg != null && viewModel.FilePath != null && 
+                        string.Equals(viewModel.FilePath, errorNavMsg.FilePath, StringComparison.OrdinalIgnoreCase))
                     {
-                        HighlightLine(message.LineNumber);
+                        System.Diagnostics.Debug.WriteLine($"[DocumentView] Received scroll to line request for {System.IO.Path.GetFileName(errorNavMsg.FilePath)}:{errorNavMsg.LineNumber}");
+                        if (_isEditorReady)
+                        {
+                            HighlightLine(errorNavMsg.LineNumber);
+                        }
+                        else
+                        {
+                            _pendingHighlightLine = errorNavMsg.LineNumber;
+                            System.Diagnostics.Debug.WriteLine($"[DocumentView] Queued pending highlight for line {errorNavMsg.LineNumber}");
+                        }
                     }
-                    else
-                    {
-                        _pendingHighlightLine = message.LineNumber;
-                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DocumentView] Error parsing ErrorNavigationMsg: {ex.Message}");
                 }
             })
             .DisposeWith(_disposables);
@@ -120,6 +149,7 @@ public partial class DocumentView : UserControl, IDisposable
             _lineHighlightRenderer = null;
         }
 
+        System.Diagnostics.Debug.WriteLine($"[DocumentView] Subscribing to PropertyChanged for {viewModel.Title}");
         viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
@@ -132,6 +162,7 @@ public partial class DocumentView : UserControl, IDisposable
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        // No longer needed - using message bus for navigation
     }
 
     private void HighlightLine(int lineNumber)
@@ -142,14 +173,34 @@ public partial class DocumentView : UserControl, IDisposable
             TextEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
         }
 
-        _lineHighlightRenderer.HighlightedLine = null;
-        _lineHighlightRenderer.HighlightedLine = lineNumber;
-        
-        TextEditor.ScrollToLine(lineNumber);
-        TextEditor.Focus();
-        
-        TextEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
-        TextEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+        System.Diagnostics.Debug.WriteLine($"[DocumentView] HighlightLine called for line {lineNumber}");
+
+        // Post to UI thread with slight delay to ensure editor is fully rendered
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                // Small delay to ensure UI layout is complete
+                await System.Threading.Tasks.Task.Delay(50);
+
+                _lineHighlightRenderer.HighlightedLine = null;
+                _lineHighlightRenderer.HighlightedLine = lineNumber;
+                
+                TextEditor.ScrollToLine(lineNumber);
+                TextEditor.Focus();
+                
+                // Force renderer refresh
+                TextEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+                TextEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+                TextEditor.TextArea.TextView.InvalidateVisual();
+                
+                System.Diagnostics.Debug.WriteLine($"[DocumentView] Line {lineNumber} highlighted and scrolled to");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DocumentView] Error highlighting line {lineNumber}: {ex.Message}");
+            }
+        }, DispatcherPriority.Background);
     }
 
     public void Dispose()

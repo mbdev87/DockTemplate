@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using DockTemplate.ViewModels;
 using DockTemplate.Views;
 using DockTemplate.Services;
+using DockComponent.Base;
 
 namespace DockTemplate;
 
@@ -59,46 +60,16 @@ public partial class App : Application
         if (_serviceProvider != null)
         {
             // Start our poor man's hosted services
-            var batchingService = _serviceProvider.GetService<LogBatchingService>();
-            if (batchingService != null)
-            {
-                _ = batchingService.StartAsync(CancellationToken.None);
-            }
-            
-            var pluginInstallationService = _serviceProvider.GetService<PluginInstallationService>();
-            if (pluginInstallationService != null)
-            {
-                _ = pluginInstallationService.StartAsync(CancellationToken.None);
-            }
-            
-            // Load components after Avalonia is initialized (avoids resource loading issues)
-            var componentLoader = _serviceProvider.GetService<ComponentLoader>();
+            // AUTHOR MODE - Direct component registration (no plugin loading)
             var dockFactory = _serviceProvider.GetService<DockFactory>();
-            if (componentLoader != null && dockFactory != null)
+            if (dockFactory != null)
             {
-                // Ensure LocalAppData directory exists
-                Services.PluginDirectoryService.EnsureLocalAppDataDirectoryExists();
+                Console.WriteLine("[App] AUTHOR MODE - Registering components directly from DI container");
                 
-                // Load components from all plugin directories (LocalAppData + Development)
-                var pluginPaths = Services.PluginDirectoryService.GetAllPluginPaths();
+                // Register components now that DockFactory is available
+                Program.RegisterAllComponents();
                 
-                Console.WriteLine($"[App] Loading installed plugins from {pluginPaths.Count()} directories:");
-                foreach (var pluginPath in pluginPaths)
-                {
-                    Console.WriteLine($"  - {pluginPath}");
-                    componentLoader.LoadComponents(pluginPath);
-                }
-                
-                // Check what we loaded
-                var registry = Services.ComponentRegistry.Instance;
-                Console.WriteLine($"[App] Startup component loading complete:");
-                Console.WriteLine($"  - Loaded components: {registry.LoadedComponents.Count}");
-                Console.WriteLine($"  - Registered tools: {registry.ComponentTools.Count}");
-                Console.WriteLine($"  - Registered documents: {registry.ComponentDocuments.Count}");
-                
-                // Components are now in ComponentRegistry via AddComponents() calls
-                // Integration will happen via UILoadedMessage in DockFactory
-                Console.WriteLine("[App] ✅ Plugin loading complete - components ready for integration");
+                Console.WriteLine("[App] ✅ Component registration complete - all components available for debugging");
             }
         }
         
@@ -114,4 +85,5 @@ public partial class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
+    
 }
