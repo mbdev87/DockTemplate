@@ -9,6 +9,7 @@ Perfect for anyone who wants a "just works" baseline with batteries included to 
 ## Current Status
 
 - Complete dockable IDE layout with working panels
+- Component system: each control on the UX is fully standalone, loaded or installed! Check DockComponent.Base/README.md file.
 - Beautiful Material Design icons with VS Code-inspired colors  
 - Real-time logging with filtering (try different log levels!)
 - File explorer with intelligent file type recognition
