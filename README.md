@@ -3,18 +3,19 @@
 **DockTemplate** is a starter framework for building **IDE-style, plugin-driven desktop applications** with [Avalonia](https://avaloniaui.net/).  
 It goes beyond simple docking demos by enabling **real collaboration and extensibility** out of the box.
 
-## Why DockTemplate?
+## Why DockTemplate Exists
 
-DockTemplate shows **how to build an application and the ecosystem around it**:
+DockTemplate is more than just a docking demo—it’s built around real-world extensibility and collaboration:
 
-- 🔑 **Debug as Source** – Develop plugins inside your solution, step through them in the debugger, and treat them like first-class code.  
-- 📦 **Ship as Plugins** – At build time, the same code is emitted as a standalone `.dockplugin` package.  
-- 🤝 **Team Collaboration** – Share functionality across teams without sharing source code. Drop in a plugin (e.g. a custom editor, visualization, or dashboard) and it “just works.”  
-- 🛠️ **Loose Coupling** – Components communicate via lightweight messages, not hard dependencies. This keeps plugins independent and apps maintainable.  
-- 🌗 **Ready to Go** – Includes theming, logging, file explorer, and extensibility points so you don’t start from scratch.
+| Benefit                | What It Enables                                                                         |
+|------------------------|------------------------------------------------------------------------------------------|
+| **Debug as Source**    | Develop plugins as part of your solution—set breakpoints, step through code, and iterate. |
+| **Ship as Plugins**    | At build-time, plugins are packaged into standalone `.dockplugin` files for distribution. |
+| **Team Collaboration** | Teams can share tools (editors, visualizations, dashboards) without exposing source code. |
+| **Loose Coupling**     | Communication via lightweight messages keeps components independent and robust.          |
+| **Out-of-the-Box Features** | Includes theming, logging, file explorer, and extensibility points—no need to reinvent basics. |
 
-Think of DockTemplate as a **cross-platform VS Shell**:  
-a lightweight foundation where functionality grows organically through plugins.
+Imagine DockTemplate as a **cross-platform VS Shell**, sculpted for simplicity, modularity, and cross-team effectiveness.
 
 <img src="docs/img/dock_template_overview.png" alt="The App" />
 
