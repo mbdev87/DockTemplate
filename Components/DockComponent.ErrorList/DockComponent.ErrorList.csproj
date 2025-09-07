@@ -31,14 +31,14 @@
             <PluginOutputDir>$(OutputPath)Plugin-Distribution</PluginOutputDir>
             <PluginName>ErrorList-Component</PluginName>
             <PluginZipPath>$(PluginOutputDir)\$(PluginName).dockplugin</PluginZipPath>
-            <TempPluginDir>$(OutputPath)temp-plugin</TempPluginDir>
+            <TempPluginDir>$(OutputPath)temp-plugin-$(MSBuildProjectName)-$([System.Guid]::NewGuid().ToString("N").Substring(0,8))</TempPluginDir>
             <MessageContractsDir>$(PluginOutputDir)\MessageContracts</MessageContractsDir>
         </PropertyGroup>
         
         <MakeDir Directories="$(PluginOutputDir)" />
         <MakeDir Directories="$(MessageContractsDir)" />
         <Delete Files="$(PluginZipPath)" Condition="Exists('$(PluginZipPath)')" />
-        <RemoveDir Directories="$(TempPluginDir)" />
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
         <MakeDir Directories="$(TempPluginDir)" />
         
         <Message Text="Creating .dockplugin file: $(PluginZipPath)" Importance="high" />
@@ -52,7 +52,7 @@
         <Copy SourceFiles="$(OutputPath)DockComponent.Base.dll" DestinationFolder="$(TempPluginDir)" />
         
         <ZipDirectory SourceDirectory="$(TempPluginDir)" DestinationFile="$(PluginZipPath)" Overwrite="true" />
-        <RemoveDir Directories="$(TempPluginDir)" />
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
         <Copy SourceFiles="README.txt" DestinationFolder="$(PluginOutputDir)" Condition="Exists('README.txt')" />
         
         <ItemGroup>

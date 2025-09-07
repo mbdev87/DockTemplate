@@ -61,11 +61,11 @@
         <Error Condition="!Exists('$(OutputPath)DockComponent.Dashboard.dll')" Text="Required file not found: $(OutputPath)DockComponent.Dashboard.dll" />
         <Error Condition="!Exists('$(OutputPath)DockComponent.Base.dll')" Text="Required file not found: $(OutputPath)DockComponent.Base.dll" />
         
-        <!-- Create temporary directory for plugin contents -->
+        <!-- Create unique temporary directory for plugin contents -->
         <PropertyGroup>
-            <TempPluginDir>$(OutputPath)temp-plugin</TempPluginDir>
+            <TempPluginDir>$(OutputPath)temp-plugin-$(MSBuildProjectName)-$([System.Guid]::NewGuid().ToString("N").Substring(0,8))</TempPluginDir>
         </PropertyGroup>
-        <RemoveDir Directories="$(TempPluginDir)" />
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
         <MakeDir Directories="$(TempPluginDir)" />
         
         <!-- Copy files to temp directory -->
@@ -76,8 +76,8 @@
         <!-- Create ZIP using MSBuild ZipDirectory task (cross-platform) -->
         <ZipDirectory SourceDirectory="$(TempPluginDir)" DestinationFile="$(PluginZipPath)" Overwrite="true" />
         
-        <!-- Clean up temp directory -->
-        <RemoveDir Directories="$(TempPluginDir)" />
+        <!-- Clean up temp directory (gracefully handle failures) -->
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
         
         <!-- Copy README.txt to distribution folder -->
         <Copy SourceFiles="README.txt" DestinationFolder="$(PluginOutputDir)" />
