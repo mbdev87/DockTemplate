@@ -14,7 +14,7 @@ public class ErrorService : ReactiveObject
     private readonly ObservableCollection<ErrorEntry> _errors = new();
 
     public ObservableCollection<ErrorEntry> Errors => _errors;
-
+    
     public ErrorService()
     {
         // Subscribe to single error messages from NLog via MessageBus
@@ -36,7 +36,10 @@ public class ErrorService : ReactiveObject
                 {
                     foreach (var entry in batchedMsg.Entries)
                     {
-                        _errors.Insert(0, entry);
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            _errors.Insert(0, entry);
+                        }, Avalonia.Threading.DispatcherPriority.Background);
                     }
                     UpdateCounts();
                 }
