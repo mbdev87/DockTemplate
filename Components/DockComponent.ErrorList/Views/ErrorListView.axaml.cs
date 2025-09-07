@@ -66,8 +66,7 @@ public partial class ErrorListView : UserControl
         // Add test error to demonstrate functionality
         if (DataContext is ErrorListViewModel viewModel)
         {
-            // This is just for demo purposes
-            System.Console.WriteLine("[ErrorListView] Test errors button clicked");
+            viewModel.GenerateTestErrors();
         }
     }
 }

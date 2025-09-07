@@ -341,6 +341,12 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
         SendLogMessage("Warn", message, filePath, lineNumber);
     }
     
+    public void GenerateTestErrors()
+    {
+        Logger.Error("Test error: double click on me to jump to source");
+        Logger.Warn("Test warning: this is a sample warning message");
+    }
+    
     private void SendLogMessage(string level, string message, string? filePath, int? lineNumber)
     {
         var logMessage = new LogMessage

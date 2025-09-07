@@ -89,7 +89,7 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
     {
         try
         {
-            RootPath = new DirectoryInfo(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName ?? Directory.GetCurrentDirectory();
+            RootPath = new DirectoryInfo(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.Parent?.FullName ?? Directory.GetCurrentDirectory();
             Items.Clear();
             
             var rootItem = new FileSystemItemViewModel(RootPath, OnFileOpened);

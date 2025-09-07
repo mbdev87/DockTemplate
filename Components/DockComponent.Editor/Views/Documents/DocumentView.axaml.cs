@@ -20,6 +20,7 @@ namespace DockComponent.Editor.Views.Documents;
 
 public partial class DocumentView : UserControl, IDisposable
 {
+    private TextEditor? _textEditor;
     private LineHighlightRenderer? _lineHighlightRenderer;
     private int? _pendingHighlightLine;
     private bool _isEditorReady = false;
@@ -36,10 +37,14 @@ public partial class DocumentView : UserControl, IDisposable
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         System.Diagnostics.Debug.WriteLine($"[DocumentView] OnLoaded called");
-        if (DataContext is DocumentViewModel viewModel)
+        
+        // Get reference to the TextEditor from XAML
+        _textEditor = this.FindControl<TextEditor>("TextEditor");
+        
+        if (DataContext is DocumentViewModel viewModel && _textEditor != null)
         {
             System.Diagnostics.Debug.WriteLine($"[DocumentView] OnLoaded for document: {viewModel.Title}");
-            viewModel.SetupTextMateForEditor(TextEditor);
+            viewModel.SetupTextMateForEditor(_textEditor);
             SetupLineHighlighting(viewModel);
             SubscribeToThemeChanges(viewModel);
             
@@ -143,9 +148,9 @@ public partial class DocumentView : UserControl, IDisposable
             prevViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         }
 
-        if (_lineHighlightRenderer != null)
+        if (_lineHighlightRenderer != null && _textEditor != null)
         {
-            TextEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+            _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
             _lineHighlightRenderer = null;
         }
 
@@ -155,8 +160,11 @@ public partial class DocumentView : UserControl, IDisposable
 
         Dispatcher.UIThread.Post(() =>
         {
-            _lineHighlightRenderer = new LineHighlightRenderer();
-            TextEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+            if (_textEditor != null)
+            {
+                _lineHighlightRenderer = new LineHighlightRenderer();
+                _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+            }
         }, DispatcherPriority.Background);
     }
 
@@ -167,10 +175,12 @@ public partial class DocumentView : UserControl, IDisposable
 
     private void HighlightLine(int lineNumber)
     {
+        if (_textEditor == null) return;
+        
         if (_lineHighlightRenderer == null)
         {
             _lineHighlightRenderer = new LineHighlightRenderer();
-            TextEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+            _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
         }
 
         System.Diagnostics.Debug.WriteLine($"[DocumentView] HighlightLine called for line {lineNumber}");
@@ -180,19 +190,37 @@ public partial class DocumentView : UserControl, IDisposable
         {
             try
             {
+                if (_textEditor == null) return;
+                
                 // Small delay to ensure UI layout is complete
                 await System.Threading.Tasks.Task.Delay(50);
+
+                // Validate line number and set caret position
+                if (lineNumber > 0 && lineNumber <= _textEditor.Document.LineCount)
+                {
+                    var line = _textEditor.Document.GetLineByNumber(lineNumber);
+                    _textEditor.CaretOffset = line.Offset;
+                }
 
                 _lineHighlightRenderer.HighlightedLine = null;
                 _lineHighlightRenderer.HighlightedLine = lineNumber;
                 
-                TextEditor.ScrollToLine(lineNumber);
-                TextEditor.Focus();
+                _textEditor.ScrollToLine(lineNumber);
+                _textEditor.Focus();
                 
-                // Force renderer refresh
-                TextEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
-                TextEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
-                TextEditor.TextArea.TextView.InvalidateVisual();
+                // Force aggressive visual refresh by temporarily removing/re-adding renderer
+                _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+                _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
+                
+                // Force complete editor refresh
+                _textEditor.TextArea.TextView.InvalidateVisual();
+                _textEditor.TextArea.TextView.InvalidateMeasure();
+                _textEditor.TextArea.TextView.InvalidateArrange();
+                
+                // Force focus cycle to trigger visual updates
+                _textEditor.Focus(Avalonia.Input.NavigationMethod.Unspecified);
+                await System.Threading.Tasks.Task.Delay(1);
+                _textEditor.Focus();
                 
                 System.Diagnostics.Debug.WriteLine($"[DocumentView] Line {lineNumber} highlighted and scrolled to");
             }
