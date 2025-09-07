@@ -71,58 +71,13 @@ public class PluginInstallationService : BackgroundService
         // Ensure directories exist
         PluginDirectoryService.EnsureLocalAppDataDirectoryExists();
         
-        // Check if plugin is already installed
+        // Check if plugin is already installed  
         var appDataRoot = Path.GetDirectoryName(localAppDataPath)!;
         var copiedPluginPath = Path.Combine(appDataRoot, pluginFileName);
         
         if (File.Exists(copiedPluginPath))
         {
-            Logger.Info($"Plugin {pluginFileName} already installed - checking for component duplicates");
-            
-            // Check if components from this plugin are already loaded to prevent runtime duplicates
-            var tempExtractPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            try
-            {
-                using (var archive = ZipFile.OpenRead(pluginPath))
-                {
-                    archive.ExtractToDirectory(tempExtractPath);
-                    
-                    // Load the plugin to get its component info for duplicate checking
-                    var dllFiles = Directory.GetFiles(tempExtractPath, "*.dll", SearchOption.AllDirectories)
-                        .Where(f => !Path.GetFileName(f).Equals("DockComponent.Base.dll", StringComparison.OrdinalIgnoreCase));
-                        
-                    foreach (var dllFile in dllFiles)
-                    {
-                        try
-                        {
-                            var assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(dllFile);
-                            var componentTypes = assembly.GetTypes()
-                                .Where(t => typeof(DockComponent.Base.IDockComponent).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
-                                
-                            foreach (var componentType in componentTypes)
-                            {
-                                var component = (DockComponent.Base.IDockComponent)Activator.CreateInstance(componentType)!;
-                                if (ComponentRegistry.Instance.IsAlreadyLoaded(component.Name, component.Version))
-                                {
-                                    Logger.Warn($"⚠️ Plugin {pluginFileName} contains component {component.Name} v{component.Version} that's already loaded - will skip duplicate");
-                                    return; // Don't install/re-process
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Debug(ex, $"Could not check component in {dllFile} for duplicates");
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                if (Directory.Exists(tempExtractPath))
-                    Directory.Delete(tempExtractPath, true);
-            }
-            
-            Logger.Info($"✅ Plugin {pluginFileName} is already installed but not loaded - proceeding with hot-loading");
+            Logger.Info($"Plugin {pluginFileName} already installed - will overwrite and reload");
         }
         
         Logger.Info($"Copying {pluginFileName} to {copiedPluginPath}");
@@ -130,6 +85,7 @@ public class PluginInstallationService : BackgroundService
         
         // Extract ZIP contents to Components folder
         Logger.Info($"Extracting plugin to {componentsPath}");
+        int extractedFiles = 0;
         using (var archive = ZipFile.OpenRead(copiedPluginPath))
         {
             foreach (var entry in archive.Entries)
@@ -150,7 +106,13 @@ public class PluginInstallationService : BackgroundService
                 // Extract file
                 Logger.Info($"  Extracting: {entry.FullName}");
                 entry.ExtractToFile(destinationPath, overwrite: true);
+                extractedFiles++;
             }
+        }
+        
+        if (extractedFiles == 0)
+        {
+            throw new InvalidOperationException($"Plugin {pluginFileName} is empty or contains no files to extract");
         }
         
         Logger.Info("Plugin extraction completed - starting hot-loading...");

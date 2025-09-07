@@ -14,13 +14,13 @@ public class ComponentLoader
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly DockFactory _dockFactory;
-    private readonly Microsoft.Extensions.DependencyInjection.IServiceCollection _services;
+    private readonly IServiceProvider _serviceProvider;
     private readonly List<IDockComponent> _loadedComponents = new();
 
-    public ComponentLoader(DockFactory dockFactory, Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    public ComponentLoader(DockFactory dockFactory, IServiceProvider serviceProvider)
     {
         _dockFactory = dockFactory;
-        _services = services;
+        _serviceProvider = serviceProvider;
     }
 
     public void LoadComponents(string componentDirectory)
@@ -92,7 +92,9 @@ public class ComponentLoader
                         Logger.Info($"Registering component: {component.Name} v{component.Version} (Instance: {component.InstanceId})");
                         
                         // Create a unique context for this component instance to prevent duplicates
-                        var componentContext = new DockComponentContext(_dockFactory, _services, component.InstanceId);
+                        // Create a new service collection for this component
+                var componentServices = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+                var componentContext = new DockComponentContext(_dockFactory, componentServices, component.InstanceId);
                         component.Register(componentContext);
                         
                         _loadedComponents.Add(component);
@@ -142,7 +144,9 @@ public class ComponentLoader
                 Logger.Info($"Registering component: {component.Name} v{component.Version} (Instance: {component.InstanceId})");
                 
                 // Create a unique context for this component instance to prevent duplicates
-                var componentContext = new DockComponentContext(_dockFactory, _services, component.InstanceId);
+                // Create a new service collection for this component
+                var componentServices = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+                var componentContext = new DockComponentContext(_dockFactory, componentServices, component.InstanceId);
                 component.Register(componentContext);
                 
                 _loadedComponents.Add(component);

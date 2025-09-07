@@ -31,7 +31,7 @@ public class DockFactory : Factory
 {
     private IRootDock? _rootDock;
     private IDocumentDock? _documentDock;
-    private IProportionalDock? _leftDock;
+    private IToolDock? _leftDock;
     private IProportionalDock? _rightDock;
     private IToolDock? _bottomDock;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -90,13 +90,15 @@ public class DockFactory : Factory
         Logger.Info("[DockFactory] Creating minimal empty layout - components will populate it");
 
         // Create empty docks that components can populate
-        var leftDock = new ProportionalDock
+        var leftDock = new ToolDock
         {
             Proportion = 0.2,
-            Orientation = Orientation.Vertical,
             ActiveDockable = new DockDock(),
             VisibleDockables = CreateList<IDockable>(),
-            
+            Alignment = Alignment.Left,
+            IsCollapsable = true,
+            IsActive = true,
+            CanCloseLastDockable = false
         };
 
         var rightDock = new ProportionalDock
@@ -105,6 +107,9 @@ public class DockFactory : Factory
             Orientation = Orientation.Vertical,
             ActiveDockable = new DockDock(),
             VisibleDockables = CreateList<IDockable>(),
+            IsCollapsable = true,
+            IsActive = true,
+            CanCloseLastDockable = false
         };
 
         var bottomDock = new ToolDock

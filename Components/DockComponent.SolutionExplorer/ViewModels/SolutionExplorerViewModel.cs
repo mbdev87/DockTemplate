@@ -165,6 +165,13 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
             var errorNavMsg = System.Text.Json.JsonSerializer.Deserialize<ErrorNavigationMsg>(message.Payload);
             if (errorNavMsg != null && !string.IsNullOrEmpty(errorNavMsg.FilePath))
             {
+                // Check if file exists before attempting navigation
+                if (!File.Exists(errorNavMsg.FilePath))
+                {
+                    LogWarn($"🚫 File does not exist, ignoring navigation request: {errorNavMsg.FilePath}", errorNavMsg.FilePath, errorNavMsg.LineNumber);
+                    return;
+                }
+                
                 LogInfo($"🎯 Error navigation request received for {Path.GetFileName(errorNavMsg.FilePath)}:{errorNavMsg.LineNumber}", errorNavMsg.FilePath, errorNavMsg.LineNumber);
                 TrySelectAndExpandToFile(errorNavMsg.FilePath);
             }

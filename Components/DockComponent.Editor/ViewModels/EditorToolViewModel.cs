@@ -280,28 +280,36 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         ApplySyntaxHighlighting();
     }
 
-    public async Task OpenFileWithPath(string filePath)
+    public async Task<bool> OpenFileWithPath(string filePath)
     {
         try
         {
-            if (File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
-                var content = await File.ReadAllTextAsync(filePath);
-                Document.Text = content;
-                CurrentFileName = Path.GetFileName(filePath);
-                CurrentLanguage = DetectLanguageFromExtension(CurrentFileName);
-                _currentFilePath = filePath;
-                HasUnsavedChanges = false;
-                StatusText = $"Opened: {CurrentFileName}";
-                ApplySyntaxHighlighting();
-                
-                // Emit file opened message
-                FileOpenedHelper.Emit(_currentFilePath, CurrentFileName, CurrentLanguage);
+                Logger.Warn($"[EditorToolViewModel] File does not exist, ignoring request: {filePath}");
+                StatusText = $"File not found: {Path.GetFileName(filePath)}";
+                return false;
             }
+
+            var content = await File.ReadAllTextAsync(filePath);
+            Document.Text = content;
+            CurrentFileName = Path.GetFileName(filePath);
+            CurrentLanguage = DetectLanguageFromExtension(CurrentFileName);
+            _currentFilePath = filePath;
+            HasUnsavedChanges = false;
+            StatusText = $"Opened: {CurrentFileName}";
+            ApplySyntaxHighlighting();
+            
+            // Emit file opened message
+            FileOpenedHelper.Emit(_currentFilePath, CurrentFileName, CurrentLanguage);
+            Logger.Info($"[EditorToolViewModel] Successfully opened file: {filePath}");
+            return true;
         }
         catch (Exception ex)
         {
-            StatusText = $"Error opening {filePath}: {ex.Message}";
+            Logger.Error(ex, $"[EditorToolViewModel] Error opening file: {filePath}");
+            StatusText = $"Error opening {Path.GetFileName(filePath)}: {ex.Message}";
+            return false;
         }
     }
 
@@ -350,7 +358,13 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             // Load the file on UI thread
             Dispatcher.UIThread.Post(async () =>
             {
-                await OpenFileWithPath(navMsg.FilePath);
+                // Only proceed if file was successfully opened
+                bool fileOpened = await OpenFileWithPath(navMsg.FilePath);
+                if (!fileOpened)
+                {
+                    Logger.Warn($"[EditorToolViewModel] File not opened, ignoring line navigation request: {navMsg.FilePath}");
+                    return;
+                }
                 
                 // Small delay to ensure UI is updated before navigation
                 await Task.Delay(100);

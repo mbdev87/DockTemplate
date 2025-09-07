@@ -66,12 +66,18 @@ sealed class Program
         services.AddLogging();
         
         // SHELL SERVICES
-        services.AddSingleton<App>();
+        services.AddSingleton<App>(provider => new App(provider));
         services.AddSingleton<IViewLocator, ViewLocator>();
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<InterPluginLogger>();
         services.AddSingleton<DockFactory>();
         services.AddTransient<MainWindowViewModel>();
+        
+        // PLUGIN SERVICES
+        services.AddSingleton<PluginInstallationService>();
+        services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<PluginInstallationService>());
+        services.AddSingleton<ComponentLoader>();
+        // Note: PluginDirectoryService is static - no need to register
         
         // COMPONENT SERVICES - Direct registration for author/debug mode
         RegisterEditorComponent(services);
