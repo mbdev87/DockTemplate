@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using DockComponent.Base;
 using ReactiveUI;
 using NLog;
 
@@ -33,7 +34,7 @@ public class ErrorService : ReactiveObject
             {
                 if (batchedMsg.Entries?.Length > 0)
                 {
-                    foreach (var entry in batchedMsg.Entries.Reverse())
+                    foreach (var entry in batchedMsg.Entries)
                     {
                         _errors.Insert(0, entry);
                     }
@@ -58,10 +59,5 @@ public class ErrorService : ReactiveObject
         this.RaisePropertyChanged(nameof(WarningCount));
     }
 
-    public void GenerateTestErrors()
-    {
-         Logger.Error("Test error: double click on me to jump to source");
-         Logger.Warn("Test warning: this is a sample warning message");
-    }
 
 }

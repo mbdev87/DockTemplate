@@ -19,7 +19,7 @@ public static class PluginDirectoryService
 
     
     /// <summary>
-    /// Gets all plugin directories to scan (LocalAppData first, then development)
+    /// Gets all plugin directories to scan (LocalAppData only)
     /// </summary>
     public static string[] GetAllPluginPaths()
     {

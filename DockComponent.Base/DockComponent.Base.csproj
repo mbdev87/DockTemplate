@@ -8,6 +8,9 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+        <PackageReference Include="NLog" Version="6.0.3" />
+        <PackageReference Include="ReactiveUI" Version="20.1.63" />
+        <PackageReference Include="System.Text.Json" Version="9.0.0" />
     </ItemGroup>
 
 </Project>

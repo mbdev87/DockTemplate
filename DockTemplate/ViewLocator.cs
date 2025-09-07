@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using DockTemplate.ViewModels;
-using DockTemplate.ViewModels.Documents;
-using DockTemplate.ViewModels.Tools;
-using DockTemplate.Models.Documents;
 using DockTemplate.Models.Tools;
 using DockTemplate.Models;
 using DockTemplate.Views;
-using DockTemplate.Views.Documents;
-using DockTemplate.Views.Tools;
 using DockTemplate.Views.Models;
+// Component references removed - using BuildByConvention for dynamically loaded plugins
 using Dock.Model.Core;
 using ReactiveUI;
 
@@ -27,15 +23,7 @@ public class ViewLocator : IDataTemplate, IViewLocator
 
         return param switch
         {
-            DocumentViewModel => new DocumentView(),
-            SolutionExplorerViewModel => new SolutionExplorerView(),
-            OutputViewModel => new OutputView(),
-            ErrorListViewModel => new ErrorListView(),
-            ToolViewModel => new ToolView(),
-            DocumentModel => new DocumentModelView(),
-            SolutionExplorerModel => new SolutionExplorerModelView(),
             PropertiesModel => new PropertiesModelView(),
-            EditorToolModel => new EditorToolView(),
             _ => BuildByConvention(param)
         };
     }
@@ -80,7 +68,7 @@ public class ViewLocator : IDataTemplate, IViewLocator
 
     public bool Match(object? data)
     {
-        return data is ViewModelBase or IDockable;
+        return data is DockTemplate.ViewModels.ViewModelBase or IDockable;
     }
 
     public IViewFor? ResolveView<T>(T? viewModel, string? contract = null)

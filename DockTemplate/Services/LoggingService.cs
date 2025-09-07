@@ -5,6 +5,7 @@ using NLog;
 using NLog.Targets;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using DockComponent.Base;
 
 namespace DockTemplate.Services;
 
@@ -20,127 +21,27 @@ public class LoggingService : ReactiveObject
     {
         _batchingService = batchingService;
         
-        // Configure NLog with our custom target
-        ConfigureNLog();
-        Logger.Info("LoggingService initialized");
+        // Connect to SharedLoggingService and configure global logging
+        ConnectToSharedLogging();
+        Logger.Info("LoggingService initialized and connected to SharedLoggingService");
     }
 
-    private void ConfigureNLog()
+    private void ConnectToSharedLogging()
     {
-        var config = LogManager.Configuration ?? new NLog.Config.LoggingConfiguration();
+        // Initialize shared logging service for host application
+        SharedLoggingService.Instance.ConfigureComponentLogging("HostApplication");
         
-        // Create custom target that feeds our UI
-        var uiTarget = new UILogTarget(this);
-        uiTarget.Name = "UITarget";
-        uiTarget.Layout =
-            "${longdate} ${level:uppercase=true} ${logger:shortName=true} ${message} " +
-            "[${callsite-filename}:${callsite-linenumber} ${callsite-method}] " +
-            "${exception:format=tostring}";
+        // Sync our collections with the shared service
+        LogEntries = SharedLoggingService.Instance.LogEntries;
+        ErrorEntries = SharedLoggingService.Instance.ErrorEntries;
         
-        config.AddTarget(uiTarget);
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, uiTarget);
-        
-        LogManager.Configuration = config;
+        Logger.Info("LoggingService connected to SharedLoggingService - all components will use consistent logging");
     }
 
-    public void AddLogEntry(LogEventInfo logEvent)
-    {
-        try
-        {
-            var entry = new LogEntry
-            {
-                Timestamp = logEvent.TimeStamp,
-                Level = logEvent.Level.Name,
-                Logger = logEvent.LoggerName ?? "Unknown",
-                Message = logEvent.FormattedMessage ?? string.Empty,
-                Exception = logEvent.Exception?.ToString()
-            };
-
-            // Add to log entries (keep last 1000 entries)
-            if (LogEntries.Count >= 1000)
-            {
-                LogEntries.RemoveAt(0);
-            }
-            LogEntries.Add(entry);
-
-            // If it's an error/warning/fatal, either batch or send immediately
-            if (logEvent.Level >= LogLevel.Warn)
-            {
-                var errorEntry = new ErrorEntry()
-                {
-                    Message  = logEvent.FormattedMessage ?? "Unknown message",
-                    Level = logEvent.Level.Name,
-                    Code = logEvent.CallerFilePath,
-                    Line = logEvent.CallerLineNumber,
-                    Exception = logEvent.Exception?.Message,
-                    FullException = logEvent.Exception?.ToString(),
-                    Source = logEvent.CallerMemberName,
-                    LoggerName = logEvent.LoggerName,
-                    Timestamp = logEvent.TimeStamp
-                };
-                
-                ErrorEntries.Add(errorEntry);
-                
-                // Use batching service if available, otherwise fallback to immediate sending
-                if (_batchingService != null)
-                {
-                    _batchingService.EnqueueError(errorEntry);
-                }
-                else
-                {
-                    var errorMessage = new ErrorMessage { Entry = errorEntry };
-                    MessageBus.Current.SendMessage(errorMessage);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Fallback logging to prevent infinite loops
-            Console.WriteLine( $"[LoggingService] Error processing log entry: {ex.Message}");
-        }
-    }
+    // Note: AddLogEntry is now handled by SharedLoggingService
+    // The host LoggingService acts as a bridge to the SharedLoggingService
+    // All log processing is centralized in SharedLoggingService for consistency
 }
 
-public class LogEntry
-{
-    public DateTime Timestamp { get; set; }
-    public string Level { get; set; } = null!;
-    public string Logger { get; set; } = null!;
-    public string Message { get; set; } = null!;
-    public string? Exception { get; set; }
-    
-    public string FormattedTimestamp => Timestamp.ToString("HH:mm:ss.fff");
-    public string FormattedMessage => $"[{FormattedTimestamp}] {Level.ToUpper()} {Logger}: {Message}";
-}
-
-public class ErrorEntry
-{
-    public DateTime Timestamp { get; set; }
-    public string Level { get; set; } = null!;
-    public string Message { get; set; } = null!;
-    public string? Exception { get; set; } = null!;
-    public string? FullException { get; set; } = null!;
-    public string? Source { get; set; }
-    public int? Line { get; set; }
-    
-    public string FormattedTimestamp => Timestamp.ToString("HH:mm:ss.fff");
-    public bool HasSourceLocation => !string.IsNullOrEmpty(Source) && Line.HasValue;
-    public string? Code { get; set; }
-    public string? LoggerName { get; set; }
-}
-
-// Custom NLog target that feeds our UI
-public class UILogTarget : TargetWithLayout
-{
-    private readonly LoggingService _loggingService;
-
-    public UILogTarget(LoggingService loggingService)
-    {
-        _loggingService = loggingService;
-    }
-
-    protected override void Write(LogEventInfo logEvent)
-    {
-        _loggingService.AddLogEntry(logEvent);
-    }
-}
+// Note: LogEntry, ErrorEntry, and SharedUILogTarget are now in DockComponent.Base.SharedLogging
+// This ensures all components use the same shared logging infrastructure

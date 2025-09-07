@@ -73,9 +73,8 @@ public partial class App : Application
             
             // Load components after Avalonia is initialized (avoids resource loading issues)
             var componentLoader = _serviceProvider.GetService<ComponentLoader>();
-            var componentContext = _serviceProvider.GetService<DockComponentContext>();
             var dockFactory = _serviceProvider.GetService<DockFactory>();
-            if (componentLoader != null && componentContext != null && dockFactory != null)
+            if (componentLoader != null && dockFactory != null)
             {
                 // Ensure LocalAppData directory exists
                 Services.PluginDirectoryService.EnsureLocalAppDataDirectoryExists();
@@ -83,14 +82,23 @@ public partial class App : Application
                 // Load components from all plugin directories (LocalAppData + Development)
                 var pluginPaths = Services.PluginDirectoryService.GetAllPluginPaths();
                 
+                Console.WriteLine($"[App] Loading installed plugins from {pluginPaths.Count()} directories:");
                 foreach (var pluginPath in pluginPaths)
                 {
-                    Console.WriteLine($"[App] Scanning for components in: {pluginPath}");
+                    Console.WriteLine($"  - {pluginPath}");
                     componentLoader.LoadComponents(pluginPath);
                 }
                 
-                // Store loaded components for integration during layout creation
-                dockFactory.StoreComponents(componentContext.RegisteredTools, componentContext.RegisteredDocuments);
+                // Check what we loaded
+                var registry = Services.ComponentRegistry.Instance;
+                Console.WriteLine($"[App] Startup component loading complete:");
+                Console.WriteLine($"  - Loaded components: {registry.LoadedComponents.Count}");
+                Console.WriteLine($"  - Registered tools: {registry.ComponentTools.Count}");
+                Console.WriteLine($"  - Registered documents: {registry.ComponentDocuments.Count}");
+                
+                // Components are now in ComponentRegistry via AddComponents() calls
+                // Integration will happen via UILoadedMessage in DockFactory
+                Console.WriteLine("[App] ✅ Plugin loading complete - components ready for integration");
             }
         }
         

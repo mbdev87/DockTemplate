@@ -18,6 +18,7 @@ namespace DockTemplate.ViewModels;
 public class MainWindowViewModel : ViewModelBase
 {
     private readonly IFactory? _factory;
+    private readonly InterPluginLogger _interPluginLogger;
     
     [Reactive] public IRootDock? Layout { get; set; }
     [Reactive] public bool ShowDropOverlay { get; set; } = false;
@@ -37,9 +38,10 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand ReloadPlugins { get; }
     public ICommand ToggleAcrylic { get; }
 
-    public MainWindowViewModel(DockFactory dockFactory)
+    public MainWindowViewModel(DockFactory dockFactory, InterPluginLogger interPluginLogger)
     {
         _factory = dockFactory;
+        _interPluginLogger = interPluginLogger;
 
         DebugFactoryEvents(_factory);
 
@@ -52,6 +54,9 @@ public class MainWindowViewModel : ViewModelBase
             // Fire UILoadedMessage after layout is fully initialized
             Logger.Info("UI fully loaded - sending UILoadedMessage");
             MessageBus.Current.SendMessage(new UILoadedMessage());
+            
+            // Demonstrate real inter-plugin messaging
+            DemonstrateInterPluginMessaging();
         }
         Layout = layout;
 
@@ -230,5 +235,20 @@ public class MainWindowViewModel : ViewModelBase
                 }, TaskScheduler.FromCurrentSynchronizationContext());
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
+    }
+    
+    private void DemonstrateInterPluginMessaging()
+    {
+        // Send some real log messages to demonstrate the inter-plugin messaging system
+        Task.Run(async () =>
+        {
+            await Task.Delay(2000); // Wait for Output component to be ready
+            
+            _interPluginLogger.Info("🚀 DockTemplate application started successfully");
+            
+            await Task.Delay(1000);
+            _interPluginLogger.Info("📦 Plugin system initialized and ready");
+            _interPluginLogger.Info("✨ All plugins loaded and inter-component communication established!");
+        });
     }
 }

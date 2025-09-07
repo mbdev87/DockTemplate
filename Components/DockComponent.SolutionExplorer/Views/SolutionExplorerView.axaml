@@ -1,0 +1,134 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:DockComponent.SolutionExplorer.ViewModels"
+             xmlns:converters="clr-namespace:DockComponent.SolutionExplorer.Converters"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             x:Class="DockComponent.SolutionExplorer.Views.SolutionExplorerView"
+             x:DataType="vm:SolutionExplorerViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TreeViewItem">
+      <Setter Property="Padding" Value="2,1" />
+      <Setter Property="Margin" Value="0" />
+    </Style>
+    
+    <Style Selector="TreeViewItem > ContentPresenter">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Toolbar -->
+    <Border Grid.Row="0" 
+            Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="4,2">
+      <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+        <!-- Expand All -->
+        <Button Command="{Binding ExpandAllCommand}"
+                ToolTip.Tip="Expand All"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="6,2">
+          <materialIcons:MaterialIcon Kind="UnfoldMoreHorizontal" 
+                                     Width="16" Height="16"
+                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </Button>
+
+        <!-- Collapse All -->
+        <Button Command="{Binding CollapseAllCommand}"
+                ToolTip.Tip="Collapse All"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="6,2">
+          <materialIcons:MaterialIcon Kind="UnfoldLessHorizontal" 
+                                     Width="16" Height="16"
+                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </Button>
+
+        <!-- Refresh -->
+        <Button Command="{Binding RefreshCommand}"
+                ToolTip.Tip="Refresh"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="6,2">
+          <materialIcons:MaterialIcon Kind="Refresh" 
+                                     Width="16" Height="16"
+                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </Button>
+      </StackPanel>
+    </Border>
+
+    <!-- File Tree -->
+    <ScrollViewer Grid.Row="1">
+      <TreeView Name="FileTree"
+                ItemsSource="{Binding Items}"
+                SelectedItem="{Binding SelectedItem}"
+                Background="Transparent"
+                Padding="4,2">
+        
+        <TreeView.ItemTemplate>
+          <TreeDataTemplate ItemsSource="{Binding Children}" 
+                           DataType="vm:FileSystemItemViewModel">
+            <StackPanel Orientation="Horizontal" 
+                       Spacing="6"
+                       Background="Transparent">
+              
+              <!-- File/Folder Icon -->
+              <materialIcons:MaterialIcon Kind="{Binding FullPath, Converter={x:Static converters:FileExtensionToMaterialIconConverter.Instance}}"
+                                         Width="16" Height="16"
+                                         VerticalAlignment="Center"
+                                         Foreground="{Binding FullPath, Converter={x:Static converters:FileExtensionToColorConverter.Instance}}" />
+
+              <!-- File/Folder Name -->
+              <TextBlock Text="{Binding Name}"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontFamily="{DynamicResource DefaultFontFamily}"
+                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                        TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </TreeDataTemplate>
+        </TreeView.ItemTemplate>
+
+        <TreeView.Styles>
+          <!-- Compact TreeViewItem styling for VS/VSCode feel -->
+          <Style Selector="TreeViewItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,1" />
+            <Setter Property="MinHeight" Value="20" />
+          </Style>
+          
+          <!-- Bind IsExpanded and IsSelected for FileSystemItemViewModel items -->
+          <Style Selector="TreeViewItem" x:DataType="vm:FileSystemItemViewModel">
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+          </Style>
+          
+          <Style Selector="TreeViewItem:pointerover /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}" />
+            <Setter Property="CornerRadius" Value="2" />
+          </Style>
+          
+          <Style Selector="TreeViewItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListMediumBrush}" />
+            <Setter Property="CornerRadius" Value="2" />
+          </Style>
+          
+          <Style Selector="TreeViewItem:selected:focus /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListMediumBrush}" />
+            <Setter Property="CornerRadius" Value="2" />
+          </Style>
+
+        </TreeView.Styles>
+      </TreeView>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

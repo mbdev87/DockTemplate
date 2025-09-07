@@ -1,4 +1,5 @@
 using System;
+using DockComponent.Base;
 
 namespace DockTemplate.Services;
 

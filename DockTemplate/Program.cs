@@ -10,7 +10,9 @@ using ReactiveUI;
 using DockTemplate.ViewModels;
 using DockTemplate.Views;
 using DockTemplate.Services;
-using DockTemplate.ViewModels.Tools;
+using DockComponent.ErrorList.ViewModels;
+using DockComponent.Output.Models;
+using DockComponent.ErrorList.Services;
 
 namespace DockTemplate;
 
@@ -53,27 +55,22 @@ sealed class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<LoggingService, LoggingService>();
         services.AddLogging();
         
-        services.AddSingleton<LogBatchingService>();
-        services.AddSingleton<PluginInstallationService>();
-        
-        services.AddSingleton<ErrorService>();
+        // MINIMAL SHELL SERVICES ONLY - All business logic handled by components
         services.AddSingleton<App>();
         services.AddSingleton<IViewLocator, ViewLocator>();
-        services.AddSingleton<TextMateService>();
-        services.AddSingleton<LoggingService>();
-        services.AddSingleton<LoggingDataService>();
-        services.AddSingleton<IThemeService, ThemeService>();
-        services.AddTransient<ErrorListViewModel>();
+        services.AddSingleton<IThemeService, ThemeService>(); // Basic theme switching
+        services.AddSingleton<PluginInstallationService>(); // Plugin loading infrastructure
+        services.AddSingleton<InterPluginLogger>(); // Inter-plugin messaging logger
 
         // Component loading system is now done in App.axaml.cs after Avalonia initialization
         // This avoids loading Avalonia resources before the UI framework is ready
-        services.AddSingleton<DockComponentContext>(provider => 
-            new DockComponentContext(provider.GetRequiredService<DockFactory>(), services));
-        services.AddSingleton<ComponentLoader>();
-
-        services.AddTransient<DockFactory>();
+        services.AddSingleton<ComponentLoader>(provider => 
+            new ComponentLoader(provider.GetRequiredService<DockFactory>(), services));
+        
+        services.AddSingleton<DockFactory>();
         services.AddTransient<MainWindowViewModel>();
     }
 

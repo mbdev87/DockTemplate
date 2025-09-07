@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,9 +71,59 @@ public class PluginInstallationService : BackgroundService
         // Ensure directories exist
         PluginDirectoryService.EnsureLocalAppDataDirectoryExists();
         
-        // Copy the .dockplugin file to LocalAppData root (alongside Components folder)
+        // Check if plugin is already installed
         var appDataRoot = Path.GetDirectoryName(localAppDataPath)!;
         var copiedPluginPath = Path.Combine(appDataRoot, pluginFileName);
+        
+        if (File.Exists(copiedPluginPath))
+        {
+            Logger.Info($"Plugin {pluginFileName} already installed - checking for component duplicates");
+            
+            // Check if components from this plugin are already loaded to prevent runtime duplicates
+            var tempExtractPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            try
+            {
+                using (var archive = ZipFile.OpenRead(pluginPath))
+                {
+                    archive.ExtractToDirectory(tempExtractPath);
+                    
+                    // Load the plugin to get its component info for duplicate checking
+                    var dllFiles = Directory.GetFiles(tempExtractPath, "*.dll", SearchOption.AllDirectories)
+                        .Where(f => !Path.GetFileName(f).Equals("DockComponent.Base.dll", StringComparison.OrdinalIgnoreCase));
+                        
+                    foreach (var dllFile in dllFiles)
+                    {
+                        try
+                        {
+                            var assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(dllFile);
+                            var componentTypes = assembly.GetTypes()
+                                .Where(t => typeof(DockComponent.Base.IDockComponent).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+                                
+                            foreach (var componentType in componentTypes)
+                            {
+                                var component = (DockComponent.Base.IDockComponent)Activator.CreateInstance(componentType)!;
+                                if (ComponentRegistry.Instance.IsAlreadyLoaded(component.Name, component.Version))
+                                {
+                                    Logger.Warn($"⚠️ Plugin {pluginFileName} contains component {component.Name} v{component.Version} that's already loaded - will skip duplicate");
+                                    return; // Don't install/re-process
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Debug(ex, $"Could not check component in {dllFile} for duplicates");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(tempExtractPath))
+                    Directory.Delete(tempExtractPath, true);
+            }
+            
+            Logger.Info($"✅ Plugin {pluginFileName} is already installed but not loaded - proceeding with hot-loading");
+        }
         
         Logger.Info($"Copying {pluginFileName} to {copiedPluginPath}");
         File.Copy(pluginPath, copiedPluginPath, overwrite: true);
@@ -118,25 +169,48 @@ public class PluginInstallationService : BackgroundService
             var dockFactory = _serviceProvider.GetService<DockFactory>();
             var componentContext = _serviceProvider.GetService<DockComponentContext>();
             
-            if (componentLoader == null || dockFactory == null || componentContext == null)
+            // Detailed diagnostic logging for service availability
+            Logger.Info($"Service availability check:");
+            Logger.Info($"  ComponentLoader: {(componentLoader != null ? "✅ Available" : "❌ MISSING")}");
+            Logger.Info($"  DockFactory: {(dockFactory != null ? "✅ Available" : "❌ MISSING")}");
+            Logger.Info($"  DockComponentContext: {(componentContext != null ? "✅ Available" : "❌ MISSING")}");
+            
+            if (componentLoader == null)
             {
-                Logger.Error("Required services not available for hot-loading");
+                Logger.Error("❌ ComponentLoader service is not registered in DI container - cannot hot-load plugins");
                 return;
+            }
+            
+            if (dockFactory == null)
+            {
+                Logger.Error("❌ DockFactory service is not registered in DI container - cannot hot-load plugins");
+                return;
+            }
+            
+            if (componentContext == null)
+            {
+                Logger.Error("⚠️ DockComponentContext service is not registered - this is expected with new architecture (components create their own contexts)");
+                // Don't return - this is actually expected behavior now since we create contexts per component
             }
             
             // Load components from the directory (this will detect new ones)
             Logger.Info($"Scanning for new components in: {componentsPath}");
             componentLoader.LoadComponents(componentsPath);
             
-            // Update the dock factory with any new components
+            // Components register themselves in ComponentRegistry, so get them from there
             var registry = ComponentRegistry.Instance;
-            Logger.Info($"Updating dock factory with {registry.LoadedComponents.Count} total components");
-            dockFactory.StoreComponents(componentContext.RegisteredTools, componentContext.RegisteredDocuments);
+            Logger.Info($"After component loading:");
+            Logger.Info($"  Total loaded components: {registry.LoadedComponents.Count}");
+            Logger.Info($"  Registered tools: {registry.ComponentTools.Count}");  
+            Logger.Info($"  Registered documents: {registry.ComponentDocuments.Count}");
             
-            // Send message to UI to refresh layout
-            MessageBus.Current.SendMessage(new UILoadedMessage());
+            // The DockFactory will get components from ComponentRegistry via StoreComponents
+            // But since we don't have a shared context anymore, components register directly
+            // So we need to trigger integration manually
+            Logger.Info("Triggering component integration...");
+            dockFactory.IntegrateComponentsAfterUILoad();
             
-            Logger.Info("Hot-loading completed! New plugin should be visible.");
+            Logger.Info("✅ Hot-loading completed! New plugin should now be visible in UI.");
         }
         catch (Exception ex)
         {

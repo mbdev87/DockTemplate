@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <OutputPath>..\..\Components-Output\$(Configuration)\</OutputPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.4" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.4" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.4" />
+        <PackageReference Include="ReactiveUI.Fody" Version="19.5.31" />
+        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.2.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="NLog" Version="6.0.3" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\DockComponent.Base\DockComponent.Base.csproj" />
+    </ItemGroup>
+    
+    <Target Name="CreateDockPlugin" AfterTargets="PostBuildEvent">
+        <PropertyGroup>
+            <PluginOutputDir>$(OutputPath)Plugin-Distribution</PluginOutputDir>
+            <PluginName>ErrorList-Component</PluginName>
+            <PluginZipPath>$(PluginOutputDir)\$(PluginName).dockplugin</PluginZipPath>
+            <TempPluginDir>$(OutputPath)temp-plugin</TempPluginDir>
+            <MessageContractsDir>$(PluginOutputDir)\MessageContracts</MessageContractsDir>
+        </PropertyGroup>
+        
+        <MakeDir Directories="$(PluginOutputDir)" />
+        <MakeDir Directories="$(MessageContractsDir)" />
+        <Delete Files="$(PluginZipPath)" Condition="Exists('$(PluginZipPath)')" />
+        <RemoveDir Directories="$(TempPluginDir)" />
+        <MakeDir Directories="$(TempPluginDir)" />
+        
+        <Message Text="Creating .dockplugin file: $(PluginZipPath)" Importance="high" />
+        <Message Text="Output path: $(OutputPath)" Importance="high" />
+        <Message Text="Files to include:" Importance="high" />
+        <Message Text="  - $(OutputPath)DockComponent.ErrorList.dll" Importance="high" />
+        <Message Text="  - $(OutputPath)DockComponent.ErrorList.pdb" Importance="high" />
+        
+        <Copy SourceFiles="$(OutputPath)DockComponent.ErrorList.dll" DestinationFolder="$(TempPluginDir)" />
+        <Copy SourceFiles="$(OutputPath)DockComponent.ErrorList.pdb" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)DockComponent.ErrorList.pdb')" />
+        <Copy SourceFiles="$(OutputPath)DockComponent.Base.dll" DestinationFolder="$(TempPluginDir)" />
+        
+        <ZipDirectory SourceDirectory="$(TempPluginDir)" DestinationFile="$(PluginZipPath)" Overwrite="true" />
+        <RemoveDir Directories="$(TempPluginDir)" />
+        <Copy SourceFiles="README.txt" DestinationFolder="$(PluginOutputDir)" Condition="Exists('README.txt')" />
+        
+        <ItemGroup>
+            <MessageFiles Include="Transport\**\*.cs" />
+        </ItemGroup>
+        <Copy SourceFiles="@(MessageFiles)" DestinationFolder="$(MessageContractsDir)" />
+        
+        <Message Text="✅ Created plugin: $(PluginZipPath)" Importance="high" />
+        <Message Text="✅ Copied README.txt to distribution folder" Importance="high" Condition="Exists('README.txt')" />
+        <Message Text="✅ Exported @(MessageFiles->Count()) message contract files for easy consumption" Importance="high" />
+    </Target>
+
+</Project>
