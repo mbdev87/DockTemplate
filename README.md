@@ -3,10 +3,6 @@
 **DockTemplate** is a starter framework for building **IDE-style, plugin-driven desktop applications** with [Avalonia](https://avaloniaui.net/).  
 It goes beyond simple docking demos by enabling **real collaboration and extensibility** out of the box.
 
----
-
-<img src="docs/img/dock_template_overview.png" alt="The App" />
-
 ## Why DockTemplate?
 
 DockTemplate shows **how to build an application and the ecosystem around it**:
@@ -19,6 +15,8 @@ DockTemplate shows **how to build an application and the ecosystem around it**:
 
 Think of DockTemplate as a **cross-platform VS Shell**:  
 a lightweight foundation where functionality grows organically through plugins.
+
+<img src="docs/img/dock_template_overview.png" alt="The App" />
 
 ---
 
