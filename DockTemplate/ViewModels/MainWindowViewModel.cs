@@ -35,7 +35,6 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand NewLayout { get; }
     public ICommand ShowPluginManager { get; }
     public ICommand InstallPlugin { get; }
-    public ICommand ReloadPlugins { get; }
     public ICommand ToggleAcrylic { get; }
 
     public MainWindowViewModel(DockFactory dockFactory, InterPluginLogger interPluginLogger)
@@ -65,7 +64,6 @@ public class MainWindowViewModel : ViewModelBase
         NewLayout = ReactiveCommand.Create(ResetLayout);
         ShowPluginManager = ReactiveCommand.Create(OpenPluginManager);
         InstallPlugin = ReactiveCommand.Create(OpenInstallPluginDialog);
-        ReloadPlugins = ReactiveCommand.Create(ReloadAllPlugins);
         ToggleAcrylic = ReactiveCommand.Create(() => 
         {
             IsAcrylicEnabled = !IsAcrylicEnabled;
@@ -102,6 +100,8 @@ public class MainWindowViewModel : ViewModelBase
 
     public void ResetLayout()
     {
+        Logger.Info("Resetting layout to default configuration...");
+        
         if (Layout is not null)
         {
             if (Layout.Close.CanExecute(null))
@@ -116,8 +116,8 @@ public class MainWindowViewModel : ViewModelBase
             _factory?.InitLayout(layout);
             Layout = layout;
             
-            // Fire UILoadedMessage after layout is reset and fully initialized
-            Logger.Info("UI reset complete - sending UILoadedMessage");
+            // Fire UILoadedMessage to re-integrate all existing components into the fresh layout
+            Logger.Info("Layout reset complete - re-integrating all components");
             MessageBus.Current.SendMessage(new UILoadedMessage());
         }
     }
@@ -172,18 +172,8 @@ public class MainWindowViewModel : ViewModelBase
         // TODO: Support drag & drop installation
     }
 
-    private void ReloadAllPlugins()
-    {
-        Logger.Info("Reloading all plugins...");
-        
-        // Clear registry
-        Services.ComponentRegistry.Instance.Clear();
-        
-        // Reset layout to trigger plugin reload
-        ResetLayout();
-        
-        Logger.Info("Plugin reload completed");
-    }
+    // Removed ReloadAllPlugins - too complex for runtime operation
+    // Users should restart the application to reload plugins properly
     
     private void OnPluginInstallationStarted(PluginInstallationStartedMessage message)
     {

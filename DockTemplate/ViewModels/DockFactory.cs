@@ -200,6 +200,10 @@ public class DockFactory : Factory
         var registry = Services.ComponentRegistry.Instance;
         Logger.Info($"IntegrateComponentsAfterUILoad called - integrating {registry.ComponentDocuments.Count} documents and {registry.ComponentTools.Count} tools");
         
+        // Clear integration tracking to allow re-integration of components into fresh layout
+        _integratedComponentInstances.Clear();
+        Logger.Info($"Cleared component integration tracking - all components will be re-integrated into the new layout");
+        
         // Integrate component documents using the same flow as opening files
         foreach (var componentDoc in registry.ComponentDocuments.Where(d => d.Position == DockComponent.Base.DockPosition.Document))
         {
