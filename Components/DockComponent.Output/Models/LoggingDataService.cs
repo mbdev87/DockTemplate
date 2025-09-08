@@ -44,6 +44,10 @@ namespace DockComponent.Output.Models
                     });
                 };
                 
+                // Setup reactive filtering for main path too!
+                this.WhenAnyValue(x => x.FilterText, x => x.SelectedLogLevel)
+                    .Subscribe(_ => ApplyFilters());
+                
                 // Initial sync
                 SyncLogEntries();
                 ApplyFilters();
