@@ -52,6 +52,12 @@ https://github.com/user-attachments/assets/188e11d2-7b6a-48a3-9a21-e7755692a52d
 
 <img src="docs/img/windows_overview.png" alt="Jump to source" />
 
+#### You can dynamically enable/disable effects
+
+Above example with disabled acrylic 
+
+<img src="docs/img/windows_overview_acrylic_disabled.png" alt="Jump to source" />
+
 ## Current Status
 
 - Complete dockable IDE layout with working panels
