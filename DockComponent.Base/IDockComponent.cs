@@ -23,7 +23,7 @@ public interface IDockComponentContext
 {
     // UI Registration
     void RegisterResources(Uri resourceUri);
-    void RegisterTool(string id, object toolViewModel, DockPosition position = DockPosition.Left);
+    void RegisterTool(string id, object toolViewModel, DockPosition position = DockPosition.Left, bool isPrimary = false);
     void RegisterDocument(string id, object documentViewModel, DockPosition position = DockPosition.Document);
     
     // Service Registration - DI Container access

@@ -36,6 +36,9 @@ public class DockFactory : Factory
     private IToolDock? _bottomDock;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
+    // Reference to acrylic layout manager for dynamic tool placement
+    public Services.AcrylicLayoutManager? AcrylicLayoutManager { get; set; }
+    
     // Note: Component registrations are now stored in the singleton ComponentRegistry
     // This factory creates MINIMAL layout - components will add themselves dynamically
 
@@ -90,10 +93,10 @@ public class DockFactory : Factory
         Logger.Info("[DockFactory] Creating minimal empty layout - components will populate it");
 
         // Create empty docks that components can populate
-        var leftDock = new ToolDock
+        var leftDock = new ToolDock()
         {
             Proportion = 0.2,
-            ActiveDockable = new DockDock(),
+            ActiveDockable = null, // Will be set when components are added
             VisibleDockables = CreateList<IDockable>(),
             Alignment = Alignment.Left,
             IsCollapsable = true,
@@ -105,7 +108,7 @@ public class DockFactory : Factory
         {
             Proportion = 0.2,
             Orientation = Orientation.Vertical,
-            ActiveDockable = new DockDock(),
+            ActiveDockable = null, // Will be set when components are added
             VisibleDockables = CreateList<IDockable>(),
             IsCollapsable = true,
             IsActive = true,
@@ -115,7 +118,7 @@ public class DockFactory : Factory
         var bottomDock = new ToolDock
         {
             Proportion = 0.2,
-            ActiveDockable = new DockDock(),
+            ActiveDockable = null, // Will be set when components are added
             VisibleDockables = CreateList<IDockable>(),
             Alignment = Alignment.Bottom,
             IsCollapsable = true,
@@ -126,7 +129,7 @@ public class DockFactory : Factory
         var documentDock = new DocumentDock
         {
             IsCollapsable = false,
-            ActiveDockable = new DockDock(),
+            ActiveDockable = null, // Will be set when documents are added
             VisibleDockables = CreateList<IDockable>(),
             CanCreateDocument = true,
         };
@@ -146,7 +149,7 @@ public class DockFactory : Factory
                     Orientation = Orientation.Horizontal,
                     VisibleDockables = CreateList<IDockable>
                     (
-                            _leftDock,
+                        _leftDock,
                         new ProportionalDockSplitter(),
                         _documentDock,
                         new ProportionalDockSplitter(),
@@ -204,6 +207,11 @@ public class DockFactory : Factory
         _integratedComponentInstances.Clear();
         Logger.Info($"Cleared component integration tracking - all components will be re-integrated into the new layout");
         
+        // Initialize acrylic layout manager with primary tool
+        AcrylicLayoutManager?.InitializeAcrylicMode();
+        
+        RefreshLayoutAfterAcrylicToggle();
+        
         // Integrate component documents using the same flow as opening files
         foreach (var componentDoc in registry.ComponentDocuments.Where(d => d.Position == DockComponent.Base.DockPosition.Document))
         {
@@ -257,25 +265,36 @@ public class DockFactory : Factory
                     switch (tool.Position)
                     {
                         case DockComponent.Base.DockPosition.Left:
-                            _leftDock?.VisibleDockables ??= new List<IDockable>();
-                            if (_leftDock?.VisibleDockables != null)
+                            // Check if this tool should be in acrylic sidebar instead of normal left dock
+                            if (AcrylicLayoutManager?.IsAcrylicLayoutActive == true && 
+                                AcrylicLayoutManager?.IsToolInAcrylicSidebar(dockable) == true)
                             {
-                                var leftDockables = _leftDock.VisibleDockables.ToList();
-                                leftDockables.Add(dockable);
-                                _leftDock.VisibleDockables = CreateList(leftDockables.ToArray());
-                                _leftDock.ActiveDockable = dockable;
-                                
-                                // Force UI refresh by setting focus to the active dockable
-                                if (_leftDock.ActiveDockable is IDockable activeDockable)
-                                {
-                                    this.SetFocusedDockable(_leftDock, activeDockable);
-                                }
-                                _leftDock.IsEmpty = _leftDock.VisibleDockables.Count == 0;
-                                
-                                // Mark this component instance as integrated
+                                Logger.Info($"Skipping {tool.Id} from left dock - it's in acrylic sidebar");
+                                // Mark as integrated but don't add to left dock
                                 _integratedComponentInstances.Add(tool.ComponentInstanceId);
+                            }
+                            else
+                            {
+                                _leftDock?.VisibleDockables ??= new List<IDockable>();
+                                if (_leftDock?.VisibleDockables != null)
+                                {
+                                    var leftDockables = _leftDock.VisibleDockables.ToList();
+                                    leftDockables.Add(dockable);
+                                    _leftDock.VisibleDockables = CreateList(leftDockables.ToArray());
+                                    _leftDock.ActiveDockable = dockable;
+                                    
+                                    // Force UI refresh by setting focus to the active dockable
+                                    if (_leftDock.ActiveDockable is IDockable activeDockable)
+                                    {
+                                        this.SetFocusedDockable(_leftDock, activeDockable);
+                                    }
+                                    _leftDock.IsEmpty = _leftDock.VisibleDockables.Count == 0;
+                                    
+                                    // Mark this component instance as integrated
+                                    _integratedComponentInstances.Add(tool.ComponentInstanceId);
 
-                                Logger.Info($"Successfully integrated {tool.Id} into left dock with UI refresh");
+                                    Logger.Info($"Successfully integrated {tool.Id} into left dock with UI refresh");
+                                }
                             }
                             break;
                             
@@ -587,5 +606,57 @@ public class DockFactory : Factory
         }
         
         return null;
+    }
+    
+    /// <summary>
+    /// Refresh layout after acrylic mode toggle - moves tools between normal dock and acrylic sidebar
+    /// </summary>
+    public void RefreshLayoutAfterAcrylicToggle()
+    {
+        if (AcrylicLayoutManager == null || _leftDock == null) return;
+        
+        var registry = Services.ComponentRegistry.Instance;
+        var leftTools = registry.ComponentTools.Where(t => t.Position == DockComponent.Base.DockPosition.Left).ToList();
+        
+        if (AcrylicLayoutManager.IsAcrylicLayoutActive)
+        {
+            Logger.Info("🎨 Refreshing layout for ACRYLIC mode - moving primary tool to sidebar");
+            
+            // Clear left dock - tools will be re-added except the primary one
+            if (_leftDock.VisibleDockables != null)
+            {
+                var normalLeftTools = leftTools
+                    .Where(t => t.ViewModel is IDockable)
+                    .Select(t => t.ViewModel as IDockable)
+                    .Where(d => d != null && !AcrylicLayoutManager.IsToolInAcrylicSidebar(d))
+                    .ToList();
+                    
+                _leftDock.VisibleDockables = CreateList(normalLeftTools.Cast<IDockable>().ToArray());
+                _leftDock.ActiveDockable = normalLeftTools.FirstOrDefault();
+                _leftDock.IsEmpty = normalLeftTools.Count == 0;
+                
+                Logger.Info($"Left dock now contains {normalLeftTools.Count} tools (primary moved to acrylic sidebar)");
+            }
+        }
+        else
+        {
+            Logger.Info("🎨 Refreshing layout for NORMAL mode - moving all tools back to left dock");
+            
+            // Add ALL left tools back to normal dock
+            if (_leftDock.VisibleDockables != null)
+            {
+                var allLeftTools = leftTools
+                    .Where(t => t.ViewModel is IDockable)
+                    .Select(t => t.ViewModel as IDockable)
+                    .Where(d => d != null)
+                    .ToList();
+                    
+                _leftDock.VisibleDockables = CreateList(allLeftTools.Cast<IDockable>().ToArray());
+                _leftDock.ActiveDockable = allLeftTools.FirstOrDefault();
+                _leftDock.IsEmpty = allLeftTools.Count == 0;
+                
+                Logger.Info($"Left dock now contains {allLeftTools.Count} tools (all tools restored)");
+            }
+        }
     }
 }

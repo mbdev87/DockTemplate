@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DockTemplate.Services;
 
-public record ComponentRegistration(string Id, object ViewModel, DockPosition Position, Guid ComponentInstanceId);
+public record ComponentRegistration(string Id, object ViewModel, DockPosition Position, Guid ComponentInstanceId, bool IsPrimary = false);
 
 public class DockComponentContext : IDockComponentContext
 {
@@ -99,15 +99,16 @@ public class DockComponentContext : IDockComponentContext
         }
     }
 
-    public void RegisterTool(string id, object toolViewModel, DockPosition position = DockPosition.Left)
+    public void RegisterTool(string id, object toolViewModel, DockPosition position = DockPosition.Left, bool isPrimary = false)
     {
-        var registration = new ComponentRegistration(id, toolViewModel, position, _componentInstanceId);
+        var registration = new ComponentRegistration(id, toolViewModel, position, _componentInstanceId, isPrimary);
         _registeredTools.Add(registration);
         
         // CRITICAL: Also store in global ComponentRegistry so DockFactory can find it
         ComponentRegistry.Instance.AddComponents(new[] { registration }, Array.Empty<ComponentRegistration>());
         
-        Console.WriteLine($"[ComponentContext] Registered tool: {id} -> {toolViewModel.GetType().Name} at {position} (Instance: {_componentInstanceId}) -> Added to global registry");
+        var primaryStatus = isPrimary ? " [PRIMARY]" : "";
+        Console.WriteLine($"[ComponentContext] Registered tool: {id} -> {toolViewModel.GetType().Name} at {position}{primaryStatus} (Instance: {_componentInstanceId}) -> Added to global registry");
     }
 
     public void RegisterDocument(string id, object documentViewModel, DockPosition position = DockPosition.Document)

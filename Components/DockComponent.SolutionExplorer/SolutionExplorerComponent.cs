@@ -12,7 +12,7 @@ namespace DockComponent.SolutionExplorer
         public void Register(IDockComponentContext context)
         {
             // Register the SolutionExplorer tool
-            context.RegisterTool("SolutionExplorer", new SolutionExplorerViewModel(), DockPosition.Left);
+            context.RegisterTool("SolutionExplorer", new SolutionExplorerViewModel(), DockPosition.Left, isPrimary: true);
         }
     }
 }

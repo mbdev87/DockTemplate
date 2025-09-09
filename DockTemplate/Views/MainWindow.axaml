@@ -20,7 +20,7 @@
         
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
-        ExtendClientAreaToDecorationsHint="{Binding IsAcrylicEnabled}"
+        ExtendClientAreaToDecorationsHint="{Binding IsAcrylicLayoutActive}"
         >
 
     <Window.Resources>
@@ -31,11 +31,32 @@
     <Window.Styles>
         <!-- Dynamic margin for macOS traffic lights when acrylic is enabled -->
         <Style Selector="Grid.main-content">
-            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="Margin" Value="0,0,0,0" />
         </Style>
         
         <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Grid.main-content">
-            <Setter Property="Margin" Value="0,28,0,0" />
+            <Setter Property="Margin" Value="0,0,0,0" />
+        </Style>
+        
+        <!-- Acrylic Layout Styles -->
+        <Style Selector="Border.acrylic-sidebar">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0,0,0,0" />
+        </Style>
+        
+        <!-- Acrylic sidebar gets the actual acrylic effect when window acrylic is enabled -->
+        <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Border.acrylic-sidebar">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <SolidColorBrush Color="Transparent" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Tighter margins for acrylic mode -->
+        <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Grid.main-content.acrylic-active">
+            <Setter Property="Margin" Value="0,0,0,0" />
         </Style>
         
         <!-- Smooth fade-in/fade-out animation for overlay -->
@@ -73,55 +94,69 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Panel>
-        <!-- Theme background (when acrylic is disabled) -->
-        <Border IsVisible="{Binding !IsAcrylicEnabled}" 
-                Background="{DynamicResource SystemRegionBrush}" />
-        
-        <!-- Acrylic Background (only when enabled) - Theme-aware -->
-        <ExperimentalAcrylicBorder IsVisible="{Binding IsAcrylicEnabled}" IsHitTestVisible="False">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial
-                    BackgroundSource="Digger"
-                    TintColor="{DynamicResource AcrylicFallbackColor}"
-                    TintOpacity="1"
-                    MaterialOpacity="0.75" />
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
-        
-        <!-- Native macOS menu bar (only shows on macOS) -->
-        <NativeMenu.Menu>
-            <NativeMenu>
-                <NativeMenuItem Header="File">
-                    <NativeMenu>
-                        <NativeMenuItem Header="New Layout" Command="{Binding NewLayout}" Gesture="Cmd+N" />
-                    </NativeMenu>
-                </NativeMenuItem>
-                <NativeMenuItem Header="Edit">
-                    <NativeMenu>
-                        <!-- macOS will automatically add Cut, Copy, Paste, etc. -->
-                    </NativeMenu>
-                </NativeMenuItem>
-                <NativeMenuItem Header="Plugins">
-                    <NativeMenu>
-                        <NativeMenuItem Header="Manage Plugins..." Command="{Binding ShowPluginManager}" />
-                        <NativeMenuItemSeparator />
-                        <NativeMenuItem Header="Install Plugin..." Command="{Binding InstallPlugin}" />
-                    </NativeMenu>
-                </NativeMenuItem>
-            </NativeMenu>
-        </NativeMenu.Menu>
-
-        <Grid x:Name="MainGrid" Classes="main-content">
+        <Grid x:Name="MainGrid" Classes="main-content" Classes.acrylic-active="{Binding IsAcrylicLayoutActive}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             
+            <Grid.ColumnDefinitions>
+                <!-- Acrylic sidebar column (hidden when acrylic is disabled) -->
+                <ColumnDefinition Width="{Binding AcrylicSidebarWidth}" />
+                <!-- Main content column -->
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            
+            <Panel Grid.RowSpan="3" Grid.Column="0">
+                <!-- Solid background for entire window when acrylic layout is disabled -->
+                <Border IsVisible="{Binding !IsAcrylicLayoutActive}"
+                        Background="{DynamicResource SystemRegionBrush}" />
+        
+                <!-- Acrylic background for left sidebar when layout is enabled -->
+                <ExperimentalAcrylicBorder IsVisible="{Binding IsAcrylicLayoutActive}" IsHitTestVisible="False">
+                    <ExperimentalAcrylicBorder.Material>
+                        <ExperimentalAcrylicMaterial
+                            BackgroundSource="Digger"
+                            TintColor="{DynamicResource AcrylicFallbackColor}"
+                            TintOpacity="1"
+                            MaterialOpacity="0.75" />
+                    </ExperimentalAcrylicBorder.Material>
+                </ExperimentalAcrylicBorder>
+            </Panel>
+                
+            <!-- Solid background for top area (menu row) in right column when acrylic is active -->
+            <Border Grid.Row="0" Grid.Column="1" 
+                    IsVisible="{Binding IsAcrylicLayoutActive}"
+                    Background="{DynamicResource SystemRegionBrush}" 
+                    ZIndex="5" />
+            <!-- Acrylic Sidebar (Column 0) - Only spans main content area (Row 1) -->
+            <Border Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" 
+                    Classes="acrylic-sidebar"
+                    IsVisible="{Binding IsAcrylicLayoutActive}">
+                <Grid>
+                    <!-- Top draggable area for window dragging -->
+                    <Border Height="28" VerticalAlignment="Top" 
+                            Background="Transparent"
+                            PointerPressed="OnPointerPressed" />
+                    <!-- Sidebar content with top margin -->
+                    <ContentControl Content="{Binding AcrylicSidebarContent}" Margin="0, 28, 0, 0" />
+                </Grid>
+            </Border>
+            
+            <!-- Resizable splitter between acrylic sidebar and main content -->
+            <GridSplitter Grid.Row="1" Grid.Column="0" 
+                         IsVisible="{Binding IsAcrylicLayoutActive}"
+                         Width="4" 
+                         HorizontalAlignment="Right"
+                         VerticalAlignment="Stretch"
+                         Background="Transparent" />
+       
             <!-- In-window menu (hidden on macOS, visible on Windows/Linux) -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" x:Name="MenuBarGrid">
-                <Menu Grid.Column="0" VerticalAlignment="Center" FontSize="12" Height="20">
+            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="Auto,*" x:Name="MenuBarGrid" 
+                  Background="{DynamicResource SystemRegionBrush}"
+                  ZIndex="10">
+                <Menu Grid.Column="0" VerticalAlignment="Center" FontSize="12" Height="24" Padding="0 8 0 0">
                     <MenuItem Header="_File">
                         <MenuItem Header="_New Layout" Command="{Binding NewLayout}" />
                     </MenuItem>
@@ -136,14 +171,25 @@
                         <MenuItem Header="_Show Windows" Command="{Binding ShowWindows}" />
                     </MenuItem>
                 </Menu>
+                
+                <!-- Empty space for window dragging -->
+                <Border Grid.Column="1" 
+                        Background="Transparent"
+                        PointerPressed="OnPointerPressed" />
             </Grid>
 
         <!-- Main Dock Area -->
-        <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
-                        Grid.Row="1" Margin="4" />
+            <Panel Background="{DynamicResource SystemRegionBrush}" Grid.Row="1" Grid.Column="1" >
+                <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
+                                
+                                Margin="4,4,4,4"   
+                                
+                                ZIndex="10" />
+            </Panel>
+   
 
         <!-- Drag & Drop Overlay - Theme-Aware Background with Smooth Animations -->
-        <Border x:Name="DropOverlay" Grid.Row="0" Grid.RowSpan="3"
+        <Border x:Name="DropOverlay" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
                 Classes.drop-overlay="True"
                 Classes.show="{Binding ShowDropOverlay}"
                 Margin="-50"
@@ -218,8 +264,10 @@
         </Border>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{DynamicResource SystemAccentColor}" 
-                BorderBrush="{DynamicResource SystemAccentColorDark2}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource SystemAccentColor}" 
+                BorderBrush="{DynamicResource SystemAccentColorDark2}" BorderThickness="0,1,0,0"
+                Margin="0,0,0,0"
+                ZIndex="10">
            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                <TextBlock Grid.Column="0" FontSize="11" Text="Ready" Margin="8,4" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" />
             
@@ -242,6 +290,5 @@
            </Grid>
         </Border>
         </Grid>
-    </Panel>
 
 </Window>

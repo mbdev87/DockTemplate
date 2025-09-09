@@ -19,6 +19,7 @@ public class MainWindowViewModel : ViewModelBase
 {
     private readonly IFactory? _factory;
     private readonly InterPluginLogger _interPluginLogger;
+    private readonly AcrylicLayoutManager _acrylicLayoutManager;
     
     [Reactive] public IRootDock? Layout { get; set; }
     [Reactive] public bool ShowDropOverlay { get; set; } = false;
@@ -27,6 +28,11 @@ public class MainWindowViewModel : ViewModelBase
     [Reactive] public string InstallStatusText { get; set; } = "Installing plugin...";
     [Reactive] public string InstallSubText { get; set; } = "Please wait while we process your plugin";
     [Reactive] public bool IsAcrylicEnabled { get; set; } = true;
+    
+    // Acrylic Layout Properties
+    public bool IsAcrylicLayoutActive => _acrylicLayoutManager.IsAcrylicLayoutActive;
+    public object? AcrylicSidebarContent => _acrylicLayoutManager.AcrylicSidebarTool;
+    public GridLength AcrylicSidebarWidth => IsAcrylicLayoutActive ? new GridLength(280) : new GridLength(0);
     
     // Note: Window is always acrylic-capable, we control the effect through content layering
     
@@ -41,6 +47,13 @@ public class MainWindowViewModel : ViewModelBase
     {
         _factory = dockFactory;
         _interPluginLogger = interPluginLogger;
+        _acrylicLayoutManager = new AcrylicLayoutManager();
+        
+        // Connect AcrylicLayoutManager to DockFactory for dynamic tool placement
+        if (dockFactory != null)
+        {
+            dockFactory.AcrylicLayoutManager = _acrylicLayoutManager;
+        }
 
         DebugFactoryEvents(_factory);
 
@@ -66,8 +79,31 @@ public class MainWindowViewModel : ViewModelBase
         InstallPlugin = ReactiveCommand.Create(OpenInstallPluginDialog);
         ToggleAcrylic = ReactiveCommand.Create(() => 
         {
-            IsAcrylicEnabled = !IsAcrylicEnabled;
+            // Toggle layout mode (not just the acrylic background effect)
+            _acrylicLayoutManager.ToggleAcrylicLayout();
+            
+            // Refresh dock layout to move tools between normal dock and acrylic sidebar
+            if (_factory is DockFactory dockFactory)
+            {
+                dockFactory.RefreshLayoutAfterAcrylicToggle();
+            }
+            
+            // Notify UI of property changes
+            this.RaisePropertyChanged(nameof(IsAcrylicLayoutActive));
+            this.RaisePropertyChanged(nameof(AcrylicSidebarContent));
+            this.RaisePropertyChanged(nameof(AcrylicSidebarWidth));
+            
+            Logger.Info($"🎨 Acrylic layout toggled - Active: {IsAcrylicLayoutActive}");
         });
+        
+        // Subscribe to AcrylicLayoutManager property changes
+        _acrylicLayoutManager.WhenAnyValue(x => x.IsAcrylicLayoutActive, x => x.AcrylicSidebarTool)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(IsAcrylicLayoutActive));
+                this.RaisePropertyChanged(nameof(AcrylicSidebarContent));
+                this.RaisePropertyChanged(nameof(AcrylicSidebarWidth));
+            });
         
         // Subscribe to plugin installation messages
         MessageBus.Current.Listen<PluginInstallationStartedMessage>()
