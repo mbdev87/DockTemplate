@@ -1,10 +1,15 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Dock.Model.Core;
 using NLog;
 using DockComponent.Base;
+using DockTemplate.Models;
 
 namespace DockTemplate.Services;
 
@@ -16,17 +21,52 @@ public class AcrylicLayoutManager : ReactiveObject
     [Reactive] public IDockable? AcrylicSidebarTool { get; set; }
     
     private readonly ComponentRegistry _componentRegistry;
+    private readonly ISettingsService? _settingsService;
     
-    public AcrylicLayoutManager()
+    public AcrylicLayoutManager(ISettingsService? settingsService = null)
     {
         _componentRegistry = ComponentRegistry.Instance;
+        _settingsService = settingsService;
     }
     
+    /// <summary>
+    /// Initialize acrylic setting early during app startup (synchronous)
+    /// </summary>
+    public void InitializeAcrylicModeEarly()
+    {
+        try
+        {
+            // Use global settings (already loaded by ThemeService)
+            IsAcrylicLayoutActive = DockComponent.Base.GlobalSettings.EnableAcrylic;
+            _isEarlyInitialized = true;
+            Logger.Info($"🎨 Loaded acrylic setting EARLY from global settings: {IsAcrylicLayoutActive}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to load acrylic setting, using default");
+            IsAcrylicLayoutActive = true; // Default to enabled
+            _isEarlyInitialized = true;
+        }
+    }
+
+    private bool _isEarlyInitialized = false;
+
     /// <summary>
     /// Initialize acrylic mode after components are loaded
     /// </summary>
     public void InitializeAcrylicMode()
     {
+        // Only load from settings service if we didn't already load early
+        if (!_isEarlyInitialized && _settingsService != null)
+        {
+            IsAcrylicLayoutActive = _settingsService.Settings.UI.EnableAcrylic;
+            Logger.Info($"🎨 Loaded acrylic setting from config: {IsAcrylicLayoutActive}");
+        }
+        else if (_isEarlyInitialized)
+        {
+            Logger.Info($"🎨 Acrylic setting already loaded early: {IsAcrylicLayoutActive}");
+        }
+        
         if (IsAcrylicLayoutActive)
         {
             var primaryLeftTool = GetPrimaryLeftTool();
@@ -51,6 +91,9 @@ public class AcrylicLayoutManager : ReactiveObject
         {
             EnableAcrylicLayout();
         }
+        
+        // Save setting
+        SaveAcrylicSetting();
     }
     
     /// <summary>
@@ -141,6 +184,22 @@ public class AcrylicLayoutManager : ReactiveObject
         foreach (var tool in leftTools)
         {
             yield return tool!;
+        }
+    }
+    
+    /// <summary>
+    /// Saves the current acrylic setting to persistent storage
+    /// </summary>
+    private void SaveAcrylicSetting()
+    {
+        // Update global settings immediately
+        DockComponent.Base.GlobalSettings.EnableAcrylic = IsAcrylicLayoutActive;
+        
+        if (_settingsService != null)
+        {
+            _settingsService.SetAcrylic(IsAcrylicLayoutActive);
+            _ = Task.Run(async () => await _settingsService.SaveSettingsAsync());
+            Logger.Info($"🎨 Saved acrylic setting: {IsAcrylicLayoutActive}");
         }
     }
 }

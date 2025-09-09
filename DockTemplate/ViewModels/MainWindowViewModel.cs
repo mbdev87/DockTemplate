@@ -43,11 +43,19 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand InstallPlugin { get; }
     public ICommand ToggleAcrylic { get; }
 
-    public MainWindowViewModel(DockFactory dockFactory, InterPluginLogger interPluginLogger)
+    public MainWindowViewModel(DockFactory dockFactory, InterPluginLogger interPluginLogger, AcrylicLayoutManager acrylicLayoutManager)
     {
         _factory = dockFactory;
         _interPluginLogger = interPluginLogger;
-        _acrylicLayoutManager = new AcrylicLayoutManager();
+        _acrylicLayoutManager = acrylicLayoutManager;
+        
+        // Initialize UI reactive properties from global settings
+        IsAcrylicEnabled = DockComponent.Base.GlobalSettings.EnableAcrylic;
+        
+        // CRITICAL: Make sure AcrylicLayoutManager reflects the global setting
+        _acrylicLayoutManager.IsAcrylicLayoutActive = DockComponent.Base.GlobalSettings.EnableAcrylic;
+        
+        Logger.Info($"🎨 MainWindow initialized with acrylic setting: {IsAcrylicEnabled}, Manager: {_acrylicLayoutManager.IsAcrylicLayoutActive}");
         
         // Connect AcrylicLayoutManager to DockFactory for dynamic tool placement
         if (dockFactory != null)
@@ -82,6 +90,10 @@ public class MainWindowViewModel : ViewModelBase
             // Toggle layout mode (not just the acrylic background effect)
             _acrylicLayoutManager.ToggleAcrylicLayout();
             
+            // Update UI reactive property and global settings
+            IsAcrylicEnabled = _acrylicLayoutManager.IsAcrylicLayoutActive;
+            DockComponent.Base.GlobalSettings.EnableAcrylic = IsAcrylicEnabled;
+            
             // Refresh dock layout to move tools between normal dock and acrylic sidebar
             if (_factory is DockFactory dockFactory)
             {
@@ -93,7 +105,7 @@ public class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(AcrylicSidebarContent));
             this.RaisePropertyChanged(nameof(AcrylicSidebarWidth));
             
-            Logger.Info($"🎨 Acrylic layout toggled - Active: {IsAcrylicLayoutActive}");
+            Logger.Info($"🎨 Acrylic layout toggled - Active: {IsAcrylicLayoutActive}, UI: {IsAcrylicEnabled}");
         });
         
         // Subscribe to AcrylicLayoutManager property changes

@@ -16,6 +16,12 @@ public interface IDockComponent
     string Name { get; }
     string Version { get; }
     Guid InstanceId { get; } // Unique runtime identifier to prevent duplicates
+    
+    /// <summary>
+    /// Global settings accessible to all components
+    /// </summary>
+    static Dictionary<string, object> GlobalSettings => DockComponent.Base.GlobalSettings.ToDictionary();
+    
     void Register(IDockComponentContext context);
 }
 

@@ -68,7 +68,10 @@ sealed class Program
         // SHELL SERVICES
         services.AddSingleton<App>(provider => new App(provider));
         services.AddSingleton<IViewLocator, ViewLocator>();
+        services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<IDockLayoutService, DockLayoutService>();
+        services.AddSingleton<AcrylicLayoutManager>();
         services.AddSingleton<InterPluginLogger>();
         services.AddSingleton<DockFactory>();
         services.AddTransient<MainWindowViewModel>();
