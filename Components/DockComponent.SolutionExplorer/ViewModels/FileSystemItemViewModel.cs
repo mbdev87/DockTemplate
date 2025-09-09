@@ -22,6 +22,7 @@ public class FileSystemItemViewModel : ReactiveObject
     [Reactive] public bool IsExpanded { get; set; }
     [Reactive] public bool IsSelected { get; set; }
     [Reactive] public bool ShouldScrollIntoView { get; set; }
+    [Reactive] public bool IsVisible { get; set; } = true;
     [Reactive] public ObservableCollection<FileSystemItemViewModel> Children { get; set; } = new();
     
     public ICommand ToggleExpandCommand { get; }
