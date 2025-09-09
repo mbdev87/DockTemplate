@@ -83,6 +83,13 @@ public class ThemeService : IThemeService
                     DockComponent.Base.GlobalSettings.ThemeIndex = settings.Theme.ThemeIndex;
                     DockComponent.Base.GlobalSettings.EnableAcrylic = settings.UI.EnableAcrylic;
                     DockComponent.Base.GlobalSettings.EnableAnimations = settings.UI.EnableAnimations;
+                    DockComponent.Base.GlobalSettings.SavedLayoutVersion = settings.DockLayout.SavedLayoutVersion;
+                    
+                    // Load layout data if available
+                    if (settings.DockLayout.LayoutData != null)
+                    {
+                        DockComponent.Base.GlobalSettings.SetSetting("DockLayout.LayoutData", settings.DockLayout.LayoutData);
+                    }
                     
                     var savedThemeIndex = settings.Theme.ThemeIndex;
                     Logger.Info($"[ThemeService] Loading theme SYNC from settings: index {savedThemeIndex}");

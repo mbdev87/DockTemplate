@@ -67,6 +67,14 @@ public class SettingsService : ISettingsService
         {
             EnsureSettingsDirectoryExists();
             
+            // Update layout data from global settings before saving
+            var layoutData = DockComponent.Base.GlobalSettings.GetSetting<DockLayoutData>("DockLayout.LayoutData");
+            if (layoutData != null)
+            {
+                Settings.DockLayout.LayoutData = layoutData;
+            }
+            Settings.DockLayout.SavedLayoutVersion = DockComponent.Base.GlobalSettings.SavedLayoutVersion;
+            
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -77,7 +85,7 @@ public class SettingsService : ISettingsService
             await File.WriteAllTextAsync(_settingsFilePath, json);
             
             Logger.Info("Settings saved successfully");
-            Logger.Debug($"Saved settings: Theme={Settings.Theme.IsDarkTheme}, Acrylic={Settings.UI.EnableAcrylic}");
+            Logger.Debug($"Saved settings: Theme={Settings.Theme.IsDarkTheme}, Acrylic={Settings.UI.EnableAcrylic}, Layout={layoutData?.Version}");
         }
         catch (Exception ex)
         {

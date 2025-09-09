@@ -43,6 +43,9 @@ public class DockLayoutSettings
     
     [JsonPropertyName("removedComponents")]
     public List<string> RemovedComponents { get; set; } = new();
+    
+    [JsonPropertyName("layoutData")]
+    public DockLayoutData? LayoutData { get; set; }
 }
 
 public class ComponentPosition

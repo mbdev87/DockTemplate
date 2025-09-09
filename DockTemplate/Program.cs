@@ -19,6 +19,7 @@ using DockComponent.Editor.Services;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
 using DockComponent.Base;
+using DockTemplate.Models;
 
 namespace DockTemplate;
 
@@ -71,6 +72,7 @@ sealed class Program
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IDockLayoutService, DockLayoutService>();
+        services.AddSingleton<IDockLayoutPersistence, DockLayoutPersistenceService>();
         services.AddSingleton<AcrylicLayoutManager>();
         services.AddSingleton<InterPluginLogger>();
         services.AddSingleton<DockFactory>();

@@ -34,6 +34,12 @@ public class DockFactory : Factory
     private IToolDock? _leftDock;
     private IProportionalDock? _rightDock;
     private IToolDock? _bottomDock;
+    
+    // Public accessors for layout persistence
+    public IDocumentDock? DocumentDock => _documentDock;
+    public IToolDock? LeftDock => _leftDock;
+    public IProportionalDock? RightDock => _rightDock;
+    public IToolDock? BottomDock => _bottomDock;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
     // Reference to acrylic layout manager for dynamic tool placement
@@ -207,6 +213,9 @@ public class DockFactory : Factory
         _integratedComponentInstances.Clear();
         Logger.Info($"Cleared component integration tracking - all components will be re-integrated into the new layout");
         
+        // Try to restore saved layout first (before component integration)
+        TryRestoreSavedLayout();
+        
         // Initialize acrylic layout manager with primary tool
         AcrylicLayoutManager?.InitializeAcrylicMode();
         
@@ -355,6 +364,9 @@ public class DockFactory : Factory
                 }
             }
         }
+        
+        // Auto-save layout after all components are integrated
+        TrySaveCurrentLayout();
     }
 
     public override void InitLayout(IDockable layout)
@@ -657,6 +669,51 @@ public class DockFactory : Factory
                 
                 Logger.Info($"Left dock now contains {allLeftTools.Count} tools (all tools restored)");
             }
+        }
+    }
+    
+    private void TryRestoreSavedLayout()
+    {
+        try
+        {
+            var layoutPersistence = Program.ServiceProvider?.GetService<IDockLayoutPersistence>();
+            if (layoutPersistence != null)
+            {
+                Logger.Info("🔄 Attempting to restore saved dock layout...");
+                _ = Task.Run(async () =>
+                {
+                    var restored = await layoutPersistence.LoadLayoutAsync();
+                    if (restored)
+                    {
+                        Logger.Info("🔄 ✅ Dock layout restored from settings");
+                    }
+                    else
+                    {
+                        Logger.Info("🔄 No saved layout found or restoration failed - using default layout");
+                    }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to restore saved layout");
+        }
+    }
+    
+    private void TrySaveCurrentLayout()
+    {
+        try
+        {
+            var layoutPersistence = Program.ServiceProvider?.GetService<IDockLayoutPersistence>();
+            if (layoutPersistence != null)
+            {
+                Logger.Debug("🔄 Auto-saving current dock layout...");
+                _ = Task.Run(async () => await layoutPersistence.SaveCurrentLayoutAsync());
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug(ex, "Failed to auto-save layout");
         }
     }
 }

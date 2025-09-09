@@ -13,6 +13,7 @@ using DockTemplate.ViewModels;
 using DockTemplate.Views;
 using DockTemplate.Services;
 using DockComponent.Base;
+using DockTemplate.Models;
 
 namespace DockTemplate;
 
@@ -133,6 +134,14 @@ public partial class App : Application
                 {
                     Console.WriteLine("[App] Initializing dock layout service...");
                     _ = dockLayoutService.RestoreLayoutAsync();
+                }
+                
+                // Initialize layout persistence for auto-save/restore
+                var layoutPersistence = _serviceProvider.GetService<IDockLayoutPersistence>();
+                if (layoutPersistence != null)
+                {
+                    Console.WriteLine("[App] Layout persistence service ready for auto-save/restore");
+                    // Layout will be restored after components are fully loaded
                 }
             }
         }
