@@ -1,5 +1,3 @@
-using System;
-
 namespace DockComponent.Editor.Transport
 {
     public class NavigationRequestMsg

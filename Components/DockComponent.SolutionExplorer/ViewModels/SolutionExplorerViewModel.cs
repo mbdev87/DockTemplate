@@ -1,7 +1,4 @@
-using System;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -54,10 +51,15 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
     [Reactive] public ObservableCollection<FileSystemItemViewModel> Items { get; set; } = new();
     [Reactive] public string RootPath { get; set; } = string.Empty;
     [Reactive] public FileSystemItemViewModel? SelectedItem { get; set; }
+    
+    // Search functionality
+    [Reactive] public string SearchText { get; set; } = string.Empty;
+    public bool HasSearchText => !string.IsNullOrWhiteSpace(SearchText);
 
     public ICommand ExpandAllCommand { get; }
     public ICommand CollapseAllCommand { get; }
     public ICommand RefreshCommand { get; }
+    public ICommand ClearSearchCommand { get; }
 
     public SolutionExplorerViewModel()
     {
@@ -81,6 +83,16 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
         ExpandAllCommand = ReactiveCommand.Create(ExpandAll);
         CollapseAllCommand = ReactiveCommand.Create(CollapseAll);
         RefreshCommand = ReactiveCommand.Create(LoadDirectory);
+        ClearSearchCommand = ReactiveCommand.Create(() => SearchText = string.Empty);
+        
+        // Watch for search text changes
+        this.WhenAnyValue(x => x.SearchText)
+            .Subscribe(_ => 
+            {
+                this.RaisePropertyChanged(nameof(HasSearchText));
+                ApplySearchFilter();
+            })
+            .DisposeWith(_disposables);
         
         LoadDirectory();
     }
@@ -95,7 +107,10 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
             var rootItem = new FileSystemItemViewModel(RootPath, OnFileOpened);
             Items.Add(rootItem);
             
-            LogInfo($"🗂️ Loaded directory: {RootPath}");
+            // Auto-expand the first (root) element for better UX
+            rootItem.IsExpanded = true;
+            
+            LogInfo($"🗂️ Loaded directory: {RootPath} - auto-expanded root");
         }
         catch (Exception ex)
         {
@@ -215,6 +230,53 @@ public class SolutionExplorerViewModel : ReactiveObject, ITool, IDisposable
         
         var componentMessage = LogMessageTransport.Create(logMessage);
         MessageBus.Current.SendMessage(componentMessage);
+    }
+    
+    private void ApplySearchFilter()
+    {
+        foreach (var item in Items)
+        {
+            ApplySearchFilterToItem(item, SearchText);
+        }
+    }
+    
+    private bool ApplySearchFilterToItem(FileSystemItemViewModel item, string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            // Show all items when no search
+            item.IsVisible = true;
+            foreach (var child in item.Children)
+            {
+                ApplySearchFilterToItem(child, searchText);
+            }
+            return true;
+        }
+        
+        // Check if this item matches search
+        var itemMatches = item.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+        
+        // Check if any children match (recursive)
+        var hasMatchingChildren = false;
+        foreach (var child in item.Children)
+        {
+            if (ApplySearchFilterToItem(child, searchText))
+            {
+                hasMatchingChildren = true;
+            }
+        }
+        
+        // Show item if it matches or has matching children
+        var shouldShow = itemMatches || hasMatchingChildren;
+        item.IsVisible = shouldShow;
+        
+        // Auto-expand if item has matching children
+        if (hasMatchingChildren && !itemMatches)
+        {
+            item.IsExpanded = true;
+        }
+        
+        return shouldShow;
     }
 
     public void Dispose()

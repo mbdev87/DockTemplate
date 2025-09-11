@@ -1,6 +1,4 @@
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reactive.Linq;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -43,6 +41,10 @@ namespace DockComponent.Output.Models
                         ApplyFilters();
                     });
                 };
+                
+                // Setup reactive filtering for main path too!
+                this.WhenAnyValue(x => x.FilterText, x => x.SelectedLogLevel)
+                    .Subscribe(_ => ApplyFilters());
                 
                 // Initial sync
                 SyncLogEntries();

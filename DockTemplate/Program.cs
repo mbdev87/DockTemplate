@@ -1,24 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using DockTemplate.ViewModels;
-using DockTemplate.Views;
 using DockTemplate.Services;
 using DockComponent.ErrorList.ViewModels;
-using DockComponent.Output.Models;
-using DockComponent.ErrorList.Services;
-using DockComponent.Editor.ViewModels.Documents;
 using DockComponent.Editor.Services;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
-using DockComponent.Base;
 
 namespace DockTemplate;
 
@@ -68,7 +59,10 @@ sealed class Program
         // SHELL SERVICES
         services.AddSingleton<App>(provider => new App(provider));
         services.AddSingleton<IViewLocator, ViewLocator>();
+        services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<IDockLayoutService, DockLayoutService>();
+        services.AddSingleton<AcrylicLayoutManager>();
         services.AddSingleton<InterPluginLogger>();
         services.AddSingleton<DockFactory>();
         services.AddTransient<MainWindowViewModel>();

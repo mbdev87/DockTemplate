@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
@@ -140,6 +138,17 @@ public partial class MainWindow : Window
         var extension = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
         return extension == ".dockplugin" || extension == ".zip";
     }
-
-
+    
+    /// <summary>
+    /// Handle pointer pressed events for window dragging in acrylic mode
+    /// </summary>
+    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        // Only handle left mouse button
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            // Start window dragging
+            BeginMoveDrag(e);
+        }
+    }
 }

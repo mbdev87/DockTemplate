@@ -63,9 +63,9 @@
         
         <!-- Create temporary directory for plugin contents -->
         <PropertyGroup>
-            <TempPluginDir>$(OutputPath)temp-plugin</TempPluginDir>
+            <TempPluginDir>$(OutputPath)temp-plugin-$(MSBuildProjectName)-$([System.Guid]::NewGuid().ToString("N").Substring(0,8))</TempPluginDir>
         </PropertyGroup>
-        <RemoveDir Directories="$(TempPluginDir)" />
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
         <MakeDir Directories="$(TempPluginDir)" />
         
         <!-- Copy files to temp directory -->
@@ -77,7 +77,7 @@
         <ZipDirectory SourceDirectory="$(TempPluginDir)" DestinationFile="$(PluginZipPath)" Overwrite="true" />
         
         <!-- Clean up temp directory -->
-        <RemoveDir Directories="$(TempPluginDir)" />
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
         
         <!-- Copy README.txt to distribution folder -->
         <Copy SourceFiles="README.txt" DestinationFolder="$(PluginOutputDir)" />

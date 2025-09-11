@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Input;
@@ -83,8 +80,18 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
     // ErrorListViewModel specific properties
     public ObservableCollection<ErrorEntry> Errors => _errorService.Errors;
     [Reactive] public ErrorEntry? SelectedError { get; set; }
-    [Reactive] public string FilterText { get; set; } = string.Empty;
-    [Reactive] public string SelectedSeverity { get; set; } = "All";
+    
+    public string FilterText
+    {
+        get => _errorService.FilterText;
+        set => _errorService.FilterText = value;
+    }
+    
+    public string SelectedSeverity
+    {
+        get => _errorService.SelectedSeverity;
+        set => _errorService.SelectedSeverity = value;
+    }
 
     public string[] SeverityLevels { get; } = { "All", "Error", "Warning" };
 

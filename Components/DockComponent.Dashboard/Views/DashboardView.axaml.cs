@@ -1,11 +1,7 @@
-using System;
-using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using Avalonia.Media;
 using Avalonia.Styling;
 using DockComponent.Dashboard.ViewModels;
-using ScottPlot;
 using ScottPlot.Avalonia;
 using System.Collections.Specialized;
 using Avalonia;

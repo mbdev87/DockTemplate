@@ -1,5 +1,3 @@
-using System;
-
 namespace DockComponent.ErrorList.Transport
 {
     public class ErrorReportedMsg

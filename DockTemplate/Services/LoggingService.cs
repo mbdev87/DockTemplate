@@ -1,8 +1,5 @@
-using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using NLog;
-using NLog.Targets;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using DockComponent.Base;

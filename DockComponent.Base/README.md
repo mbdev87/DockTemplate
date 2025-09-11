@@ -5,7 +5,7 @@ A revolutionary plugin system that enables true team independence while maintain
 ## 🏗️ Cross-Team Plugin Sharing
 
 ```mermaid
-graph TD
+graph LR
     subgraph TeamB["🔵 Team B Solution"]
         Editor["Editor<br/>📦 .dockplugin only"]
         ErrorList["ErrorList<br/>📦 .dockplugin only"]

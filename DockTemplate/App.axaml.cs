@@ -1,17 +1,14 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using DockTemplate.ViewModels;
 using DockTemplate.Views;
 using DockTemplate.Services;
-using DockComponent.Base;
 
 namespace DockTemplate;
 
@@ -39,6 +36,24 @@ public partial class App : Application
         if (_serviceProvider != null)
         {
             ThemeService = _serviceProvider.GetService<IThemeService>();
+            
+            // CRITICAL: Load theme BEFORE any UI is shown to prevent flicker
+            if (ThemeService != null)
+            {
+                Console.WriteLine("[App] Loading theme from settings EARLY to prevent flicker...");
+                // Use synchronous version during app initialization
+                ThemeService.InitializeFromSettingsSync();
+                Console.WriteLine("[App] ✅ Theme loaded early");
+            }
+            
+            // CRITICAL: Load acrylic setting EARLY too
+            var acrylicLayoutManager = _serviceProvider.GetService<AcrylicLayoutManager>();
+            if (acrylicLayoutManager != null)
+            {
+                Console.WriteLine("[App] Loading acrylic setting EARLY...");
+                acrylicLayoutManager.InitializeAcrylicModeEarly();
+                Console.WriteLine("[App] ✅ Acrylic setting loaded early");
+            }
         }
         
         InitializePlatformSpecificMenu();
@@ -105,6 +120,16 @@ public partial class App : Application
                 }
                 
                 Console.WriteLine("[App] ✅ All components available for debugging");
+                
+                // Theme already loaded early in Initialize() - no need to load again
+                
+                // Initialize dock layout service
+                var dockLayoutService = _serviceProvider.GetService<IDockLayoutService>();
+                if (dockLayoutService != null)
+                {
+                    Console.WriteLine("[App] Initializing dock layout service...");
+                    _ = dockLayoutService.RestoreLayoutAsync();
+                }
             }
         }
         
