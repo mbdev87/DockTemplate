@@ -1,4 +1,3 @@
-using System;
 using DockComponent.Base;
 using DockComponent.Output.ViewModels;
 using DockComponent.Output.Models;

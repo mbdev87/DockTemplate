@@ -1,4 +1,3 @@
-using System;
 using DockComponent.Base;
 using DockComponent.ErrorList.ViewModels;
 using DockComponent.ErrorList.Services;

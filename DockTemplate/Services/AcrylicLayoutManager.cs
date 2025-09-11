@@ -1,15 +1,11 @@
 using System;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Dock.Model.Core;
 using NLog;
 using DockComponent.Base;
-using DockTemplate.Models;
 
 namespace DockTemplate.Services;
 

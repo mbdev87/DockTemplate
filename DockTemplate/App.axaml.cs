@@ -1,18 +1,14 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using DockTemplate.ViewModels;
 using DockTemplate.Views;
 using DockTemplate.Services;
-using DockComponent.Base;
 
 namespace DockTemplate;
 

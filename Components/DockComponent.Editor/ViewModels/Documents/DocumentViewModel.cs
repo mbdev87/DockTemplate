@@ -1,16 +1,10 @@
-using System;
-using System.IO;
 using System.Reactive.Disposables;
-using Avalonia;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
-using AvaloniaEdit.TextMate;
 using Dock.Model.Mvvm.Controls;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using TextMateSharp.Grammars;
 using DockComponent.Editor.Services;
 using DockComponent.Editor.Transport;
 using NLog;

@@ -1,21 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using DockComponent.Base;
-//using DockComponent.Editor.ViewModels.Documents; // Moved to Editor component
-using DockComponent.Editor.ViewModels;
 using DockComponent.SolutionExplorer.ViewModels;
-using DockComponent.Output.ViewModels;
-using DockComponent.ErrorList.ViewModels;
-//using DockTemplate.Models.Documents; // Removed
-using DockTemplate.Models.Tools;
-using DockTemplate.Models;
-using DockTemplate.Services;
 using DockTemplate.Messages;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;

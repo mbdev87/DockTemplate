@@ -1,11 +1,9 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using ReactiveUI;
 using DockTemplate.Messages;
 using DockTemplate.ViewModels;

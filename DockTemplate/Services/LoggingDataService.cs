@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using DockComponent.Base;
 using ReactiveUI;
-using DockTemplate.Services;
 
 namespace DockTemplate.Services;
 

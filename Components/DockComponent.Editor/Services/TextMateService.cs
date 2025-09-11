@@ -1,14 +1,8 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using AvaloniaEdit;
-using AvaloniaEdit.Rendering;
 using AvaloniaEdit.TextMate;
 using NLog;
 using TextMateSharp.Grammars;

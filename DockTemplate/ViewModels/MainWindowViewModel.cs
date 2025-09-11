@@ -10,8 +10,6 @@ using DockTemplate.Services;
 using DockTemplate.Messages;
 using NLog;
 using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia;
 
 namespace DockTemplate.ViewModels;
 

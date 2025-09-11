@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -12,7 +11,6 @@ using AvaloniaEdit.Rendering;
 using DockComponent.Editor.ViewModels.Documents;
 using DockComponent.Editor.Transport;
 using DockComponent.Base;
-using JetBrains.Annotations;
 using ReactiveUI;
 // ReSharper disable PartialTypeWithSinglePart
 

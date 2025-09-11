@@ -1,5 +1,4 @@
 using System;
-using DockComponent.Base;
 using DockComponent.Output.Messages;
 using ReactiveUI;
 using NLog;

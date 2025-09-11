@@ -1,7 +1,4 @@
-using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
 using System.Windows.Input;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -9,10 +6,8 @@ using DockComponent.Output.Models;
 using DockComponent.Output.Messages; // Using LOCAL messages only - no cross-component dependencies!
 using DockComponent.Base;
 using NLog;
-using Avalonia.Threading;
 using Dock.Model.Controls;
 using Dock.Model.Core;
-using Dock.Model.Mvvm;
 
 namespace DockComponent.Output.ViewModels;
 

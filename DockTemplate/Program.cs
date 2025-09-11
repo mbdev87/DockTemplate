@@ -1,24 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using DockTemplate.ViewModels;
-using DockTemplate.Views;
 using DockTemplate.Services;
 using DockComponent.ErrorList.ViewModels;
-using DockComponent.Output.Models;
-using DockComponent.ErrorList.Services;
-using DockComponent.Editor.ViewModels.Documents;
 using DockComponent.Editor.Services;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
-using DockComponent.Base;
 
 namespace DockTemplate;
 
