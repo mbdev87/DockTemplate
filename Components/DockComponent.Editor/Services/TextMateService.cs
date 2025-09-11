@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using AvaloniaEdit;
+using AvaloniaEdit.Rendering;
 using AvaloniaEdit.TextMate;
 using NLog;
 using TextMateSharp.Grammars;
@@ -24,6 +29,7 @@ public class TextMateService
         public ThemeName CurrentTheme { get; set; }
         public TextEditor? AttachedEditor { get; set; }
         public bool IsDisposed { get; set; }
+        public bool NeedsRefresh { get; set; }
 
         public void Dispose()
         {
@@ -52,6 +58,30 @@ public class TextMateService
             if (existingContext.AttachedEditor != textEditor)
             {
                 AttachToEditor(existingContext, textEditor);
+            }
+            
+            // Check if context needs refresh due to theme change
+            if (existingContext.NeedsRefresh)
+            {
+                Logger.Info($"[TextMateService] Context {documentId} needs refresh - applying now to current editor");
+                existingContext.NeedsRefresh = false;
+                
+                // CRITICAL: Ensure we refresh the CURRENT editor, not a cached one
+                var currentEditor = existingContext.AttachedEditor;
+                if (currentEditor == textEditor)
+                {
+                    Logger.Info($"[TextMateService] Refreshing content on current editor");
+                    // Refresh the content now that this tab is active
+                    Dispatcher.UIThread.Post(async () =>
+                    {
+                        await System.Threading.Tasks.Task.Delay(10); // Minimal delay for tab switch
+                        await RefreshEditorContent(existingContext);
+                    }, DispatcherPriority.Background);
+                }
+                else
+                {
+                    Logger.Warn($"[TextMateService] Editor mismatch detected - context attached to different editor");
+                }
             }
             
             return existingContext;
@@ -107,6 +137,7 @@ public class TextMateService
         if (context.AttachedEditor != textEditor)
         {
             Logger.Info($"[TextMateService] Reattaching context to different editor - creating new installation");
+            Logger.Info($"[TextMateService] Old editor: {context.AttachedEditor?.GetHashCode()}, New editor: {textEditor.GetHashCode()}");
             
             var oldInstallation = context.Installation;
             
@@ -137,7 +168,8 @@ public class TextMateService
         if (_currentTheme == newTheme) return;
         
         _currentTheme = newTheme;
-        var newThemeName = GetCurrentThemeName();
+        // Convert the passed theme directly instead of reading from Application.Current
+        var newThemeName = newTheme == ThemeVariant.Dark ? ThemeName.DarkPlus : ThemeName.LightPlus;
         
         Logger.Info($"[TextMateService] Updating all contexts to theme: {newTheme} -> {newThemeName}");
 
@@ -166,8 +198,35 @@ public class TextMateService
                     context.Installation.SetGrammar(freshRegistry.GetScopeByLanguageId(languageInfo.Id));
                 }
                 
-                // Force refresh for the specific language
-                RefreshEditorContent(context);
+                // Check if this context is currently active (attached editor is visible)
+                if (context.AttachedEditor != null && context.AttachedEditor.IsVisible)
+                {
+                    // Immediately refresh active contexts
+                    Logger.Info($"[TextMateService] Context {kvp.Key} is active - refreshing immediately");
+                    // MULTI-PRIORITY APPROACH: Hit different points in the rendering pipeline
+                    Logger.Info($"[TextMateService] Scheduling multi-priority refresh");
+                    
+                    // Attempt 1: Immediate with Render priority (highest)
+                    Dispatcher.UIThread.Post(async () => 
+                    {
+                        Logger.Info($"[TextMateService] Render priority refresh");
+                        await RefreshEditorContent(context);
+                    }, DispatcherPriority.Render);
+                    
+                    // Attempt 2: Background priority as fallback
+                    Dispatcher.UIThread.Post(async () => 
+                    {
+                        await System.Threading.Tasks.Task.Delay(1); // Tiny delay to ensure render priority ran
+                        Logger.Info($"[TextMateService] Background priority refresh");  
+                        await RefreshEditorContent(context);
+                    }, DispatcherPriority.Background);
+                }
+                else
+                {
+                    // Mark inactive contexts for refresh when they become active
+                    context.NeedsRefresh = true;
+                    Logger.Info($"[TextMateService] Context {kvp.Key} is inactive - marked for refresh on activation");
+                }
                 
                 // Dispose old installation
                 oldInstallation?.Dispose();
@@ -181,14 +240,20 @@ public class TextMateService
         }
     }
 
-    private void RefreshEditorContent(TextMateContext context)
+    private async Task RefreshEditorContent(TextMateContext context)
     {
-        if (context.AttachedEditor == null) return;
+        if (context.AttachedEditor == null) 
+        {
+            Logger.Warn($"[TextMateService] RefreshEditorContent: No attached editor for context");
+            return;
+        }
 
         try
         {
             var editor = context.AttachedEditor;
             var document = editor.Document;
+            
+            Logger.Info($"[TextMateService] RefreshEditorContent: Refreshing {context.Language} content, isVisible: {editor.IsVisible}");
             
             if (document != null && !string.IsNullOrEmpty(document.Text))
             {
@@ -196,6 +261,7 @@ public class TextMateService
                 {
                     // Light refresh for Markdown
                     editor.InvalidateVisual();
+                    Logger.Info($"[TextMateService] Light refresh applied for markdown");
                 }
                 else
                 {
@@ -203,10 +269,56 @@ public class TextMateService
                     var currentText = document.Text;
                     var cursorOffset = editor.CaretOffset;
                     
+                    Logger.Info($"[TextMateService] Full refresh: clearing and restoring {currentText.Length} characters");
                     document.Text = string.Empty;
                     document.Text = currentText;
                     editor.CaretOffset = cursorOffset;
+                    
+                    // PROVEN TECHNIQUE: Use the same method that works for line highlighting
+                    Logger.Info($"[TextMateService] Applying proven visual refresh technique...");
+                    
+                    // Force aggressive visual refresh by manipulating background renderers
+                    if (editor.TextArea?.TextView != null)
+                    {
+                        var textView = editor.TextArea.TextView;
+                        var backgroundRenderers = textView.BackgroundRenderers;
+                        var rendererCount = backgroundRenderers.Count;
+                        
+                        // Temporarily remove and re-add all background renderers to force refresh
+                        var renderersCopy = new List<AvaloniaEdit.Rendering.IBackgroundRenderer>();
+                        for (int i = 0; i < backgroundRenderers.Count; i++)
+                        {
+                            renderersCopy.Add(backgroundRenderers[i]);
+                        }
+                        backgroundRenderers.Clear();
+                        foreach (var renderer in renderersCopy)
+                        {
+                            backgroundRenderers.Add(renderer);
+                        }
+                        
+                        Logger.Info($"[TextMateService] Refreshed {rendererCount} background renderers");
+                    }
+                    
+                    // Apply the proven TextView invalidation sequence
+                    if (editor.TextArea?.TextView != null)
+                    {
+                        editor.TextArea.TextView.InvalidateVisual();
+                        editor.TextArea.TextView.InvalidateMeasure();
+                        editor.TextArea.TextView.InvalidateArrange();
+                    }
+                    
+                    // Apply the proven focus cycle technique with minimal delay
+                    editor.Focus(Avalonia.Input.NavigationMethod.Unspecified);
+                    // Ultra-minimal delay - just enough to trigger the pipeline
+                    await System.Threading.Tasks.Task.Delay(1);
+                    editor.Focus();
+                    
+                    Logger.Info($"[TextMateService] Proven visual refresh technique completed");
                 }
+            }
+            else
+            {
+                Logger.Warn($"[TextMateService] RefreshEditorContent: Document is null or empty");
             }
         }
         catch (Exception ex)

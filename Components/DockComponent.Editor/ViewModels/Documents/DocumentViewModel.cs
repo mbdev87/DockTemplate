@@ -39,7 +39,12 @@ public class DocumentViewModel : Document, IDisposable
             .Subscribe(message => 
             {
                 Logger.Info($"[{Title}] Received theme change message: {message.NewTheme}");
-                _textMateService.UpdateTheme(message.NewTheme);
+                
+                // Delay theme update to allow UI to finish theme transition
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _textMateService.UpdateTheme(message.NewTheme);
+                }, DispatcherPriority.Background);
             })
             .DisposeWith(_disposables);
     }
@@ -58,7 +63,8 @@ public class DocumentViewModel : Document, IDisposable
             // Use the document ID as cache key - this allows caching across editor switches
             var documentId = !string.IsNullOrEmpty(Title) ? Title : Id ?? "unknown";
             
-            Logger.Info($"[{Title}] Setting up TextMate using service for document: {documentId}");
+            Logger.Info($"[{Title}] Setting up TextMate using service for document: {documentId}, Language: {CurrentLanguage}");
+            Logger.Info($"[{Title}] TextEditor instance: {textEditor.GetHashCode()}");
             
             // Get or create cached TextMate context
             _textMateContext = _textMateService.GetOrCreateContext(documentId, CurrentLanguage, textEditor);
