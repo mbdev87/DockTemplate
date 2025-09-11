@@ -1,9 +1,6 @@
-using System;
 using DockComponent.Base;
-using DockComponent.Editor.ViewModels;
 using DockComponent.Editor.ViewModels.Documents;
 using DockComponent.Editor.Services;
-using Dock.Model.Mvvm.Controls;
 
 namespace DockComponent.Editor
 {

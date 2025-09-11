@@ -1,6 +1,4 @@
 using System.Collections.Concurrent;
-using System.ComponentModel;
-using ReactiveUI;
 
 namespace DockComponent.Base;
 

@@ -1,16 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Reactive;
-using System.Threading.Tasks;
-using Avalonia.Controls;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
 using Dock.Model.Mvvm.Controls;
-using ScottPlot;
-using ScottPlot.Avalonia;
 
 namespace DockComponent.Dashboard.ViewModels;
 

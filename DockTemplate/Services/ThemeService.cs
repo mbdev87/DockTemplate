@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using ReactiveUI;
 using DockTemplate.Messages;
 using DockTemplate.Models;
+using DockComponent.Editor.Transport;
 using NLog;
 
 namespace DockTemplate.Services;
@@ -58,6 +59,7 @@ public class ThemeService : IThemeService
 
         Application.Current.RequestedThemeVariant = newTheme;
         MessageBus.Current.SendMessage(new ThemeChangedMessage(newTheme));
+        MessageBus.Current.SendMessage(new ThemeChangedMsg(newTheme));
         
         Logger.Info($"[ThemeService] Applied theme without saving: {newTheme}");
     }
@@ -129,6 +131,7 @@ public class ThemeService : IThemeService
         {
             Application.Current.RequestedThemeVariant = newTheme;
             MessageBus.Current.SendMessage(new ThemeChangedMessage(newTheme));
+            MessageBus.Current.SendMessage(new ThemeChangedMsg(newTheme));
         });
 
         // Save theme preference to settings (can be done on background thread)

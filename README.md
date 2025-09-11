@@ -17,7 +17,7 @@ DockTemplate is more than just a docking demo—it’s built around real-world e
 
 Imagine DockTemplate as a **cross-platform VS Shell**, sculpted for simplicity, modularity, and cross-team effectiveness.
 
-<img src="docs/img/dock_template_overview.png" alt="The App" />
+<img src="docs/img/DockTemplate.png" alt="The App" />
 
 ---
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace DockComponent.Base;
 
 /// <summary>

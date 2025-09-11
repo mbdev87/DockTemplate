@@ -1,11 +1,6 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using System.Text.Json;
 using Avalonia;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -19,8 +14,6 @@ using DockComponent.Base;
 using DockComponent.Editor.Messages;
 using DockComponent.Editor.Transport.EditorComponent;
 using DockComponent.Editor.Transport.ErrorListComponent;
-using DockComponent.Editor.Transport.UIComponent;
-using Dock.Model.Mvvm.Controls;
 using NLog;
 
 namespace DockComponent.Editor.ViewModels;

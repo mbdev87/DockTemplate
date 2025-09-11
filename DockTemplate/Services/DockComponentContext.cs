@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Avalonia;
-using Avalonia.Styling;
 using Avalonia.Markup.Xaml.Styling;
 using DockComponent.Base;
 using DockTemplate.ViewModels;

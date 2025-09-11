@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -12,7 +11,6 @@ using AvaloniaEdit.Rendering;
 using DockComponent.Editor.ViewModels.Documents;
 using DockComponent.Editor.Transport;
 using DockComponent.Base;
-using JetBrains.Annotations;
 using ReactiveUI;
 // ReSharper disable PartialTypeWithSinglePart
 
@@ -25,6 +23,7 @@ public partial class DocumentView : UserControl, IDisposable
     private int? _pendingHighlightLine;
     private bool _isEditorReady = false;
     private readonly CompositeDisposable _disposables = new();
+    private DocumentViewModel _viewModel;
 
     public DocumentView()
     {
@@ -43,6 +42,7 @@ public partial class DocumentView : UserControl, IDisposable
         
         if (DataContext is DocumentViewModel viewModel && _textEditor != null)
         {
+            _viewModel =  viewModel;
             System.Diagnostics.Debug.WriteLine($"[DocumentView] OnLoaded for document: {viewModel.Title}");
             viewModel.SetupTextMateForEditor(_textEditor);
             SetupLineHighlighting(viewModel);
@@ -103,9 +103,44 @@ public partial class DocumentView : UserControl, IDisposable
         MessageBus.Current.Listen<ThemeChangedMsg>()
             .Subscribe(message =>
             {
-                Dispatcher.UIThread.Post(() =>
+                Dispatcher.UIThread.Post(async void () =>
                 {
-                    SetupLineHighlighting(viewModel);
+                    try
+                    {
+                        SetupLineHighlighting(viewModel);
+                    
+                        // NUCLEAR KICK: Force TextEditor to re-render after theme change
+                        if (_textEditor != null)
+                        {
+                            await Task.Delay(500);
+                            System.Diagnostics.Debug.WriteLine($"[DocumentView] Kicking TextEditor rendering for theme change: {message.NewTheme}");
+                        
+                            // Force complete visual refresh
+                            _textEditor.InvalidateVisual();
+                            _textEditor.InvalidateMeasure(); 
+                            _textEditor.InvalidateArrange();
+                            
+                            // Force TextArea refresh
+                            _textEditor.TextArea?.InvalidateVisual();
+                            _textEditor.TextArea?.TextView?.InvalidateVisual();
+                            _viewModel.SetupTextMateForEditor(_textEditor);
+                            // Force focus cycle to trigger updates
+                            var wasFocused = _textEditor.IsFocused;
+                            _textEditor.Focus();
+                            if (!wasFocused)
+                            {
+                                // Return focus to original state if it wasn't focused
+                                _textEditor.Focusable = false;
+                                _textEditor.Focusable = true;
+                            }
+                        
+                            System.Diagnostics.Debug.WriteLine($"[DocumentView] TextEditor rendering kick completed");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Ignored.
+                    }
                 }, DispatcherPriority.Background);
             })
             .DisposeWith(_disposables);

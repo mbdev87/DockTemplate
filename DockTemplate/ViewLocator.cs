@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using DockTemplate.ViewModels;
 using DockTemplate.Models.Tools;
-using DockTemplate.Models;
-using DockTemplate.Views;
 using DockTemplate.Views.Models;
 // Component references removed - using BuildByConvention for dynamically loaded plugins
 using Dock.Model.Core;
