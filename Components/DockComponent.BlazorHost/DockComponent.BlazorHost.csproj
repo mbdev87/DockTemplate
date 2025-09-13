@@ -1,0 +1,98 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <OutputType>Library</OutputType>
+        
+        <!-- Output component to shared Components-Output folder -->
+        <OutputPath>..\..\Components-Output\$(Configuration)\</OutputPath>
+    </PropertyGroup>
+
+    <!-- Avalonia Resource Include for AXAML files -->
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**" />
+    </ItemGroup>
+
+    <!-- Component packages -->
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.4" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.4" />
+        <PackageReference Include="ReactiveUI.Fody" Version="19.5.31" />
+        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.2.2" />
+        
+        <!-- OutSystems WebView for FOSS Chromium integration -->
+        <PackageReference Include="WebViewControl-Avalonia" Version="3.120.10" />
+        
+        <!-- Web hosting support (optional for future use) -->
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\DockComponent.Base\DockComponent.Base.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Update="Views\WebViewTestView.axaml.cs">
+        <DependentUpon>WebViewTestControlView.axaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    
+    <!-- Post-build target to create .dockplugin file -->
+    <Target Name="CreateDockPlugin" AfterTargets="PostBuildEvent">
+        <PropertyGroup>
+            <PluginOutputDir>$(OutputPath)Plugin-Distribution</PluginOutputDir>
+            <PluginName>BlazorHost-Component</PluginName>
+            <PluginZipPath>$(PluginOutputDir)\$(PluginName).dockplugin</PluginZipPath>
+        </PropertyGroup>
+        
+        <!-- Create distribution directory -->
+        <MakeDir Directories="$(PluginOutputDir)" />
+        
+        <!-- Remove old plugin file if it exists -->
+        <Delete Files="$(PluginZipPath)" Condition="Exists('$(PluginZipPath)')" />
+        
+        <!-- Create ZIP file with plugin contents -->
+        <ItemGroup>
+            <PluginFiles Include="$(OutputPath)DockComponent.BlazorHost.dll" />
+            <PluginFiles Include="$(OutputPath)DockComponent.BlazorHost.pdb" />
+            <PluginFiles Include="$(OutputPath)DockComponent.Base.dll" />
+            <!-- Include WebView dependencies -->
+            <PluginFiles Include="$(OutputPath)OutSystems.WebView.*.dll" />
+            <PluginFiles Include="$(OutputPath)CefGlue.dll" />
+        </ItemGroup>
+        
+        <Message Text="Creating .dockplugin file: $(PluginZipPath)" Importance="high" />
+        <Message Text="Output path: $(OutputPath)" Importance="high" />
+        
+        <!-- Check if required files exist before creating ZIP -->
+        <Error Condition="!Exists('$(OutputPath)DockComponent.BlazorHost.dll')" Text="Required file not found: $(OutputPath)DockComponent.BlazorHost.dll" />
+        <Error Condition="!Exists('$(OutputPath)DockComponent.Base.dll')" Text="Required file not found: $(OutputPath)DockComponent.Base.dll" />
+        
+        <!-- Create unique temporary directory for plugin contents -->
+        <PropertyGroup>
+            <TempPluginDir>$(OutputPath)temp-plugin-$(MSBuildProjectName)-$([System.Guid]::NewGuid().ToString("N").Substring(0,8))</TempPluginDir>
+        </PropertyGroup>
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
+        <MakeDir Directories="$(TempPluginDir)" />
+        
+        <!-- Copy files to temp directory -->
+        <Copy SourceFiles="$(OutputPath)DockComponent.BlazorHost.dll" DestinationFolder="$(TempPluginDir)" />
+        <Copy SourceFiles="$(OutputPath)DockComponent.BlazorHost.pdb" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)DockComponent.BlazorHost.pdb')" />
+        <Copy SourceFiles="$(OutputPath)DockComponent.Base.dll" DestinationFolder="$(TempPluginDir)" />
+        
+        <!-- Create ZIP using MSBuild ZipDirectory task (cross-platform) -->
+        <ZipDirectory SourceDirectory="$(TempPluginDir)" DestinationFile="$(PluginZipPath)" Overwrite="true" />
+        
+        <!-- Clean up temp directory (gracefully handle failures) -->
+        <RemoveDir Directories="$(TempPluginDir)" ContinueOnError="true" />
+        
+        <!-- Copy README.txt to distribution folder -->
+        <Copy SourceFiles="README.txt" DestinationFolder="$(PluginOutputDir)" />
+        
+        <Message Text="✅ Created plugin: $(PluginZipPath)" Importance="high" />
+        <Message Text="✅ Copied README.txt to distribution folder" Importance="high" />
+    </Target>
+
+</Project>

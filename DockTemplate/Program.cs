@@ -10,6 +10,7 @@ using DockComponent.ErrorList.ViewModels;
 using DockComponent.Editor.Services;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
+using DockComponent.BlazorHost.ViewModels;
 
 namespace DockTemplate;
 
@@ -73,11 +74,15 @@ sealed class Program
         services.AddSingleton<ComponentLoader>();
         // Note: PluginDirectoryService is static - no need to register
         
+        // BLAZOR AUTO-INTEGRATION
+        services.AddSingleton<BlazorAutoIntegrationService>();
+        
         // COMPONENT SERVICES - Direct registration for author/debug mode
         RegisterEditorComponent(services);
         RegisterErrorListComponent(services);
         RegisterOutputComponent(services);
         RegisterSolutionExplorerComponent(services);
+        RegisterBlazorHostComponent(services);
     }
     
     private static void RegisterEditorComponent(IServiceCollection services)
@@ -128,6 +133,21 @@ sealed class Program
             {
                 var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
                 var component = new DockComponent.SolutionExplorer.SolutionExplorerComponent();
+                component.Register(context);
+            }
+        });
+    }
+    
+    private static void RegisterBlazorHostComponent(IServiceCollection services)
+    {
+        services.AddSingleton<BlazorHostViewModel>();
+        
+        ComponentsToRegister.Add(() => {
+            var dockFactory = ServiceProvider?.GetRequiredService<DockFactory>();
+            if (dockFactory != null)
+            {
+                var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
+                var component = new DockComponent.BlazorHost.BlazorHostComponent();
                 component.Register(context);
             }
         });

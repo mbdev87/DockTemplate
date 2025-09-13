@@ -63,15 +63,22 @@ namespace DockComponent.Output.Models
         
         private void SyncLogEntries()
         {
-            // Convert from shared LogEntry format to our local LogEntry format
-            var sharedEntries = SharedLoggingService.Instance.LogEntries;
-            
-            // Clear and repopulate to ensure sync (could be optimized to only add new entries)
-            LogEntries.Clear();
-            foreach (var sharedEntry in sharedEntries)
+            try
             {
-                // sharedEntry is already the correct Base.LogEntry type, just add it directly
-                LogEntries.Add(sharedEntry);
+                // Convert from shared LogEntry format to our local LogEntry format
+                var sharedEntries = SharedLoggingService.Instance.LogEntries;
+
+                // Clear and repopulate to ensure sync (could be optimized to only add new entries)
+                LogEntries.Clear();
+                foreach (var sharedEntry in sharedEntries)
+                {
+                    // sharedEntry is already the correct Base.LogEntry type, just add it directly
+                    LogEntries.Add(sharedEntry);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e); // Do not use logger inside the logger
             }
         }
         

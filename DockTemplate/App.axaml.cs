@@ -91,6 +91,18 @@ public partial class App : Application
                 Console.WriteLine("[App] ❌ PluginInstallationService is NULL - service not registered properly!");
             }
             
+            // Start BlazorAutoIntegrationService
+            Console.WriteLine("[App] Starting BlazorAutoIntegrationService...");
+            var blazorAutoIntegrationService = _serviceProvider.GetService<BlazorAutoIntegrationService>();
+            if (blazorAutoIntegrationService != null)
+            {
+                Console.WriteLine("[App] ✅ BlazorAutoIntegrationService started and watching for Blazor apps");
+            }
+            else
+            {
+                Console.WriteLine("[App] ❌ BlazorAutoIntegrationService is NULL - service not registered properly!");
+            }
+            
             // AUTHOR MODE - Direct component registration + plugin loading
             var dockFactory = _serviceProvider.GetService<DockFactory>();
             if (dockFactory != null)

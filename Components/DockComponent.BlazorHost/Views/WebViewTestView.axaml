@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:webView="clr-namespace:WebViewControl;assembly=WebViewControl.Avalonia"
+             xmlns:viewModels="clr-namespace:DockComponent.BlazorHost.ViewModels"
+             x:Class="DockComponent.BlazorHost.Views.WebViewTestView"
+             x:DataType="viewModels:WebViewTestViewModel">
+
+    <Grid Margin="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top Half: GitHub -->
+        <webView:WebView Grid.Row="0" 
+                       Address="https://github.com/mbdev87/DockTemplate"
+                       Margin="0" />
+
+        <!-- Bottom Half: Avalonia Playground -->
+        <webView:WebView Grid.Row="1" 
+                       Address="https://play.avaloniaui.net/"
+                       Margin="0" />
+    </Grid>
+</UserControl>

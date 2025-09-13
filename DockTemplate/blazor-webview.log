@@ -1,0 +1,235 @@
+[0913/140924.494:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/140924.494:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/140924.530:VERBOSE1:pref_proxy_config_tracker_impl.cc(191)] 00001B3C00025000: set chrome proxy config service to 00001B3C00118900
+[0913/140924.544:VERBOSE1:webrtc_internals.cc(123)] Could not get the download directory.
+[0913/140924.546:VERBOSE1:media_stream_manager.cc(1410)] MSM::InitializeMaybeAsync([this=00001B3C000B6200])
+[0913/140924.546:VERBOSE1:media_stream_manager.cc(1410)] MDM::MediaDevicesManager()
+[0913/140924.546:VERBOSE1:media_stream_manager.cc(1410)] MSM::MediaStreamManager([this=00001B3C000B6200]))
+[0913/140924.546:VERBOSE1:device_event_log_impl.cc(194)] [14:09:24.544] Display: EVENT: screen_win.cc:828 Displays updated, count: 1
+[0913/140924.546:VERBOSE1:device_event_log_impl.cc(194)] [14:09:24.545] Display: EVENT: screen_win.cc:830 Display[3877790716] bounds=[0,0 1280x800], workarea=[0,0 1280x752], scale=2, rotation=0, panel_rotation=0 external detected
+[0913/140924.546:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.552:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/140924.561:VERBOSE1:component_installer.cc(428)] StartRegistration for Widevine Content Decryption Module
+[0913/140924.567:VERBOSE1:component_installer.cc(499)] FinishRegistration for Widevine Content Decryption Module
+[0913/140924.567:VERBOSE1:component_updater_service.cc(151)] CrxUpdateService starting up. First update attempt will take place in 60 s seconds. Next update attempt will take place in 18000 s seconds. 
+[0913/140924.646:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/140924.646:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/140924.656:VERBOSE1:pref_proxy_config_tracker_impl.cc(191)] 00001B3C003EC400: set chrome proxy config service to 00001B3C0011D340
+[0913/140924.667:VERBOSE1:simple_index_file.cc(600)] Simple Cache Index is being restored from disk.
+[0913/140924.667:VERBOSE1:simple_index_file.cc(600)] Simple Cache Index is being restored from disk.
+[0913/140924.802:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/140924.802:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/140924.816:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/140924.816:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/140924.834:VERBOSE1:simple_index_file.cc(600)] Simple Cache Index is being restored from disk.
+[0913/140924.845:VERBOSE1:configured_proxy_resolution_service.cc(1096)] Failed configuring with PAC script, falling-back to manual proxy servers.
+[0913/140924.845:VERBOSE1:configured_proxy_resolution_service.cc(1096)] Failed configuring with PAC script, falling-back to manual proxy servers.
+[0913/141024.579:VERBOSE1:network_delegate.cc(35)] NetworkDelegate::NotifyBeforeURLRequest: https://update.googleapis.com/service/update2/json?cup2key=13:Xqze3IwGIwtp4X4O5lVakK4IXeaGub8Y9gCap2J450A&cup2hreq=1548eb335a7ccb6d523698f4dba7a3f8b2d5d2d362691b65d5d2d2f6729d02d2
+[0913/141024.742:VERBOSE1:request_sender.cc(181)] Request completed from url: https://update.googleapis.com/service/update2/json?cup2key=13:Xqze3IwGIwtp4X4O5lVakK4IXeaGub8Y9gCap2J450A&cup2hreq=1548eb335a7ccb6d523698f4dba7a3f8b2d5d2d362691b65d5d2d2f6729d02d2
+[0913/141024.742:VERBOSE1:component_updater_service.cc(451)] Update completed with error 0
+[0913/141124.655:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/141124.655:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/143154.184:VERBOSE1:statistics_recorder.cc(647)] Collections of all histograms
+Histogram: LevelDBEnv.DeleteTableBackupFile recorded 0 samples (flags = 0x1)
+0 ... 
+
+Histogram: Memory.PartitionAlloc.MemoryReclaim recorded 322 samples, mean = 72.4 (flags = 0x1)
+0    ... 
+28   --O                                                                       (4 = 1.2%) {0.0%}
+37   ---------------O                                                          (26 = 8.1%) {1.2%}
+49   ----------------------------------------------------------O               (103 = 32.0%) {9.3%}
+65   ------------------------------------------------------------------------O (128 = 39.8%) {41.3%}
+86   -------------------------O                                                (45 = 14.0%) {81.1%}
+113  -------O                                                                  (13 = 4.0%) {95.0%}
+149  -O                                                                        (1 = 0.3%) {99.1%}
+196  -O                                                                        (2 = 0.6%) {99.4%}
+258  ... 
+
+Histogram: Memory.PartitionAlloc.PartitionRoot.ExtrasSize recorded 1 samples, mean = 4.0 (flags = 0x1)
+0  ... 
+4  -O                                                                        (1 = 100.0%) {0.0%}
+5  ... 
+
+Histogram: Memory.PartitionAlloc.PeriodicPurge recorded 27 samples, mean = 10.4 (flags = 0x1)
+0   ... 
+5   --O                                                                       (2 = 7.4%) {0.0%}
+7   --------------O                                                           (14 = 51.9%) {7.4%}
+9   --------O                                                                 (8 = 29.6%) {59.3%}
+12  --O                                                                       (2 = 7.4%) {88.9%}
+16  ... 
+49  -O                                                                        (1 = 3.7%) {96.3%}
+65  ... 
+
+Histogram: UMA.ChildProcess.Ping.SharedMemorySetUp recorded 1 samples, mean = 1.0 (flags = 0x1)
+0  O                                                                         (0 = 0.0%)
+1  -O                                                                        (1 = 100.0%) {0.0%}
+2  ... 
+
+Histogram: UMA.LocalHistogram recorded 1 samples, mean = 1.0
+0  O                                                                         (0 = 0.0%)
+1  -O                                                                        (1 = 100.0%) {0.0%}
+2  O                                                                         (0 = 0.0%) {100.0%}
+
+Histogram: V8.Initializer.OpenV8File.Result recorded 1 samples, mean = 0.0 (flags = 0x1)
+0  -O                                                                        (1 = 100.0%)
+1  ... 
+
+Histogram: Variations.Limits.VariationKeySize.Default recorded 1 samples, mean = 0.0 (flags = 0x1)
+0  -O                                                                        (1 = 100.0%)
+1  ... 
+
+Histogram: Windows.HighResolutionTimerUsage recorded 2 samples, mean = 0.0 (flags = 0x1)
+0  --O                                                                       (2 = 100.0%)
+1  ... 
+
+
+[0913/143711.215:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/143711.215:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/143711.246:VERBOSE1:pref_proxy_config_tracker_impl.cc(191)] 00000CF80002D000: set chrome proxy config service to 00000CF800118900
+[0913/143711.271:VERBOSE1:webrtc_internals.cc(123)] Could not get the download directory.
+[0913/143711.271:VERBOSE1:media_stream_manager.cc(1410)] MSM::InitializeMaybeAsync([this=00000CF8000B6200])
+[0913/143711.271:VERBOSE1:media_stream_manager.cc(1410)] MDM::MediaDevicesManager()
+[0913/143711.271:VERBOSE1:media_stream_manager.cc(1410)] MSM::MediaStreamManager([this=00000CF8000B6200]))
+[0913/143711.278:VERBOSE1:device_event_log_impl.cc(194)] [14:37:11.277] Display: EVENT: screen_win.cc:828 Displays updated, count: 1
+[0913/143711.278:VERBOSE1:device_event_log_impl.cc(194)] [14:37:11.278] Display: EVENT: screen_win.cc:830 Display[3877790716] bounds=[0,0 1280x800], workarea=[0,0 1280x752], scale=2, rotation=0, panel_rotation=0 external detected
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.278:WARNING:resource_bundle.cc(1199)] locale resources are not loaded
+[0913/143711.294:VERBOSE1:component_installer.cc(428)] StartRegistration for Widevine Content Decryption Module
+[0913/143711.299:VERBOSE1:component_installer.cc(499)] FinishRegistration for Widevine Content Decryption Module
+[0913/143711.299:VERBOSE1:component_updater_service.cc(151)] CrxUpdateService starting up. First update attempt will take place in 60 s seconds. Next update attempt will take place in 18000 s seconds. 
+[0913/143711.374:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/143711.374:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/143711.390:VERBOSE1:pref_proxy_config_tracker_impl.cc(191)] 00000CF800434000: set chrome proxy config service to 00000CF80011D340
+[0913/143711.400:VERBOSE1:simple_index_file.cc(600)] Simple Cache Index is being restored from disk.
+[0913/143711.400:VERBOSE1:simple_index_file.cc(600)] Simple Cache Index is being restored from disk.
+[0913/143711.532:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/143711.532:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/143711.532:WARNING:resource_bundle.cc(464)] locale_file_path.empty() for locale 
+[0913/143711.532:ERROR:alloy_main_delegate.cc(716)] Could not load locale pak for en-US
+[0913/143711.563:VERBOSE1:simple_index_file.cc(600)] Simple Cache Index is being restored from disk.
+[0913/143711.572:VERBOSE1:configured_proxy_resolution_service.cc(1096)] Failed configuring with PAC script, falling-back to manual proxy servers.
+[0913/143711.572:VERBOSE1:configured_proxy_resolution_service.cc(1096)] Failed configuring with PAC script, falling-back to manual proxy servers.
+[0913/143811.309:VERBOSE1:network_delegate.cc(35)] NetworkDelegate::NotifyBeforeURLRequest: https://update.googleapis.com/service/update2/json?cup2key=13:20jy_q8NKx88ld5gm4FqQYzEJ_BoUFHMOwR61oGfTKw&cup2hreq=f729f2b5c072cb89493a95a270288de8bc0ee8a6eb1ef5b8d7fa26631f68bb63
+[0913/143811.422:VERBOSE1:request_sender.cc(181)] Request completed from url: https://update.googleapis.com/service/update2/json?cup2key=13:20jy_q8NKx88ld5gm4FqQYzEJ_BoUFHMOwR61oGfTKw&cup2hreq=f729f2b5c072cb89493a95a270288de8bc0ee8a6eb1ef5b8d7fa26631f68bb63
+[0913/143811.422:VERBOSE1:component_updater_service.cc(451)] Update completed with error 0
+[0913/143818.221:VERBOSE1:frame_host_impl.cc(503)] frame 21474836481 [5,1] (main) detached (reason=NEW_MAIN_FRAME, is_connected=0)
+[0913/143818.560:VERBOSE1:statistics_recorder.cc(647)] Collections of all histograms
+Histogram: LevelDBEnv.DeleteTableBackupFile recorded 0 samples (flags = 0x1)
+0 ... 
+
+Histogram: Memory.PartitionAlloc.MemoryReclaim recorded 2 samples, mean = 105.0 (flags = 0x1)
+0    ... 
+49   -O                                                                        (1 = 50.0%) {0.0%}
+65   ... 
+113  -O                                                                        (1 = 50.0%) {50.0%}
+149  ... 
+
+Histogram: Memory.PartitionAlloc.PartitionRoot.ExtrasSize recorded 1 samples, mean = 4.0 (flags = 0x1)
+0  ... 
+4  -O                                                                        (1 = 100.0%) {0.0%}
+5  ... 
+
+Histogram: Memory.PartitionAlloc.PeriodicPurge recorded 3 samples, mean = 14.7 (flags = 0x1)
+0   ... 
+9   -O                                                                        (1 = 33.3%) {0.0%}
+12  -O                                                                        (1 = 33.3%) {33.3%}
+16  -O                                                                        (1 = 33.3%) {66.7%}
+21  ... 
+
+Histogram: UMA.ChildProcess.Ping.SharedMemorySetUp recorded 1 samples, mean = 1.0 (flags = 0x1)
+0  O                                                                         (0 = 0.0%)
+1  -O                                                                        (1 = 100.0%) {0.0%}
+2  ... 
+
+Histogram: UMA.LocalHistogram recorded 1 samples, mean = 1.0
+0  O                                                                         (0 = 0.0%)
+1  -O                                                                        (1 = 100.0%) {0.0%}
+2  O                                                                         (0 = 0.0%) {100.0%}
+
+Histogram: V8.Initializer.OpenV8File.Result recorded 1 samples, mean = 0.0 (flags = 0x1)
+0  -O                                                                        (1 = 100.0%)
+1  ... 
+
+Histogram: Variations.Limits.VariationKeySize.Default recorded 1 samples, mean = 0.0 (flags = 0x1)
+0  -O                                                                        (1 = 100.0%)
+1  ... 
+
+
