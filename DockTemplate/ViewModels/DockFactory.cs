@@ -264,25 +264,30 @@ public class DockFactory : Factory
                             }
                             else
                             {
-                                _leftDock?.VisibleDockables ??= new List<IDockable>();
-                                if (_leftDock?.VisibleDockables != null)
+                                if (_leftDock != null)
                                 {
-                                    var leftDockables = _leftDock.VisibleDockables.ToList();
-                                    leftDockables.Add(dockable);
-                                    _leftDock.VisibleDockables = CreateList(leftDockables.ToArray());
-                                    _leftDock.ActiveDockable = dockable;
-                                    
-                                    // Force UI refresh by setting focus to the active dockable
-                                    if (_leftDock.ActiveDockable is IDockable activeDockable)
+                                    _leftDock.VisibleDockables ??= new List<IDockable>();
+                                    if (_leftDock?.VisibleDockables != null)
                                     {
-                                        this.SetFocusedDockable(_leftDock, activeDockable);
-                                    }
-                                    _leftDock.IsEmpty = _leftDock.VisibleDockables.Count == 0;
-                                    
-                                    // Mark this component instance as integrated
-                                    _integratedComponentInstances.Add(tool.ComponentInstanceId);
+                                        var leftDockables = _leftDock.VisibleDockables.ToList();
+                                        leftDockables.Add(dockable);
+                                        _leftDock.VisibleDockables = CreateList(leftDockables.ToArray());
+                                        _leftDock.ActiveDockable = dockable;
 
-                                    Logger.Info($"Successfully integrated {tool.Id} into left dock with UI refresh");
+                                        // Force UI refresh by setting focus to the active dockable
+                                        if (_leftDock.ActiveDockable is IDockable activeDockable)
+                                        {
+                                            this.SetFocusedDockable(_leftDock, activeDockable);
+                                        }
+
+                                        _leftDock.IsEmpty = _leftDock.VisibleDockables.Count == 0;
+
+                                        // Mark this component instance as integrated
+                                        _integratedComponentInstances.Add(tool.ComponentInstanceId);
+
+                                        Logger.Info(
+                                                $"Successfully integrated {tool.Id} into left dock with UI refresh");
+                                    }
                                 }
                             }
                             break;
