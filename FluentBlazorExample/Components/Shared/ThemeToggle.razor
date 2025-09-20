@@ -1,0 +1,79 @@
+@rendermode InteractiveServer
+@inject FluentBlazorExample.Services.IThemeService ThemeService
+@implements IDisposable
+
+<FluentButton Appearance="Appearance.Stealth"
+              OnClick="ToggleTheme"
+              Title="@GetThemeTitle()"
+              IconStart="@GetThemeIcon()" />
+
+@code {
+    private bool _disposed = false;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private void OnThemeChanged()
+    {
+        if (!_disposed)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ToggleTheme()
+    {
+        if (_disposed)
+        {
+            Console.WriteLine("ThemeToggle: Button clicked but component is disposed!");
+            return;
+        }
+
+        Console.WriteLine($"[THEME] ThemeToggle: Button clicked, current mode: {ThemeService.Mode}");
+        var oldMode = ThemeService.Mode;
+
+        try
+        {
+            ThemeService.ToggleTheme();
+            Console.WriteLine($"[THEME] ThemeToggle: Successfully toggled from {oldMode} to {ThemeService.Mode}");
+
+            // Force UI update
+            StateHasChanged();
+            Console.WriteLine($"[THEME] ThemeToggle: Called StateHasChanged()");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[THEME] ThemeToggle: Error during toggle: {ex.Message}");
+        }
+    }
+
+    private Icon GetThemeIcon()
+    {
+        return ThemeService.Mode switch
+        {
+            DesignThemeModes.Light => new Icons.Regular.Size20.WeatherSunny(),
+            DesignThemeModes.Dark => new Icons.Regular.Size20.WeatherMoon(),
+            DesignThemeModes.System => new Icons.Regular.Size20.DesktopMac(),
+            _ => new Icons.Regular.Size20.DesktopMac()
+        };
+    }
+
+    private string GetThemeTitle()
+    {
+        return ThemeService.Mode switch
+        {
+            DesignThemeModes.Light => "Switch to Dark Theme",
+            DesignThemeModes.Dark => "Switch to System Theme",
+            DesignThemeModes.System => "Switch to Light Theme",
+            _ => "Toggle Theme"
+        };
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        ThemeService.ThemeChanged -= OnThemeChanged;
+    }
+}

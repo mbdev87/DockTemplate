@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:webView="clr-namespace:WebViewControl;assembly=WebViewControl.Avalonia"
+             xmlns:vm="using:DockComponent.BlazorHost.ViewModels"
+             xmlns:converters="using:DockComponent.BlazorHost.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="DockComponent.BlazorHost.Views.EmbeddedDashboardView"
+             x:DataType="vm:EmbeddedDashboardViewModel">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />   <!-- Control Panel -->
+            <RowDefinition Height="*" />      <!-- WebView -->
+        </Grid.RowDefinitions>
+
+        <!-- Control Panel -->
+        <Border Grid.Row="0" Background="{DynamicResource TextControlBackground}"
+                BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="0,0,0,1"
+                Padding="15,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Title Row -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+                    <TextBlock Text="📊" FontSize="16" Margin="0,0,8,0" />
+                    <TextBlock Text="Embedded Dashboard" FontWeight="Bold" FontSize="14"
+                               Foreground="{DynamicResource SystemAccentColor}" Margin="0,0,15,0" />
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                               Foreground="{DynamicResource TextForegroundColor}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Control Buttons Row -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10">
+                    <Button Content="🚀 Start Server" FontSize="11" Padding="12,6"
+                            Command="{Binding StartServerCommand}"
+                            Background="{DynamicResource SystemAccentColorDark1}"
+                            Foreground="White" CornerRadius="4" />
+
+                    <Button Content="🛑 Stop Server" FontSize="11" Padding="12,6"
+                            Command="{Binding StopServerCommand}"
+                            Background="#DC3545" Foreground="White" CornerRadius="4" />
+
+                    <Button Content="🔄 Refresh" FontSize="11" Padding="12,6"
+                            Command="{Binding RefreshCommand}"
+                            Background="{DynamicResource TextControlBackground}"
+                            Foreground="{DynamicResource TextForegroundColor}"
+                            BorderBrush="{DynamicResource TextControlBorderBrush}"
+                            BorderThickness="1" CornerRadius="4" />
+
+                    <!-- Status Indicator -->
+                    <Border Background="{DynamicResource TextControlBackground}"
+                            BorderBrush="{DynamicResource TextControlBorderBrush}"
+                            BorderThickness="1" CornerRadius="4" Padding="8,6">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Ellipse Width="8" Height="8"
+                                     Fill="{Binding IsServerRunning, Converter={x:Static converters:BoolToColorConverter.Instance}}" />
+                            <TextBlock Text="{Binding IsServerRunning, Converter={x:Static converters:BoolToServerStatusConverter.Instance}}"
+                                       FontSize="10" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- WebView Container -->
+        <Border Grid.Row="1" Background="{DynamicResource EditorBackground}"
+                BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="0">
+            <Grid>
+                <!-- Actual WebView (shown when dashboard is loaded) -->
+                <webView:WebView x:Name="DashboardWebView"
+                               IsVisible="{Binding IsLoaded}"
+                               Address="{Binding CurrentUrl}"
+                               Margin="2" />
+
+                <!-- Empty State (shown when server is not running) -->
+                <Border IsVisible="{Binding !IsLoaded}"
+                        Background="{DynamicResource EditorBackground}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="15">
+                        <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" />
+                        <TextBlock Text="Embedded Dashboard"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource SystemAccentColor}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="Self-hosted Blazor dashboard with shared state"
+                                   FontSize="14" Foreground="{DynamicResource TextForegroundColor}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="Click 'Start Server' to launch the embedded Blazor dashboard server"
+                                   FontSize="12" Foreground="{DynamicResource EditorForeground}"
+                                   HorizontalAlignment="Center" TextWrapping="Wrap"
+                                   MaxWidth="400" TextAlignment="Center" />
+
+                        <StackPanel Spacing="8" HorizontalAlignment="Center" Margin="0,10,0,0">
+                            <TextBlock Text="Features:" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextForegroundColor}" HorizontalAlignment="Center" />
+                            <TextBlock Text="• Shared theme and accent color" FontSize="11" Foreground="{DynamicResource EditorForeground}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="• Real-time data synchronization" FontSize="11" Foreground="{DynamicResource EditorForeground}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="• Bi-directional state management" FontSize="11" Foreground="{DynamicResource EditorForeground}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="• Zero external dependencies" FontSize="11" Foreground="{DynamicResource EditorForeground}"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

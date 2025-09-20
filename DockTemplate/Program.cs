@@ -11,6 +11,7 @@ using DockComponent.Editor.Services;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
 using DockComponent.BlazorHost.ViewModels;
+using FluentBlazorExample.Services;
 
 namespace DockTemplate;
 
@@ -61,7 +62,7 @@ sealed class Program
         services.AddSingleton<App>(provider => new App(provider));
         services.AddSingleton<IViewLocator, ViewLocator>();
         services.AddSingleton<ISettingsService, SettingsService>();
-        services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<DockTemplate.Services.IThemeService, DockTemplate.Services.ThemeService>();
         services.AddSingleton<IDockLayoutService, DockLayoutService>();
         services.AddSingleton<AcrylicLayoutManager>();
         services.AddSingleton<InterPluginLogger>();
@@ -76,6 +77,10 @@ sealed class Program
         
         // BLAZOR AUTO-INTEGRATION
         services.AddSingleton<BlazorAutoIntegrationService>();
+
+        // SHARED BLAZOR SERVICES - for bi-directional communication with embedded Blazor servers
+        services.AddSingleton<FluentBlazorExample.Services.IThemeService, FluentBlazorExample.Services.ThemeService>();
+        services.AddSingleton<FluentBlazorExample.Services.IDashboardService, FluentBlazorExample.Services.DashboardService>();
         
         // COMPONENT SERVICES - Direct registration for author/debug mode
         RegisterEditorComponent(services);

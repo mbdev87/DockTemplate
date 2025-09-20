@@ -1,0 +1,117 @@
+@inherits LayoutComponentBase
+@using FluentBlazorExample.Components.Shared
+@using Microsoft.FluentUI.AspNetCore.Components
+@inject FluentBlazorExample.Services.IThemeService ThemeService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["FluentBlazorExample.styles.css"]" />
+    <ImportMap />
+    <style>
+        /* Remove all margins, padding, and chrome for clean embedding */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .embedded-container {
+            height: 100vh;
+            width: 100vw;
+            padding: 0;
+            margin: 0;
+            overflow: auto;
+        }
+
+        /* Small theme toggle for embedded view */
+        .embedded-theme-toggle {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 1000;
+            background: var(--neutral-layer-floating);
+            border-radius: 4px;
+            padding: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <FluentDesignTheme @ref="designTheme"
+                       Mode="@ThemeService.Mode"
+                       OfficeColor="@ThemeService.OfficeColor"
+                       StorageName="theme" />
+    <div class="embedded-theme-toggle">
+        <ThemeToggle />
+    </div>
+    <div class="embedded-container">
+        @Body
+    </div>
+    <script src="_framework/blazor.web.js"></script>
+</body>
+</html>
+
+@code {
+    private FluentDesignTheme? designTheme;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.ThemeChanged += OnThemeChanged;
+
+        // Parse query parameters for theme settings
+        var uri = new Uri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        // Handle theme parameter
+        if (query.TryGetValue("theme", out var themeValue))
+        {
+            var parsedTheme = themeValue.ToString().ToLowerInvariant() switch
+            {
+                "light" => DesignThemeModes.Light,
+                "dark" => DesignThemeModes.Dark,
+                "system" => DesignThemeModes.System,
+                _ => DesignThemeModes.System
+            };
+            ThemeService.Mode = parsedTheme;
+            Console.WriteLine($"[EMBEDDED LAYOUT] Theme set from query: {themeValue} -> {parsedTheme}");
+        }
+
+        // Handle accent color parameter
+        if (query.TryGetValue("accent", out var accentValue))
+        {
+            var parsedAccent = accentValue.ToString().ToLowerInvariant() switch
+            {
+                "blue" => OfficeColor.Word,
+                "green" => OfficeColor.Excel,
+                "red" => OfficeColor.PowerPoint,
+                "purple" => OfficeColor.OneNote,
+                "orange" => OfficeColor.Outlook,
+                "teal" => OfficeColor.Teams,
+                "yellow" => OfficeColor.SharePoint,
+                "default" => OfficeColor.Default,
+                _ => OfficeColor.Word
+            };
+            ThemeService.OfficeColor = parsedAccent;
+            Console.WriteLine($"[EMBEDDED LAYOUT] Accent color set from query: {accentValue} -> {parsedAccent}");
+        }
+    }
+
+    private async void OnThemeChanged()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
+    }
+}

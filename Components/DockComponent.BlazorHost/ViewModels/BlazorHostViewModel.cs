@@ -47,7 +47,7 @@ public class BlazorHostViewModel : Document, IDisposable
     public ReactiveCommand<Unit, Unit> CopyUrlCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenInBrowserCommand { get; }
 
-    private void LoadUrl(string url)
+    public void LoadUrl(string url)
     {
         System.Diagnostics.Debug.WriteLine($"🚀 LoadUrl called with: '{url}'");
         try

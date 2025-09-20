@@ -1,0 +1,329 @@
+@page "/dashboard-embedded"
+@layout Layout.EmbeddedLayout
+@rendermode InteractiveServer
+@using Microsoft.JSInterop
+@using FluentBlazorExample.Models
+@using FluentBlazorExample.Services
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.AspNetCore.Components
+@inject IJSRuntime JSRuntime
+@inject IDashboardService DashboardService
+@inject IThemeService ThemeService
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+@implements IDisposable
+
+<PageTitle>📊 Dashboard</PageTitle>
+
+<div style="height: 100vh; width: 100vw; padding: 16px; box-sizing: border-box; overflow: auto;">
+
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+
+        <!-- Header Card -->
+        <FluentCard>
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                    <FluentIcon Value="@(new Icons.Regular.Size28.DataUsage())" Color="Color.Accent" />
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                        <h2 style="margin: 0; color: var(--accent-fill-rest);">Project Analytics Dashboard</h2>
+                        <p style="margin: 0; color: var(--neutral-foreground-rest);">File System Analysis</p>
+                    </FluentStack>
+                </FluentStack>
+                <FluentButton Appearance="Appearance.Accent"
+                              OnClick="RefreshData"
+                              Disabled="_isLoading"
+                              IconStart="@(new Icons.Regular.Size16.ArrowClockwise())">
+                    @if (_isLoading)
+                    {
+                        <FluentProgressRing Style="width: 16px; height: 16px;" />
+                        <span style="margin-left: 8px;">Loading...</span>
+                    }
+                    else
+                    {
+                        <span>Refresh</span>
+                    }
+                </FluentButton>
+            </FluentStack>
+        </FluentCard>
+
+        <!-- Summary Cards -->
+        <FluentGrid Spacing="3" Justify="JustifyContent.FlexStart">
+            <FluentGridItem xs="12" md="4">
+                <FluentCard>
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Folder())" Color="Color.Accent" />
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">Total Files</p>
+                            <h3 style="margin: 0; color: var(--accent-fill-rest);">@TotalFiles</h3>
+                        </FluentStack>
+                    </FluentStack>
+                </FluentCard>
+            </FluentGridItem>
+
+            <FluentGridItem xs="12" md="4">
+                <FluentCard>
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Database())" Color="Color.Success" />
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">Total Size</p>
+                            <h3 style="margin: 0; color: var(--success-fill-rest);">@TotalSizeFormatted</h3>
+                        </FluentStack>
+                    </FluentStack>
+                </FluentCard>
+            </FluentGridItem>
+
+            <FluentGridItem xs="12" md="4">
+                <FluentCard>
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Tag())" Color="Color.Warning" />
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">File Types</p>
+                            <h3 style="margin: 0; color: var(--warning-fill-rest);">@FileTypeStats.Count</h3>
+                        </FluentStack>
+                    </FluentStack>
+                </FluentCard>
+            </FluentGridItem>
+        </FluentGrid>
+
+        <!-- Data Grid -->
+        <FluentCard>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                    <h4 style="margin: 0;">File Details</h4>
+                    <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">@Files.Count files</p>
+                </FluentStack>
+
+                <!-- Search Bar -->
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                    <FluentTextField @bind-Value="SearchString"
+                                     @oninput="OnSearchInput"
+                                     @onkeypress="OnSearchKeyPress"
+                                     Placeholder="Search files..."
+                                     Style="flex: 1; min-width: 250px;" />
+                    <FluentButton Appearance="Appearance.Accent"
+                                  OnClick="PerformSearch"
+                                  IconStart="@(new Icons.Regular.Size16.Search())">
+                        Search
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Outline"
+                                  OnClick="ClearSearch"
+                                  IconStart="@(new Icons.Regular.Size16.Dismiss())"
+                                  Disabled="@(string.IsNullOrEmpty(SearchString))">
+                        Clear
+                    </FluentButton>
+                </FluentStack>
+
+                @if (FilteredFiles.Any())
+                {
+                    <FluentDataGrid Items="@FilteredFiles.AsQueryable()"
+                                    Pagination="@pagination"
+                                    Style="height: 400px; overflow: auto;"
+                                    TGridItem="FileInfoItem">
+                        <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Name" />
+                        <PropertyColumn Property="@(c => c.Type)" Sortable="true" Title="Type" />
+                        <PropertyColumn Property="@(c => c.Extension)" Sortable="true" Title="Extension" />
+                        <PropertyColumn Property="@(c => c.SizeFormatted)" Sortable="false" Title="Size" />
+                        <PropertyColumn Property="@(c => c.Lines)" Sortable="true" Title="Lines" />
+                        <PropertyColumn Property="@(c => c.ModifiedFormatted)" Sortable="false" Title="Modified" />
+                    </FluentDataGrid>
+
+                    <FluentPaginator State="@pagination" />
+                }
+                else
+                {
+                    <FluentStack Orientation="Orientation.Vertical"
+                                 VerticalAlignment="VerticalAlignment.Center"
+                                 HorizontalAlignment="HorizontalAlignment.Center"
+                                 Style="padding: 40px; text-align: center;">
+                        <FluentIcon Value="@(new Icons.Regular.Size48.Folder())" Color="Color.Neutral" />
+                        <h5 style="margin-top: 12px;">No files found</h5>
+                        <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">Click refresh to scan the project files</p>
+                    </FluentStack>
+                }
+            </FluentStack>
+        </FluentCard>
+
+    </FluentStack>
+
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "theme")]
+    public string? ThemeMode { get; set; }
+
+    [SupplyParameterFromQuery(Name = "accent")]
+    public string? AccentColor { get; set; }
+
+    private DashboardData _dashboardData = new();
+    private bool _isLoading = true;
+    private string _searchString = "";
+    private bool _disposed = false;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 25 };
+
+    private List<FileInfoItem> Files => _dashboardData.Files;
+    private List<FileTypeStats> FileTypeStats => _dashboardData.FileTypeStats;
+    private int TotalFiles => _dashboardData.TotalFiles;
+    private long TotalSize => _dashboardData.TotalSize;
+    private string TotalSizeFormatted => _dashboardData.TotalSizeFormatted;
+
+    private List<FileInfoItem> FilteredFiles => GetFilteredFiles();
+
+    private string SearchString
+    {
+        get => _searchString;
+        set
+        {
+            if (_disposed) return;
+            _searchString = value;
+            StateHasChanged();
+        }
+    }
+
+    private List<FileInfoItem> GetFilteredFiles()
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return Files;
+
+        var searchTerm = _searchString.Trim();
+        return Files.Where(x =>
+            x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            x.Type.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            x.Extension.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            x.SizeFormatted.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Handle theme query parameter
+        if (!string.IsNullOrEmpty(ThemeMode))
+        {
+            var parsedTheme = ThemeMode.ToLowerInvariant() switch
+            {
+                "light" => DesignThemeModes.Light,
+                "dark" => DesignThemeModes.Dark,
+                "system" => DesignThemeModes.System,
+                _ => DesignThemeModes.System
+            };
+            ThemeService.Mode = parsedTheme;
+            Console.WriteLine($"[EMBEDDED] Theme set from query parameter: {ThemeMode} -> {parsedTheme}");
+        }
+
+        // Handle accent color query parameter
+        if (!string.IsNullOrEmpty(AccentColor))
+        {
+            var parsedAccent = AccentColor.ToLowerInvariant() switch
+            {
+                "blue" => OfficeColor.Word,
+                "green" => OfficeColor.Excel,
+                "red" => OfficeColor.PowerPoint,
+                "purple" => OfficeColor.OneNote,
+                "orange" => OfficeColor.Outlook,
+                "teal" => OfficeColor.Teams,
+                "yellow" => OfficeColor.SharePoint,
+                "default" => OfficeColor.Default,
+                _ => OfficeColor.Word
+            };
+            ThemeService.OfficeColor = parsedAccent;
+            Console.WriteLine($"[EMBEDDED] Accent color set from query parameter: {AccentColor} -> {parsedAccent}");
+        }
+
+        DashboardService.DataUpdated += OnDataUpdated;
+        try
+        {
+            _dashboardData = await DashboardService.GetDashboardDataAsync();
+            _isLoading = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Dashboard initialization error: {ex.Message}");
+            _isLoading = false;
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            await DashboardService.RefreshDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Dashboard refresh error: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OnDataUpdated(DashboardData newData)
+    {
+        if (_disposed) return;
+
+        _dashboardData = newData;
+        _isLoading = false;
+
+        try
+        {
+            InvokeAsync(() =>
+            {
+                if (_disposed) return Task.CompletedTask;
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
+        }
+        catch (ObjectDisposedException)
+        {
+            // Component has been disposed, ignore the update
+        }
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        SearchString = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+
+    private void PerformSearch()
+    {
+        StateHasChanged();
+    }
+
+    private void ClearSearch()
+    {
+        SearchString = "";
+        StateHasChanged();
+    }
+
+    private void OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            PerformSearch();
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        try
+        {
+            DashboardService.DataUpdated -= OnDataUpdated;
+        }
+        catch (ObjectDisposedException)
+        {
+            // Service was already disposed
+        }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
+}
