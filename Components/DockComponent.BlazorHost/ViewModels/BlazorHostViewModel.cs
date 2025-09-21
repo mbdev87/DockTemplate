@@ -30,16 +30,9 @@ public class BlazorHostViewModel : Document, IDisposable
         
         System.Diagnostics.Debug.WriteLine("🏗️ BlazorHostViewModel commands created");
 
-        // Listen for auto-integration messages from BlazorAutoIntegrationService
-        MessageBus.Current.Listen<BlazorAppStartedMsg>()
-            .Subscribe(msg =>
-            {
-                if (!string.IsNullOrEmpty(msg.Url))
-                {
-                    LoadUrl(msg.Url);
-                    StatusMessage = $"🚀 Auto-loaded: {msg.Url}";
-                }
-            });
+        // Auto-load the Blazor dashboard URL
+        LoadUrl("http://localhost:5000/dashboard-embedded");
+        StatusMessage = "🚀 Blazor dashboard loaded";
     }
 
     public ReactiveCommand<string, Unit> LoadUrlCommand { get; }

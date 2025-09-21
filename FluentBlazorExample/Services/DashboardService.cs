@@ -39,22 +39,10 @@ public class DashboardService : IDashboardService
         {
             // Get the actual project root directory
             var currentDir = Directory.GetCurrentDirectory();
-            var projectRoot = currentDir;
+            var projectRoot = FindDockTemplateRoot(currentDir);
 
-            // Navigate up to find the DockTemplate root
-            if (currentDir.Contains("FluentBlazorExample"))
-            {
-                var dirInfo = new DirectoryInfo(currentDir);
-                while (dirInfo?.Parent != null && !dirInfo.Name.Equals("DockTemplate", StringComparison.OrdinalIgnoreCase))
-                {
-                    dirInfo = dirInfo.Parent;
-                }
-
-                if (dirInfo != null)
-                {
-                    projectRoot = dirInfo.FullName;
-                }
-            }
+            Console.WriteLine($"🔍 [DASHBOARD] Current dir: {currentDir}");
+            Console.WriteLine($"🎯 [DASHBOARD] Project root: {projectRoot}");
 
             var files = Directory.GetFiles(projectRoot, "*", SearchOption.AllDirectories)
                 .Where(f => !IsIgnoredPath(f))
@@ -156,6 +144,47 @@ public class DashboardService : IDashboardService
         }
 
         return stats;
+    }
+
+    private string FindDockTemplateRoot(string startPath)
+    {
+        var currentDir = new DirectoryInfo(startPath);
+
+        // Strategy 1: Look for DockTemplate directory going up the tree
+        while (currentDir != null)
+        {
+            // Check if we're in a DockTemplate directory or one of its children
+            if (currentDir.Name.Equals("DockTemplate", StringComparison.OrdinalIgnoreCase))
+            {
+                return currentDir.FullName;
+            }
+
+            // Check if there's a DockTemplate subdirectory
+            var dockTemplateSubdir = Path.Combine(currentDir.FullName, "DockTemplate");
+            if (Directory.Exists(dockTemplateSubdir))
+            {
+                return dockTemplateSubdir;
+            }
+
+            currentDir = currentDir.Parent;
+        }
+
+        // Strategy 2: Look for solution files (.sln) or key project files
+        currentDir = new DirectoryInfo(startPath);
+        while (currentDir != null)
+        {
+            if (currentDir.GetFiles("*.sln").Any() ||
+                currentDir.GetDirectories("Components").Any() ||
+                currentDir.GetFiles("DockTemplate.csproj").Any())
+            {
+                return currentDir.FullName;
+            }
+            currentDir = currentDir.Parent;
+        }
+
+        // Fallback: return start path
+        Console.WriteLine($"⚠️ [DASHBOARD] Could not find DockTemplate root, using: {startPath}");
+        return startPath;
     }
 
     private bool IsIgnoredPath(string path)

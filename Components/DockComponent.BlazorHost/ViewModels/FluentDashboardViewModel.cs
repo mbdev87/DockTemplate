@@ -2,7 +2,6 @@ using ReactiveUI;
 using Dock.Model.Mvvm.Controls;
 using ReactiveUI.Fody.Helpers;
 using FluentBlazorExample.Services;
-using DockComponent.BlazorHost.Services;
 
 namespace DockComponent.BlazorHost.ViewModels;
 
@@ -14,7 +13,6 @@ public class FluentDashboardViewModel : Document, IDisposable
 
     private readonly IThemeService? _themeService;
     private readonly IDashboardService? _dashboardService;
-    private readonly BlazorServerManager _dashboardServer;
 
     public FluentDashboardViewModel(IThemeService? themeService = null, IDashboardService? dashboardService = null)
     {
@@ -23,7 +21,6 @@ public class FluentDashboardViewModel : Document, IDisposable
 
         _themeService = themeService;
         _dashboardService = dashboardService;
-        _dashboardServer = new BlazorServerManager();
 
         System.Diagnostics.Debug.WriteLine("🎨 FluentDashboardViewModel created - starting embedded dashboard server");
 
@@ -35,7 +32,7 @@ public class FluentDashboardViewModel : Document, IDisposable
     {
         try
         {
-            var serverUrl = await _dashboardServer.StartAsync();
+            var serverUrl = "http://localhost:5000/dashboard-embedded";
             var dashboardUrl = serverUrl;
 
             DashboardUrl = dashboardUrl;
@@ -56,6 +53,6 @@ public class FluentDashboardViewModel : Document, IDisposable
 
     public void Dispose()
     {
-        _dashboardServer?.Dispose();
+        // No cleanup needed - server is managed by BlazorServerHost service
     }
 }

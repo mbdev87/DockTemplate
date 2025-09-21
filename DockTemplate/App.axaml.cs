@@ -91,16 +91,18 @@ public partial class App : Application
                 Console.WriteLine("[App] ❌ PluginInstallationService is NULL - service not registered properly!");
             }
             
-            // Start BlazorAutoIntegrationService
-            Console.WriteLine("[App] Starting BlazorAutoIntegrationService...");
-            var blazorAutoIntegrationService = _serviceProvider.GetService<BlazorAutoIntegrationService>();
-            if (blazorAutoIntegrationService != null)
+
+            // Start BlazorServerHost service
+            Console.WriteLine("[App] Starting BlazorServerHost...");
+            var blazorServerHost = _serviceProvider.GetService<BlazorServerHost>();
+            if (blazorServerHost != null)
             {
-                Console.WriteLine("[App] ✅ BlazorAutoIntegrationService started and watching for Blazor apps");
+                _ = blazorServerHost.StartAsync(CancellationToken.None);
+                Console.WriteLine("[App] ✅ BlazorServerHost started");
             }
             else
             {
-                Console.WriteLine("[App] ❌ BlazorAutoIntegrationService is NULL - service not registered properly!");
+                Console.WriteLine("[App] ❌ BlazorServerHost is NULL - service not registered properly!");
             }
             
             // AUTHOR MODE - Direct component registration + plugin loading

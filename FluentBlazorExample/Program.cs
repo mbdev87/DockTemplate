@@ -1,12 +1,26 @@
 using Microsoft.FluentUI.AspNetCore.Components;
 using FluentBlazorExample.Components;
 using FluentBlazorExample.Services;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 
+// Configure builder with explicit paths for embedded hosting
 var builder = WebApplication.CreateBuilder(args);
 
+// CRITICAL: Set content root to current directory when running as embedded server
+// This ensures static assets are resolved from the copied location, not the host app
+var currentDirectory = Directory.GetCurrentDirectory();
+var assemblyDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? currentDirectory;
+
+builder.Configuration.SetBasePath(assemblyDirectory);
+builder.Environment.ContentRootPath = assemblyDirectory;
+builder.Environment.WebRootPath = Path.Combine(assemblyDirectory, "wwwroot");
+builder.WebHost.UseStaticWebAssets();
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(options =>
+    {
+        options.DetailedErrors = true;
+    });
 builder.Services.AddFluentUIComponents();
 
 // Add application services

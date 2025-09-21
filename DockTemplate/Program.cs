@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,11 @@ using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
 using DockComponent.BlazorHost.ViewModels;
 using FluentBlazorExample.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.FluentUI.AspNetCore.Components;
+using IThemeService = FluentBlazorExample.Services.IThemeService;
+using ThemeService = FluentBlazorExample.Services.ThemeService;
 
 namespace DockTemplate;
 
@@ -23,6 +29,41 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // OLD BLAZOR SETUP - Commented out in favor of BlazorServerHost service
+        /*
+        Task.Run(async () =>
+        {
+            var builder = WebApplication.CreateBuilder(args);
+            builder.WebHost.UseStaticWebAssets();
+
+            builder.Services.AddServerSideBlazor();
+            builder.Services.AddRazorPages();
+// Add services to the container.
+            builder.Services.AddRazorComponents()
+                    .AddInteractiveServerComponents();
+            builder.Services.AddFluentUIComponents();
+
+// Add application services
+            builder.Services.AddSingleton<IDashboardService, DashboardService>();
+            builder.Services.AddSingleton<IThemeService, ThemeService>();
+
+            var app = builder.Build();
+
+            app.UseHsts();
+            app.UseHttpsRedirection();
+
+            app.UseAntiforgery();
+            app.MapBlazorHub();
+            app.MapStaticAssets();
+            app.MapRazorComponents<App>()
+                    .AddInteractiveServerRenderMode();
+
+            app.Run();
+
+            await app.RunAsync("http://localhost:5005");
+        });
+        */
+
         using var provider = Initialize();
         ServiceProvider = provider;
         
@@ -75,8 +116,10 @@ sealed class Program
         services.AddSingleton<ComponentLoader>();
         // Note: PluginDirectoryService is static - no need to register
         
-        // BLAZOR AUTO-INTEGRATION
-        services.AddSingleton<BlazorAutoIntegrationService>();
+
+        // BLAZOR SERVER HOST - launches embedded Blazor server
+        services.AddSingleton<BlazorServerHost>();
+        services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<BlazorServerHost>());
 
         // SHARED BLAZOR SERVICES - for bi-directional communication with embedded Blazor servers
         services.AddSingleton<FluentBlazorExample.Services.IThemeService, FluentBlazorExample.Services.ThemeService>();

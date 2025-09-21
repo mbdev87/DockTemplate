@@ -15,7 +15,7 @@
 
 <PageTitle>📊 Dashboard</PageTitle>
 
-<div style="height: 100vh; width: 100vw; padding: 16px; box-sizing: border-box; overflow: auto;">
+<div style="width: 100%; padding: 16px; box-sizing: border-box;">
 
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
 
@@ -117,7 +117,6 @@
                 {
                     <FluentDataGrid Items="@FilteredFiles.AsQueryable()"
                                     Pagination="@pagination"
-                                    Style="height: 400px; overflow: auto;"
                                     TGridItem="FileInfoItem">
                         <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Name" />
                         <PropertyColumn Property="@(c => c.Type)" Sortable="true" Title="Type" />

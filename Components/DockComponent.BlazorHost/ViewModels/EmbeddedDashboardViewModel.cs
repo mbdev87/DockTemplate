@@ -1,7 +1,6 @@
 using System.Reactive;
 using ReactiveUI;
 using Dock.Model.Mvvm.Controls;
-using DockComponent.BlazorHost.Services;
 using FluentBlazorExample.Services;
 using ReactiveUI.Fody.Helpers;
 
@@ -9,15 +8,14 @@ namespace DockComponent.BlazorHost.ViewModels;
 
 public class EmbeddedDashboardViewModel : Document, IDisposable
 {
-    private readonly BlazorServerManager _dashboardServer;
     private readonly IThemeService? _sharedThemeService;
     private readonly IDashboardService? _sharedDashboardService;
     private bool _disposed;
 
     [Reactive] public string CurrentUrl { get; set; } = string.Empty;
     [Reactive] public bool IsLoaded { get; set; }
-    [Reactive] public bool IsServerRunning { get; set; }
-    [Reactive] public string StatusMessage { get; set; } = "Dashboard server stopped";
+    [Reactive] public bool IsServerRunning { get; set; } = true; // Server managed by BlazorServerHost
+    [Reactive] public string StatusMessage { get; set; } = "Dashboard ready";
 
     public EmbeddedDashboardViewModel(
         IThemeService? sharedThemeService = null,
@@ -28,54 +26,28 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
 
         _sharedThemeService = sharedThemeService;
         _sharedDashboardService = sharedDashboardService;
-        _dashboardServer = new BlazorServerManager();
 
         Console.WriteLine("🏗️ [EMBEDDED DASHBOARD] ViewModel created");
 
-        // Wire up server events
-        _dashboardServer.ServerStarted += OnServerStarted;
-        _dashboardServer.ServerStopped += OnServerStopped;
-        _dashboardServer.ServerError += OnServerError;
-
         // Commands
-        StartServerCommand = ReactiveCommand.CreateFromTask(StartServer,
-            this.WhenAnyValue(x => x.IsServerRunning, running => !running));
+        RefreshCommand = ReactiveCommand.Create(Refresh);
 
-        StopServerCommand = ReactiveCommand.CreateFromTask(StopServer,
-            this.WhenAnyValue(x => x.IsServerRunning));
-
-        RefreshCommand = ReactiveCommand.Create(Refresh,
-            this.WhenAnyValue(x => x.IsServerRunning));
-
-        // Auto-start the server
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(1000); // Give a moment for DI setup
-                await StartServer();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ [EMBEDDED DASHBOARD] Auto-start failed: {ex.Message}");
-            }
-        });
+        // Load dashboard immediately - server is managed by BlazorServerHost
+        LoadDashboard();
     }
 
-    public ReactiveCommand<Unit, Unit> StartServerCommand { get; }
-    public ReactiveCommand<Unit, Unit> StopServerCommand { get; }
     public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
 
-    private async Task StartServer()
+    private void LoadDashboard()
     {
-        if (_disposed || IsServerRunning) return;
+        if (_disposed) return;
 
         try
         {
-            StatusMessage = "🚀 Starting embedded dashboard server...";
-            Console.WriteLine("🚀 [EMBEDDED DASHBOARD] Starting server with shared services");
+            StatusMessage = "✅ Loading dashboard...";
+            Console.WriteLine("🚀 [EMBEDDED DASHBOARD] Loading dashboard from centralized server");
 
-            var url = await _dashboardServer.StartAsync();
+            var url = "http://localhost:5000/dashboard-embedded";
 
             // Navigate to the real FluentBlazorExample app
             var dashboardUrl = url;
@@ -90,36 +62,19 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
 
             CurrentUrl = dashboardUrl;
             IsLoaded = true;
-            Console.WriteLine($"✅ [EMBEDDED DASHBOARD] Server started, dashboard at: {dashboardUrl}");
+            StatusMessage = "✅ Dashboard ready";
+            Console.WriteLine($"✅ [EMBEDDED DASHBOARD] Dashboard loaded: {dashboardUrl}");
         }
         catch (Exception ex)
         {
-            StatusMessage = $"❌ Failed to start server: {ex.Message}";
-            Console.WriteLine($"❌ [EMBEDDED DASHBOARD] Start failed: {ex.Message}");
-        }
-    }
-
-    private async Task StopServer()
-    {
-        if (_disposed || !IsServerRunning) return;
-
-        try
-        {
-            StatusMessage = "🛑 Stopping dashboard server...";
-            await _dashboardServer.StopAsync();
-            CurrentUrl = string.Empty;
-            IsLoaded = false;
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"❌ Failed to stop server: {ex.Message}";
-            Console.WriteLine($"❌ [EMBEDDED DASHBOARD] Stop failed: {ex.Message}");
+            StatusMessage = $"❌ Failed to load dashboard: {ex.Message}";
+            Console.WriteLine($"❌ [EMBEDDED DASHBOARD] Load failed: {ex.Message}");
         }
     }
 
     private void Refresh()
     {
-        if (!IsServerRunning) return;
+        if (_disposed) return;
 
         try
         {
@@ -141,29 +96,9 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
         }
     }
 
-    private void OnServerStarted(string url)
-    {
-        IsServerRunning = true;
-        StatusMessage = $"✅ Dashboard server running on {url}";
-        Console.WriteLine($"✅ [EMBEDDED DASHBOARD] Server started: {url}");
-    }
-
-    private void OnServerStopped()
-    {
-        IsServerRunning = false;
-        StatusMessage = "🛑 Dashboard server stopped";
-        Console.WriteLine("🛑 [EMBEDDED DASHBOARD] Server stopped");
-    }
-
-    private void OnServerError(Exception ex)
-    {
-        StatusMessage = $"❌ Server error: {ex.Message}";
-        Console.WriteLine($"❌ [EMBEDDED DASHBOARD] Server error: {ex.Message}");
-    }
-
     public void UpdateTheme()
     {
-        if (IsServerRunning)
+        if (!_disposed)
         {
             Refresh();
         }
@@ -174,17 +109,7 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
         if (_disposed) return;
         _disposed = true;
 
-        try
-        {
-            _dashboardServer.ServerStarted -= OnServerStarted;
-            _dashboardServer.ServerStopped -= OnServerStopped;
-            _dashboardServer.ServerError -= OnServerError;
-
-            _dashboardServer.Dispose();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ [EMBEDDED DASHBOARD] Disposal error: {ex.Message}");
-        }
+        // No server cleanup needed - managed by BlazorServerHost service
+        Console.WriteLine("🛑 [EMBEDDED DASHBOARD] ViewModel disposed");
     }
 }

@@ -54,7 +54,6 @@
       <ProjectReference Include="..\Components\DockComponent.SolutionExplorer\DockComponent.SolutionExplorer.csproj" />
       <ProjectReference Include="..\Components\DockComponent.Output\DockComponent.Output.csproj" />
       <ProjectReference Include="..\Components\DockComponent.ErrorList\DockComponent.ErrorList.csproj" />
-      <ProjectReference Include="..\FluentBlazorExample\FluentBlazorExample.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -62,4 +61,30 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
+
+    <!-- Build and copy Blazor plugin -->
+    <Target Name="BuildAndCopyBlazor" AfterTargets="Build">
+        <!-- Build the Blazor project -->
+        <MSBuild Projects="..\FluentBlazorExample\FluentBlazorExample.csproj"
+                 Targets="Build"
+                 Properties="Configuration=$(Configuration);TargetFramework=net9.0" />
+
+        <!-- Copy everything from Blazor bin to a folder under Avalonia -->
+        <ItemGroup>
+            <BlazorFiles Include="..\FluentBlazorExample\bin\$(Configuration)\net9.0\**\*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(BlazorFiles)"
+              DestinationFolder="$(OutputPath)\Blazor\%(RecursiveDir)"
+              SkipUnchangedFiles="true" />
+
+        <!-- Also copy wwwroot manually since it's needed for static assets -->
+        <ItemGroup>
+            <BlazorWwwRootFiles Include="..\FluentBlazorExample\wwwroot\**\*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(BlazorWwwRootFiles)"
+              DestinationFolder="$(OutputPath)\Blazor\wwwroot\%(RecursiveDir)"
+              SkipUnchangedFiles="true" />
+    </Target>
 </Project>

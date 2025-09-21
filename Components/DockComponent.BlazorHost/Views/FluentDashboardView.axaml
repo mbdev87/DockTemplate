@@ -35,7 +35,7 @@
     <!-- Embedded Blazor Dashboard -->
     <webView:WebView Grid.Row="1"
                      x:Name="DashboardWebView"
-                     Address="{Binding DashboardUrl}" />
+                     Address="{Binding DashboardUrl}" VerticalAlignment="Stretch" />
     
 
   </Grid>
