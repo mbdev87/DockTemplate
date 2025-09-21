@@ -12,12 +12,6 @@ using DockComponent.Editor.Services;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
 using DockComponent.BlazorHost.ViewModels;
-using FluentBlazorExample.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.FluentUI.AspNetCore.Components;
-using IThemeService = FluentBlazorExample.Services.IThemeService;
-using ThemeService = FluentBlazorExample.Services.ThemeService;
 
 namespace DockTemplate;
 
@@ -117,13 +111,6 @@ sealed class Program
         // Note: PluginDirectoryService is static - no need to register
         
 
-        // BLAZOR SERVER HOST - launches embedded Blazor server
-        services.AddSingleton<BlazorServerHost>();
-        services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<BlazorServerHost>());
-
-        // SHARED BLAZOR SERVICES - for bi-directional communication with embedded Blazor servers
-        services.AddSingleton<FluentBlazorExample.Services.IThemeService, FluentBlazorExample.Services.ThemeService>();
-        services.AddSingleton<FluentBlazorExample.Services.IDashboardService, FluentBlazorExample.Services.DashboardService>();
         
         // COMPONENT SERVICES - Direct registration for author/debug mode
         RegisterEditorComponent(services);

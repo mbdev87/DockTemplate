@@ -92,18 +92,6 @@ public partial class App : Application
             }
             
 
-            // Start BlazorServerHost service
-            Console.WriteLine("[App] Starting BlazorServerHost...");
-            var blazorServerHost = _serviceProvider.GetService<BlazorServerHost>();
-            if (blazorServerHost != null)
-            {
-                _ = blazorServerHost.StartAsync(CancellationToken.None);
-                Console.WriteLine("[App] ✅ BlazorServerHost started");
-            }
-            else
-            {
-                Console.WriteLine("[App] ❌ BlazorServerHost is NULL - service not registered properly!");
-            }
             
             // AUTHOR MODE - Direct component registration + plugin loading
             var dockFactory = _serviceProvider.GetService<DockFactory>();

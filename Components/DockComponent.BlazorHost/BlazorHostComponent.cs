@@ -3,14 +3,18 @@ using DockComponent.BlazorHost.ViewModels;
 using DockComponent.BlazorHost.Services;
 using FluentBlazorExample.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DockComponent.BlazorHost;
 
-public class BlazorHostComponent : IDockComponent
+public class BlazorHostComponent : IDockComponent, IDisposable
 {
     public string Name => "Web Host Component";
     public string Version => "1.0.0";
     public Guid InstanceId { get; } = Guid.NewGuid();
+
+    private BlazorServerHost? _blazorServer;
+    private bool _disposed;
 
     public void Register(IDockComponentContext context)
     {
@@ -24,6 +28,9 @@ public class BlazorHostComponent : IDockComponent
             // Load component styles - CRITICAL for Avalonia View discovery!
             var stylesUri = new Uri("avares://DockComponent.BlazorHost/Styles.axaml");
             context.RegisterResources(stylesUri);
+
+            // Start our own Blazor server
+            StartBlazorServer(context);
 
             // Get shared services from main application for bi-directional communication
             var sharedThemeService = context.Services.FirstOrDefault(s => s.ServiceType == typeof(IThemeService))?.ImplementationInstance as IThemeService;
@@ -59,5 +66,79 @@ public class BlazorHostComponent : IDockComponent
 
             Console.WriteLine("✅ [BLAZOR HOST] Registered documents: FluentDashboard, BlazorHost, WebViewTest, EmbeddedDashboard");
         }
+    }
+
+    private void StartBlazorServer(IDockComponentContext context)
+    {
+        try
+        {
+            // Get logger from main app's services
+            var loggerFactory = context.Services.FirstOrDefault(s => s.ServiceType == typeof(ILoggerFactory))?.ImplementationInstance as ILoggerFactory;
+            var logger = loggerFactory?.CreateLogger<BlazorServerHost>() ?? new NullLogger<BlazorServerHost>();
+
+            // Create and start our Blazor server
+            _blazorServer = new BlazorServerHost(logger);
+
+            // Start the server in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _blazorServer.StartAsync(CancellationToken.None);
+                    Console.WriteLine("🚀 [BLAZOR HOST] Plugin started its own Blazor server!");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed to start Blazor server from plugin");
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ [BLAZOR HOST] Failed to start Blazor server: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        try
+        {
+            if (_blazorServer != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _blazorServer.StopAsync(CancellationToken.None);
+                        _blazorServer.Dispose();
+                        Console.WriteLine("🛑 [BLAZOR HOST] Plugin stopped its Blazor server");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"❌ [BLAZOR HOST] Error stopping Blazor server: {ex.Message}");
+                    }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ [BLAZOR HOST] Error disposing component: {ex.Message}");
+        }
+    }
+}
+
+// Null logger implementation for fallback
+internal class NullLogger<T> : ILogger<T>
+{
+    public IDisposable BeginScope<TState>(TState state) => new NullDisposable();
+    public bool IsEnabled(LogLevel logLevel) => false;
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
+
+    private class NullDisposable : IDisposable
+    {
+        public void Dispose() { }
     }
 }

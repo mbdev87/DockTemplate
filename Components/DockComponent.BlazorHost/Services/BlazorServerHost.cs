@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace DockTemplate.Services;
+namespace DockComponent.BlazorHost.Services;
 
 public class BlazorServerHost : IHostedService, IDisposable
 {
@@ -19,11 +19,88 @@ public class BlazorServerHost : IHostedService, IDisposable
     private int _port;
     private bool _isDisposed;
 
-    public BlazorServerHost(ILogger<BlazorServerHost> logger)
+    public BlazorServerHost(ILogger<BlazorServerHost> logger, string? blazorPath = null)
     {
         _logger = logger;
-        _blazorPath = Path.Combine(AppContext.BaseDirectory, "Blazor", "FluentBlazorExample.dll");
-        _signalFilePath = Path.Combine(Directory.GetCurrentDirectory(), "blazor-app-url.txt");
+        _blazorPath = blazorPath ?? ExtractEmbeddedBlazorApp();
+        _signalFilePath = Path.Combine(Path.GetTempPath(), "blazor-app-url.txt");
+    }
+
+    private string ExtractEmbeddedBlazorApp()
+    {
+        try
+        {
+            // Create temp directory for this plugin instance
+            var tempDir = Path.Combine(Path.GetTempPath(), "DockTemplate_BlazorHost", Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDir);
+
+            // For now, try to find the FluentBlazorExample.dll in the plugin directory
+            var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var pluginDir = Path.GetDirectoryName(assemblyLocation);
+
+            // Look for FluentBlazorExample.dll in various likely locations
+            var possiblePaths = new[]
+            {
+                Path.Combine(pluginDir, "FluentBlazorExample.dll"),
+                Path.Combine(pluginDir, "..", "FluentBlazorExample.dll"),
+                Path.Combine(pluginDir, "..", "..", "FluentBlazorExample.dll"),
+                Path.Combine(AppContext.BaseDirectory, "FluentBlazorExample.dll"),
+                Path.Combine(AppContext.BaseDirectory, "Blazor", "FluentBlazorExample.dll")
+            };
+
+            foreach (var path in possiblePaths)
+            {
+                if (File.Exists(path))
+                {
+                    var targetPath = Path.Combine(tempDir, "FluentBlazorExample.dll");
+
+                    // Copy all related files
+                    var sourceDir = Path.GetDirectoryName(path);
+                    var targetDir = Path.GetDirectoryName(targetPath);
+
+                    foreach (var file in Directory.GetFiles(sourceDir, "*FluentBlazorExample*"))
+                    {
+                        var fileName = Path.GetFileName(file);
+                        File.Copy(file, Path.Combine(targetDir, fileName), true);
+                    }
+
+                    // Also copy any wwwroot directory
+                    var wwwrootSource = Path.Combine(sourceDir, "wwwroot");
+                    if (Directory.Exists(wwwrootSource))
+                    {
+                        var wwwrootTarget = Path.Combine(targetDir, "wwwroot");
+                        CopyDirectory(wwwrootSource, wwwrootTarget);
+                    }
+
+                    _logger.LogInformation("Extracted Blazor app from {SourcePath} to {TargetPath}", path, targetPath);
+                    return targetPath;
+                }
+            }
+
+            throw new FileNotFoundException("Could not find FluentBlazorExample.dll in any expected location");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to extract embedded Blazor app");
+            throw;
+        }
+    }
+
+    private static void CopyDirectory(string sourceDir, string targetDir)
+    {
+        Directory.CreateDirectory(targetDir);
+
+        foreach (var file in Directory.GetFiles(sourceDir))
+        {
+            var fileName = Path.GetFileName(file);
+            File.Copy(file, Path.Combine(targetDir, fileName), true);
+        }
+
+        foreach (var dir in Directory.GetDirectories(sourceDir))
+        {
+            var dirName = Path.GetFileName(dir);
+            CopyDirectory(dir, Path.Combine(targetDir, dirName));
+        }
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)

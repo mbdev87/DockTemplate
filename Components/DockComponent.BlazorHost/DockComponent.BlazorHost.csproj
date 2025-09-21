@@ -66,6 +66,12 @@
             <PluginFiles Include="$(OutputPath)DockComponent.BlazorHost.dll" />
             <PluginFiles Include="$(OutputPath)DockComponent.BlazorHost.pdb" />
             <PluginFiles Include="$(OutputPath)DockComponent.Base.dll" />
+            <!-- Include Blazor app and dependencies -->
+            <PluginFiles Include="$(OutputPath)FluentBlazorExample.dll" />
+            <PluginFiles Include="$(OutputPath)FluentBlazorExample.pdb" />
+            <PluginFiles Include="$(OutputPath)FluentBlazorExample.runtimeconfig.json" />
+            <PluginFiles Include="$(OutputPath)FluentBlazorExample.deps.json" />
+            <PluginFiles Include="$(OutputPath)FluentBlazorExample.staticwebassets.runtime.json" />
             <!-- Include WebView dependencies -->
             <PluginFiles Include="$(OutputPath)OutSystems.WebView.*.dll" />
             <PluginFiles Include="$(OutputPath)CefGlue.dll" />
@@ -89,6 +95,19 @@
         <Copy SourceFiles="$(OutputPath)DockComponent.BlazorHost.dll" DestinationFolder="$(TempPluginDir)" />
         <Copy SourceFiles="$(OutputPath)DockComponent.BlazorHost.pdb" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)DockComponent.BlazorHost.pdb')" />
         <Copy SourceFiles="$(OutputPath)DockComponent.Base.dll" DestinationFolder="$(TempPluginDir)" />
+
+        <!-- Copy Blazor app and its dependencies -->
+        <Copy SourceFiles="$(OutputPath)FluentBlazorExample.dll" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)FluentBlazorExample.dll')" />
+        <Copy SourceFiles="$(OutputPath)FluentBlazorExample.pdb" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)FluentBlazorExample.pdb')" />
+        <Copy SourceFiles="$(OutputPath)FluentBlazorExample.runtimeconfig.json" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)FluentBlazorExample.runtimeconfig.json')" />
+        <Copy SourceFiles="$(OutputPath)FluentBlazorExample.deps.json" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)FluentBlazorExample.deps.json')" />
+        <Copy SourceFiles="$(OutputPath)FluentBlazorExample.staticwebassets.runtime.json" DestinationFolder="$(TempPluginDir)" Condition="Exists('$(OutputPath)FluentBlazorExample.staticwebassets.runtime.json')" />
+
+        <!-- Copy wwwroot directory if it exists -->
+        <ItemGroup>
+            <BlazorWwwRootFiles Include="$(OutputPath)wwwroot\**\*" Condition="Exists('$(OutputPath)wwwroot')" />
+        </ItemGroup>
+        <Copy SourceFiles="@(BlazorWwwRootFiles)" DestinationFiles="@(BlazorWwwRootFiles->'$(TempPluginDir)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" Condition="@(BlazorWwwRootFiles) != ''" />
         
         <!-- Create ZIP using MSBuild ZipDirectory task (cross-platform) -->
         <ZipDirectory SourceDirectory="$(TempPluginDir)" DestinationFile="$(PluginZipPath)" Overwrite="true" />
