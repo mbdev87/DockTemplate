@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageVersion>1.0.0</PackageVersion>
+    <PackageId>DockTemplate.ProjectTemplate</PackageId>
+    <Title>Avalonia IDE with Dockable Interface Template</Title>
+    <Authors>DockTemplate Contributors</Authors>
+    <Description>A batteries-included Avalonia template for building professional desktop applications with dockable interface, plugin architecture, and integrated Blazor dashboard.</Description>
+    <PackageTags>dotnet-new;templates;avalonia;desktop;ide;dock;plugin;blazor</PackageTags>
+    <PackageProjectUrl>https://github.com/mbdev87/DockTemplate</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/mbdev87/DockTemplate</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="**\*" Exclude="bin\**;obj\**;**\*.user;**\*.suo;.vs\**;.vscode\**;.idea\**;.git\**;Components-Output\**;CLAUDE.md;*.log;temp-plugin-*\**;Plugin-Distribution\**" />
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
+  </ItemGroup>
+
+</Project>

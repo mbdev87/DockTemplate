@@ -37,7 +37,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// DISABLED: HTTP redirection conflicts with embedded hosting
+// app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "DockTemplate Contributors",
+  "classifications": ["Desktop", "Avalonia", "UI", "IDE", "Dock", "Plugin"],
+  "identity": "DockTemplate.ProjectTemplate",
+  "name": "Avalonia IDE with Dockable Interface",
+  "description": "A batteries-included Avalonia template for building professional desktop applications with dockable interface, plugin architecture, and integrated Blazor dashboard.",
+  "shortName": "dock-ide",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "DockTemplate",
+  "preferNameDirectory": true,
+  "defaultName": "MyAwesomeIDE",
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "net9.0",
+          "description": ".NET 9.0"
+        },
+        {
+          "choice": "net8.0",
+          "description": ".NET 8.0"
+        }
+      ],
+      "defaultValue": "net9.0",
+      "replaces": "net9.0"
+    },
+    "IncludeBlazor": {
+      "type": "parameter",
+      "description": "Include Blazor dashboard component for web-based UI",
+      "datatype": "bool",
+      "defaultValue": "true"
+    },
+    "CompanyName": {
+      "type": "parameter",
+      "description": "Company name for assembly metadata",
+      "datatype": "string",
+      "defaultValue": "MyCompany"
+    },
+    "AuthorName": {
+      "type": "parameter",
+      "description": "Author name for assembly metadata",
+      "datatype": "string",
+      "defaultValue": "Developer"
+    },
+    "Description": {
+      "type": "parameter",
+      "description": "Project description",
+      "datatype": "string",
+      "defaultValue": "Professional desktop application with dockable interface"
+    },
+    "EnablePluginSystem": {
+      "type": "parameter",
+      "description": "Enable dynamic plugin loading system",
+      "datatype": "bool",
+      "defaultValue": "true"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!IncludeBlazor)",
+          "exclude": [
+            "**/FluentBlazorExample/**",
+            "**/DockComponent.BlazorHost/**",
+            "**/BlazorHost*/**"
+          ]
+        },
+        {
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "**/.vs/**",
+            "**/.vscode/**",
+            "**/.idea/**",
+            "**/*.user",
+            "**/*.suo",
+            "**/.git/**",
+            "**/.gitignore",
+            "**/Components-Output/**",
+            "**/CLAUDE.md",
+            "**/*.log",
+            "**/temp-plugin-*/**",
+            "**/Plugin-Distribution/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "forms": {
+    "namespace": {
+      "identifier": "safe_namespace"
+    }
+  },
+  "guids": [
+    "98048C9C-BF28-46FB-9A5E-C2D7B78AA9F0",
+    "7B5B2F8C-4E3D-4A2B-8F1E-3C9D6A7E8B9F",
+    "A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D",
+    "F1E2D3C4-B5A6-978B-8C9D-0E1F2A3B4C5D"
+  ],
+  "postActions": [
+    {
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages required by this project",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore' to restore NuGet packages"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    },
+    {
+      "condition": "(OS != \"Windows_NT\")",
+      "description": "Make scripts executable on Unix",
+      "manualInstructions": [
+        {
+          "text": "Run 'chmod +x **/*.sh' to make shell scripts executable"
+        }
+      ],
+      "actionId": "cb9a6cf3-4f5c-4860-b9d2-03a574959774",
+      "args": {
+        "+x": "**/*.sh"
+      },
+      "continueOnError": true
+    }
+  ]
+}

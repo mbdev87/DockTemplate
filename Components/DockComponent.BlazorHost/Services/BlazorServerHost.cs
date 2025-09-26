@@ -30,58 +30,51 @@ public class BlazorServerHost : IHostedService, IDisposable
     {
         try
         {
-            // Create temp directory for this plugin instance
-            var tempDir = Path.Combine(Path.GetTempPath(), "DockTemplate_BlazorHost", Guid.NewGuid().ToString());
-            Directory.CreateDirectory(tempDir);
-
-            // For now, try to find the FluentBlazorExample.dll in the plugin directory
+            // For embedded hosting, point directly to the built FluentBlazorExample
             var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
             var pluginDir = Path.GetDirectoryName(assemblyLocation);
 
             // Look for FluentBlazorExample.dll in various likely locations
             var possiblePaths = new[]
             {
+                // Direct reference to built output
+                Path.Combine(AppContext.BaseDirectory, "FluentBlazorExample.dll"),
+                // Relative to plugin directory
                 Path.Combine(pluginDir, "FluentBlazorExample.dll"),
                 Path.Combine(pluginDir, "..", "FluentBlazorExample.dll"),
                 Path.Combine(pluginDir, "..", "..", "FluentBlazorExample.dll"),
-                Path.Combine(AppContext.BaseDirectory, "FluentBlazorExample.dll"),
-                Path.Combine(AppContext.BaseDirectory, "Blazor", "FluentBlazorExample.dll")
+                // Development build location
+                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "FluentBlazorExample", "bin", "Debug", "net9.0", "FluentBlazorExample.dll"),
+                // Built in solution
+                Path.Combine(Directory.GetCurrentDirectory(), "FluentBlazorExample", "bin", "Debug", "net9.0", "FluentBlazorExample.dll")
             };
 
             foreach (var path in possiblePaths)
             {
                 if (File.Exists(path))
                 {
-                    var targetPath = Path.Combine(tempDir, "FluentBlazorExample.dll");
-
-                    // Copy all related files
-                    var sourceDir = Path.GetDirectoryName(path);
-                    var targetDir = Path.GetDirectoryName(targetPath);
-
-                    foreach (var file in Directory.GetFiles(sourceDir, "*FluentBlazorExample*"))
-                    {
-                        var fileName = Path.GetFileName(file);
-                        File.Copy(file, Path.Combine(targetDir, fileName), true);
-                    }
-
-                    // Also copy any wwwroot directory
-                    var wwwrootSource = Path.Combine(sourceDir, "wwwroot");
-                    if (Directory.Exists(wwwrootSource))
-                    {
-                        var wwwrootTarget = Path.Combine(targetDir, "wwwroot");
-                        CopyDirectory(wwwrootSource, wwwrootTarget);
-                    }
-
-                    _logger.LogInformation("Extracted Blazor app from {SourcePath} to {TargetPath}", path, targetPath);
-                    return targetPath;
+                    _logger.LogInformation("Found Blazor app at: {BlazorPath}", path);
+                    Console.WriteLine($"🎯 Found Blazor app at: {path}");
+                    return path;
+                }
+                else
+                {
+                    Console.WriteLine($"🔍 Checked path: {path} (not found)");
                 }
             }
+
+            // List the current directory contents for debugging
+            var currentDir = Directory.GetCurrentDirectory();
+            Console.WriteLine($"🔍 Current directory: {currentDir}");
+            Console.WriteLine($"🔍 AppContext.BaseDirectory: {AppContext.BaseDirectory}");
+            Console.WriteLine($"🔍 Assembly location: {assemblyLocation}");
 
             throw new FileNotFoundException("Could not find FluentBlazorExample.dll in any expected location");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to extract embedded Blazor app");
+            _logger.LogError(ex, "Failed to locate Blazor app");
+            Console.WriteLine($"❌ Failed to locate Blazor app: {ex.Message}");
             throw;
         }
     }
@@ -111,24 +104,30 @@ public class BlazorServerHost : IHostedService, IDisposable
             _port = FindAvailablePort(5000, 5020);
 
             _logger.LogInformation("Starting Blazor server from: {BlazorPath}", _blazorPath);
+            Console.WriteLine($"🚀 Starting Blazor server from: {_blazorPath}");
 
             if (!File.Exists(_blazorPath))
             {
                 _logger.LogError("Blazor application not found at: {BlazorPath}", _blazorPath);
+                Console.WriteLine($"❌ Blazor application not found at: {_blazorPath}");
                 return;
             }
 
             // Launch Blazor as separate process
+            var workingDir = Path.GetDirectoryName(_blazorPath);
             var startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"\"{_blazorPath}\" --urls=http://localhost:{_port}",
-                WorkingDirectory = Path.GetDirectoryName(_blazorPath),
+                Arguments = $"\"{_blazorPath}\" --urls=http://localhost:{_port} --environment=Development",
+                WorkingDirectory = workingDir,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true
             };
+
+            Console.WriteLine($"🔧 Command: {startInfo.FileName} {startInfo.Arguments}");
+            Console.WriteLine($"🔧 Working directory: {workingDir}");
 
             _blazorProcess = new Process { StartInfo = startInfo };
 
@@ -136,13 +135,19 @@ public class BlazorServerHost : IHostedService, IDisposable
             _blazorProcess.OutputDataReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
+                {
                     _logger.LogInformation("Blazor: {Output}", e.Data);
+                    Console.WriteLine($"🌐 Blazor stdout: {e.Data}");
+                }
             };
 
             _blazorProcess.ErrorDataReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
+                {
                     _logger.LogWarning("Blazor Error: {Error}", e.Data);
+                    Console.WriteLine($"❌ Blazor stderr: {e.Data}");
+                }
             };
 
             _blazorProcess.Start();

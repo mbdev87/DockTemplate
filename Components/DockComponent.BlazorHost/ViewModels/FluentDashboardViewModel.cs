@@ -32,14 +32,36 @@ public class FluentDashboardViewModel : Document, IDisposable
     {
         try
         {
-            var serverUrl = "http://localhost:5000/dashboard-embedded";
-            var dashboardUrl = serverUrl;
+            StatusMessage = "🔄 Starting FluentBlazor server...";
 
-            DashboardUrl = dashboardUrl;
-            StatusMessage = "✅ FluentBlazor Dashboard Ready";
-            IsLoaded = true;
+            // Wait for the BlazorServerHost to write the URL file
+            var urlFile = Path.Combine(Path.GetTempPath(), "blazor-app-url.txt");
+            var maxWait = DateTime.Now.AddSeconds(10);
 
-            System.Diagnostics.Debug.WriteLine($"🎨 FluentDashboard loaded: {dashboardUrl}");
+            while (DateTime.Now < maxWait)
+            {
+                if (File.Exists(urlFile))
+                {
+                    var baseUrl = await File.ReadAllTextAsync(urlFile);
+                    var dashboardUrl = $"{baseUrl.TrimEnd('/')}/dashboard-embedded";
+
+                    DashboardUrl = dashboardUrl;
+                    StatusMessage = "✅ FluentBlazor Dashboard Ready";
+                    IsLoaded = true;
+
+                    System.Diagnostics.Debug.WriteLine($"🎨 FluentDashboard WebView URL: {dashboardUrl}");
+                    return;
+                }
+
+                await Task.Delay(200);
+            }
+
+            // Fallback if server file not found
+            var fallbackUrl = "http://localhost:5000/dashboard-embedded";
+            DashboardUrl = fallbackUrl;
+            StatusMessage = "⚠️ Using fallback URL";
+
+            System.Diagnostics.Debug.WriteLine($"🎨 Setting FluentDashboard WebView URL: {fallbackUrl}");
         }
         catch (Exception ex)
         {
