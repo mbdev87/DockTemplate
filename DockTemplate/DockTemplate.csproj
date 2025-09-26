@@ -31,9 +31,9 @@
         <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
         <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.2.2" />
         <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
         <PackageReference Include="NLog" Version="6.0.3" />
         <PackageReference Include="ReactiveUI.Fody" Version="19.5.31" />
         <PackageReference Include="Fody" Version="6.8.2">
@@ -48,6 +48,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Components\DockComponent.BlazorHost\DockComponent.BlazorHost.csproj" />
       <ProjectReference Include="..\DockComponent.Base\DockComponent.Base.csproj" />
       <ProjectReference Include="..\Components\DockComponent.Editor\DockComponent.Editor.csproj" />
       <ProjectReference Include="..\Components\DockComponent.SolutionExplorer\DockComponent.SolutionExplorer.csproj" />
@@ -60,4 +61,30 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
+
+    <!-- Build and copy Blazor plugin -->
+    <Target Name="BuildAndCopyBlazor" AfterTargets="Build">
+        <!-- Build the Blazor project -->
+        <MSBuild Projects="..\FluentBlazorExample\FluentBlazorExample.csproj"
+                 Targets="Build"
+                 Properties="Configuration=$(Configuration);TargetFramework=net9.0" />
+
+        <!-- Copy everything from Blazor bin to a folder under Avalonia -->
+        <ItemGroup>
+            <BlazorFiles Include="..\FluentBlazorExample\bin\$(Configuration)\net9.0\**\*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(BlazorFiles)"
+              DestinationFolder="$(OutputPath)\Blazor\%(RecursiveDir)"
+              SkipUnchangedFiles="true" />
+
+        <!-- Also copy wwwroot manually since it's needed for static assets -->
+        <ItemGroup>
+            <BlazorWwwRootFiles Include="..\FluentBlazorExample\wwwroot\**\*" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(BlazorWwwRootFiles)"
+              DestinationFolder="$(OutputPath)\Blazor\wwwroot\%(RecursiveDir)"
+              SkipUnchangedFiles="true" />
+    </Target>
 </Project>

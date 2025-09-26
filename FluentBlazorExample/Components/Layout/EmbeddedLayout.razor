@@ -1,0 +1,33 @@
+@inherits LayoutComponentBase
+@using FluentBlazorExample.Components.Shared
+
+<style>
+    /* Force natural content height - no viewport constraints */
+    body, html {
+        height: auto !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .fluent-layout, .main, .body-content, .content {
+        height: auto !important;
+        min-height: auto !important;
+    }
+</style>
+
+<FluentLayout Style="margin: 0; padding: 0;">
+    <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%" Style="margin: 0; padding: 0;">
+        <FluentBodyContent Class="body-content" Style="width: 100%; margin: 0; padding: 0;">
+            <div class="content" style="margin: 0; padding: 0;">
+                @Body
+            </div>
+        </FluentBodyContent>
+    </FluentStack>
+</FluentLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

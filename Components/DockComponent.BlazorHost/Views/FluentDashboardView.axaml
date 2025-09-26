@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DockComponent.BlazorHost.ViewModels"
+             xmlns:webView="clr-namespace:WebViewControl;assembly=WebViewControl.Avalonia"
+             x:Class="DockComponent.BlazorHost.Views.FluentDashboardView"
+             x:DataType="vm:FluentDashboardViewModel">
+
+  <Design.DataContext>
+    <vm:FluentDashboardViewModel />
+  </Design.DataContext>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- Header -->
+    <Border Grid.Row="0" Background="{DynamicResource SystemAccentColor}" Padding="16,8">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="🎨" FontSize="20" VerticalAlignment="Center"/>
+        <TextBlock Text="FluentBlazor Dashboard"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   Foreground="White"
+                   VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding StatusMessage}"
+                   FontSize="12"
+                   Foreground="White"
+                   Opacity="0.8"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Embedded Blazor Dashboard -->
+    <webView:WebView Grid.Row="1"
+                     x:Name="DashboardWebView"
+                     Address="{Binding DashboardUrl}" VerticalAlignment="Stretch" />
+    
+
+  </Grid>
+
+</UserControl>

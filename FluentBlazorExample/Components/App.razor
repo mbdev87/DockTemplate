@@ -1,0 +1,55 @@
+﻿@inject FluentBlazorExample.Services.IThemeService ThemeService
+@implements IDisposable
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["FluentBlazorExample.styles.css"]" />
+    <ImportMap />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <HeadOutlet />
+</head>
+
+<body>
+    <FluentDesignTheme @ref="designTheme"
+                       Mode="@ThemeService.Mode"
+                       OfficeColor="@ThemeService.OfficeColor"
+                       StorageName="theme" />
+    <Routes />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>
+
+@code {
+    private FluentDesignTheme? designTheme;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    private async void OnThemeChanged()
+    {
+        Console.WriteLine($"[THEME] App: OnThemeChanged() called, current mode: {ThemeService.Mode}");
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+            Console.WriteLine($"[THEME] App: StateHasChanged() completed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[THEME] App: Error in OnThemeChanged: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
+    }
+}

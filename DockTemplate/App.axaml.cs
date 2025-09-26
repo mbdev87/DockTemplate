@@ -91,6 +91,8 @@ public partial class App : Application
                 Console.WriteLine("[App] ❌ PluginInstallationService is NULL - service not registered properly!");
             }
             
+
+            
             // AUTHOR MODE - Direct component registration + plugin loading
             var dockFactory = _serviceProvider.GetService<DockFactory>();
             if (dockFactory != null)

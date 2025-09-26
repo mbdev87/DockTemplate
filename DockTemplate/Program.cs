@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using DockComponent.ErrorList.ViewModels;
 using DockComponent.Editor.Services;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockComponent.Output.ViewModels;
+using DockComponent.BlazorHost.ViewModels;
 
 namespace DockTemplate;
 
@@ -21,6 +23,41 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // OLD BLAZOR SETUP - Commented out in favor of BlazorServerHost service
+        /*
+        Task.Run(async () =>
+        {
+            var builder = WebApplication.CreateBuilder(args);
+            builder.WebHost.UseStaticWebAssets();
+
+            builder.Services.AddServerSideBlazor();
+            builder.Services.AddRazorPages();
+// Add services to the container.
+            builder.Services.AddRazorComponents()
+                    .AddInteractiveServerComponents();
+            builder.Services.AddFluentUIComponents();
+
+// Add application services
+            builder.Services.AddSingleton<IDashboardService, DashboardService>();
+            builder.Services.AddSingleton<IThemeService, ThemeService>();
+
+            var app = builder.Build();
+
+            app.UseHsts();
+            app.UseHttpsRedirection();
+
+            app.UseAntiforgery();
+            app.MapBlazorHub();
+            app.MapStaticAssets();
+            app.MapRazorComponents<App>()
+                    .AddInteractiveServerRenderMode();
+
+            app.Run();
+
+            await app.RunAsync("http://localhost:5005");
+        });
+        */
+
         using var provider = Initialize();
         ServiceProvider = provider;
         
@@ -60,7 +97,7 @@ sealed class Program
         services.AddSingleton<App>(provider => new App(provider));
         services.AddSingleton<IViewLocator, ViewLocator>();
         services.AddSingleton<ISettingsService, SettingsService>();
-        services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<DockTemplate.Services.IThemeService, DockTemplate.Services.ThemeService>();
         services.AddSingleton<IDockLayoutService, DockLayoutService>();
         services.AddSingleton<AcrylicLayoutManager>();
         services.AddSingleton<InterPluginLogger>();
@@ -73,11 +110,14 @@ sealed class Program
         services.AddSingleton<ComponentLoader>();
         // Note: PluginDirectoryService is static - no need to register
         
+
+        
         // COMPONENT SERVICES - Direct registration for author/debug mode
         RegisterEditorComponent(services);
         RegisterErrorListComponent(services);
         RegisterOutputComponent(services);
         RegisterSolutionExplorerComponent(services);
+        RegisterBlazorHostComponent(services);
     }
     
     private static void RegisterEditorComponent(IServiceCollection services)
@@ -128,6 +168,21 @@ sealed class Program
             {
                 var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
                 var component = new DockComponent.SolutionExplorer.SolutionExplorerComponent();
+                component.Register(context);
+            }
+        });
+    }
+    
+    private static void RegisterBlazorHostComponent(IServiceCollection services)
+    {
+        services.AddSingleton<BlazorHostViewModel>();
+        
+        ComponentsToRegister.Add(() => {
+            var dockFactory = ServiceProvider?.GetRequiredService<DockFactory>();
+            if (dockFactory != null)
+            {
+                var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
+                var component = new DockComponent.BlazorHost.BlazorHostComponent();
                 component.Register(context);
             }
         });

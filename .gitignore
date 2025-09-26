@@ -24,7 +24,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
-
+.log
+global.json
 *.sln.DotSettings.user
 # .NET Core
 project.lock.json
