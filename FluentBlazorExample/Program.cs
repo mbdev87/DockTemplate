@@ -26,6 +26,8 @@ builder.Services.AddFluentUIComponents();
 // Add application services
 builder.Services.AddSingleton<IDashboardService, DashboardService>();
 builder.Services.AddSingleton<IThemeService, ThemeService>();
+builder.Services.AddSingleton<LifecycleService>();
+builder.Services.AddHostedService<LifecycleService>(provider => provider.GetRequiredService<LifecycleService>());
 
 var app = builder.Build();
 
@@ -45,5 +47,25 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Add lifecycle management endpoints
+var lifecycleService = app.Services.GetRequiredService<LifecycleService>();
+
+app.MapGet("/heartbeat", () =>
+{
+    lifecycleService.UpdateHeartbeat();
+    return Results.Ok(new { status = "alive", timestamp = DateTime.UtcNow });
+});
+
+app.MapPost("/shutdown", () =>
+{
+    // Trigger graceful shutdown
+    _ = Task.Run(async () =>
+    {
+        await Task.Delay(100); // Give time to return response
+        lifecycleService.TriggerShutdown();
+    });
+    return Results.Ok(new { status = "shutting down", timestamp = DateTime.UtcNow });
+});
 
 app.Run();

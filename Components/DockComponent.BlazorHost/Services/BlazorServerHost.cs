@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,12 +19,19 @@ public class BlazorServerHost : IHostedService, IDisposable
     private readonly string _signalFilePath;
     private int _port;
     private bool _isDisposed;
+    private Timer? _heartbeatTimer;
+    private readonly HttpClient _httpClient;
 
     public BlazorServerHost(ILogger<BlazorServerHost> logger, string? blazorPath = null)
     {
         _logger = logger;
         _blazorPath = blazorPath ?? ExtractEmbeddedBlazorApp();
         _signalFilePath = Path.Combine(Path.GetTempPath(), "blazor-app-url.txt");
+        _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+
+        // Register shutdown handlers
+        AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+        Console.CancelKeyPress += OnCancelKeyPress;
     }
 
     private string ExtractEmbeddedBlazorApp()
@@ -161,7 +169,10 @@ public class BlazorServerHost : IHostedService, IDisposable
             var url = $"http://localhost:{_port}";
             await File.WriteAllTextAsync(_signalFilePath, url, cancellationToken);
 
-            _logger.LogInformation("Blazor server started at: {Url}", url);
+            // Start heartbeat timer (every 3 seconds)
+            _heartbeatTimer = new Timer(SendHeartbeat, url, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3));
+
+            _logger.LogInformation("Blazor server started at: {Url} with HTTP heartbeat monitoring", url);
         }
         catch (Exception ex)
         {
@@ -173,15 +184,34 @@ public class BlazorServerHost : IHostedService, IDisposable
     {
         try
         {
+            // Stop heartbeat timer first
+            _heartbeatTimer?.Dispose();
+            _heartbeatTimer = null;
+
             if (_blazorProcess != null && !_blazorProcess.HasExited)
             {
-                // Try graceful shutdown first
-                _blazorProcess.CloseMainWindow();
+                // Try graceful shutdown via HTTP endpoint first
+                var shutdownSuccess = await TryGracefulShutdown();
 
-                // Wait a bit for graceful shutdown
-                if (!_blazorProcess.WaitForExit(2000))
+                if (!shutdownSuccess)
                 {
-                    // Force kill if graceful shutdown failed
+                    _logger.LogWarning("HTTP shutdown failed, trying process termination");
+
+                    // Fallback: try SIGTERM equivalent
+                    try
+                    {
+                        _blazorProcess.Kill(entireProcessTree: false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to send termination signal");
+                    }
+                }
+
+                // Wait for graceful shutdown with longer timeout
+                if (!_blazorProcess.WaitForExit(5000))
+                {
+                    _logger.LogWarning("Graceful shutdown timeout, force killing process tree");
                     _blazorProcess.Kill(entireProcessTree: true);
                 }
 
@@ -226,14 +256,88 @@ public class BlazorServerHost : IHostedService, IDisposable
         return startPort; // Fallback
     }
 
+    private void SendHeartbeat(object? state)
+    {
+        if (_isDisposed || state is not string baseUrl) return;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{baseUrl}/heartbeat");
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogTrace("Heartbeat sent successfully");
+                }
+                else
+                {
+                    _logger.LogWarning("Heartbeat failed with status: {StatusCode}", response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send heartbeat to Blazor app");
+            }
+        });
+    }
+
+    private async Task<bool> TryGracefulShutdown()
+    {
+        try
+        {
+            var shutdownUrl = $"http://localhost:{_port}/shutdown";
+            _logger.LogInformation("Attempting graceful shutdown via {ShutdownUrl}", shutdownUrl);
+
+            var response = await _httpClient.PostAsync(shutdownUrl, null);
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Graceful shutdown initiated successfully");
+                return true;
+            }
+            else
+            {
+                _logger.LogWarning("Shutdown endpoint returned: {StatusCode}", response.StatusCode);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to call shutdown endpoint");
+            return false;
+        }
+    }
+
+    private void OnProcessExit(object? sender, EventArgs e)
+    {
+        _logger.LogInformation("Process exit detected, initiating Blazor shutdown");
+        _ = Task.Run(TryGracefulShutdown);
+    }
+
+    private void OnCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+    {
+        _logger.LogInformation("Ctrl+C detected, initiating Blazor shutdown");
+        _ = Task.Run(TryGracefulShutdown);
+        // Don't cancel the event, let normal shutdown proceed
+    }
+
     public void Dispose()
     {
         if (_isDisposed) return;
 
         _isDisposed = true;
 
+        // Unregister event handlers
+        AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+        Console.CancelKeyPress -= OnCancelKeyPress;
+
+        // Clean up timer
+        _heartbeatTimer?.Dispose();
+
         try
         {
+            // Try graceful shutdown first
+            _ = Task.Run(TryGracefulShutdown).Wait(3000);
+
             if (_blazorProcess != null && !_blazorProcess.HasExited)
             {
                 _blazorProcess.Kill(entireProcessTree: true);
@@ -245,5 +349,6 @@ public class BlazorServerHost : IHostedService, IDisposable
         }
 
         _blazorProcess?.Dispose();
+        _httpClient?.Dispose();
     }
 }
