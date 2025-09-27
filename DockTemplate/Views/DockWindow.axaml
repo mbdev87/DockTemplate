@@ -7,17 +7,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="680"
-        x:Class="DockTemplate.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        x:Name="MainWindowView"
-        UseLayoutRounding="True" 
+        x:Class="DockTemplate.Views.DockWindow"
+        x:DataType="vm:DockWindowViewModel"
+        x:Name="DockWindowView"
+        UseLayoutRounding="True"
         RenderOptions.BitmapInterpolationMode="HighQuality"
         WindowState="Normal" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI, SF Pro Display, Noto Sans, Cantarel"
         Icon="/Assets/avalonia-logo.ico"
         Title="DockTemplate - Visual Studio Layout" Height="680" Width="1200"
         DragDrop.AllowDrop="True"
-        
+
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="{Binding IsAcrylicLayoutActive}"
@@ -33,18 +33,18 @@
         <Style Selector="Grid.main-content">
             <Setter Property="Margin" Value="0,0,0,0" />
         </Style>
-        
+
         <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Grid.main-content">
             <Setter Property="Margin" Value="0,0,0,0" />
         </Style>
-        
+
         <!-- Acrylic Layout Styles -->
         <Style Selector="Border.acrylic-sidebar">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0,0,0,0" />
         </Style>
-        
+
         <!-- Acrylic sidebar gets the actual acrylic effect when window acrylic is enabled -->
         <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Border.acrylic-sidebar">
             <Setter Property="Background">
@@ -53,12 +53,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <!-- Tighter margins for acrylic mode -->
         <Style Selector="Window[ExtendClientAreaToDecorationsHint=True] Grid.main-content.acrylic-active">
             <Setter Property="Margin" Value="0,0,0,0" />
         </Style>
-        
+
         <!-- Smooth fade-in/fade-out animation for overlay -->
         <Style Selector="Border.drop-overlay">
             <Setter Property="Opacity" Value="0" />
@@ -69,12 +69,12 @@
                 </Transitions>
             </Setter>
         </Style>
-        
+
         <Style Selector="Border.drop-overlay.show">
             <Setter Property="Opacity" Value="0.98" />
             <Setter Property="IsHitTestVisible" Value="True" />
         </Style>
-        
+
         <!-- Smooth scale animation for the content -->
         <Style Selector="Grid.overlay-content">
             <Setter Property="RenderTransform" Value="scale(0.95)" />
@@ -84,14 +84,14 @@
                 </Transitions>
             </Setter>
         </Style>
-        
+
         <Style Selector="Border.drop-overlay.show Grid.overlay-content">
             <Setter Property="RenderTransform" Value="scale(1.0)" />
         </Style>
     </Window.Styles>
 
     <Design.DataContext>
-        <vm:MainWindowViewModel/>
+        <vm:DockWindowViewModel/>
     </Design.DataContext>
 
         <Grid x:Name="MainGrid" Classes="main-content" Classes.acrylic-active="{Binding IsAcrylicLayoutActive}">
@@ -100,19 +100,19 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            
+
             <Grid.ColumnDefinitions>
                 <!-- Acrylic sidebar column (hidden when acrylic is disabled) -->
                 <ColumnDefinition Width="{Binding AcrylicSidebarWidth}" />
                 <!-- Main content column -->
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            
+
             <Panel Grid.RowSpan="3" Grid.Column="0">
                 <!-- Solid background for entire window when acrylic layout is disabled -->
                 <Border IsVisible="{Binding !IsAcrylicLayoutActive}"
                         Background="{DynamicResource SystemRegionBrush}" />
-        
+
                 <!-- Acrylic background for left sidebar when layout is enabled -->
                 <ExperimentalAcrylicBorder IsVisible="{Binding IsAcrylicLayoutActive}" IsHitTestVisible="False">
                     <ExperimentalAcrylicBorder.Material>
@@ -124,36 +124,36 @@
                     </ExperimentalAcrylicBorder.Material>
                 </ExperimentalAcrylicBorder>
             </Panel>
-                
+
             <!-- Solid background for top area (menu row) in right column when acrylic is active -->
-            <Border Grid.Row="0" Grid.Column="1" 
+            <Border Grid.Row="0" Grid.Column="1"
                     IsVisible="{Binding IsAcrylicLayoutActive}"
-                    Background="{DynamicResource SystemRegionBrush}" 
+                    Background="{DynamicResource SystemRegionBrush}"
                     ZIndex="5" />
             <!-- Acrylic Sidebar (Column 0) - Only spans main content area (Row 1) -->
-            <Border Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" 
+            <Border Grid.Row="0" Grid.RowSpan="3" Grid.Column="0"
                     Classes="acrylic-sidebar"
                     IsVisible="{Binding IsAcrylicLayoutActive}">
                 <Grid>
                     <!-- Top draggable area for window dragging -->
-                    <Border Height="28" VerticalAlignment="Top" 
+                    <Border Height="28" VerticalAlignment="Top"
                             Background="Transparent"
                             PointerPressed="OnPointerPressed" />
                     <!-- Sidebar content with top margin -->
                     <ContentControl Content="{Binding AcrylicSidebarContent}" Margin="0, 28, 0, 0" />
                 </Grid>
             </Border>
-            
+
             <!-- Resizable splitter between acrylic sidebar and main content -->
-            <GridSplitter Grid.Row="1" Grid.Column="0" 
+            <GridSplitter Grid.Row="1" Grid.Column="0"
                          IsVisible="{Binding IsAcrylicLayoutActive}"
-                         Width="4" 
+                         Width="4"
                          HorizontalAlignment="Right"
                          VerticalAlignment="Stretch"
                          Background="Transparent" />
-       
+
             <!-- In-window menu (hidden on macOS, visible on Windows/Linux) -->
-            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="Auto,*" x:Name="MenuBarGrid" 
+            <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="Auto,*" x:Name="MenuBarGrid"
                   Background="{DynamicResource SystemRegionBrush}"
                   ZIndex="10">
                 <Menu Grid.Column="0" VerticalAlignment="Center" FontSize="12" Height="24" Padding="0 8 0 0">
@@ -171,22 +171,22 @@
                         <MenuItem Header="_Show Windows" Command="{Binding ShowWindows}" />
                     </MenuItem>
                 </Menu>
-                
+
                 <!-- Empty space for window dragging -->
-                <Border Grid.Column="1" 
+                <Border Grid.Column="1"
                         Background="Transparent"
                         PointerPressed="OnPointerPressed" />
             </Grid>
 
         <!-- Main Dock Area -->
             <Panel Background="{DynamicResource SystemRegionBrush}" Grid.Row="1" Grid.Column="1" >
-                <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}" 
-                                
-                                Margin="4,4,4,4"   
-                                
+                <dc:DockControl x:Name="DockControl" Layout="{Binding Layout}"
+
+                                Margin="4,4,4,4"
+
                                 ZIndex="10" />
             </Panel>
-   
+
 
         <!-- Drag & Drop Overlay - Theme-Aware Background with Smooth Animations -->
         <Border x:Name="DropOverlay" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
@@ -198,62 +198,62 @@
                 <SolidColorBrush Color="{DynamicResource RegionColor}" Opacity="0.85" />
             </Border.Background>
             <!-- Rigid Grid Layout to Prevent Jumping -->
-            <Grid RowDefinitions="120,120,80,60,*" 
+            <Grid RowDefinitions="120,120,80,60,*"
                   Classes="overlay-content"
-                  HorizontalAlignment="Center" 
+                  HorizontalAlignment="Center"
                   VerticalAlignment="Center"
                   Width="400">
-                
+
                 <!-- Row 0: Plugin Icon -->
                 <TextBlock Grid.Row="0"
-                          Text="🔌" FontSize="80" 
-                          HorizontalAlignment="Center" 
+                          Text="🔌" FontSize="80"
+                          HorizontalAlignment="Center"
                           VerticalAlignment="Center"
                           Foreground="{DynamicResource SystemBaseHighColorBrush}" />
-                
+
                 <!-- Row 1: Main Message (Same font size for both states) -->
                 <Grid Grid.Row="1" HorizontalAlignment="Center">
                     <!-- Drop Message (Ready State) -->
                     <TextBlock IsVisible="{Binding !IsInstallMode}"
-                              Text="Drop plugin anywhere to install" 
-                              FontSize="24" FontWeight="Bold" 
-                              HorizontalAlignment="Center" 
+                              Text="Drop plugin anywhere to install"
+                              FontSize="24" FontWeight="Bold"
+                              HorizontalAlignment="Center"
                               VerticalAlignment="Center"
                               TextWrapping="Wrap"
                               TextAlignment="Center"
                               Foreground="{DynamicResource SystemBaseHighColorBrush}" />
-                    
+
                     <!-- Installing Message (Processing State) -->
                     <TextBlock IsVisible="{Binding IsInstallMode}"
-                              Text="{Binding InstallStatusText}" 
-                              FontSize="24" FontWeight="Bold" 
-                              HorizontalAlignment="Center" 
+                              Text="{Binding InstallStatusText}"
+                              FontSize="24" FontWeight="Bold"
+                              HorizontalAlignment="Center"
                               VerticalAlignment="Center"
                               TextWrapping="Wrap"
                               TextAlignment="Center"
                               Foreground="{DynamicResource SystemBaseHighColorBrush}" />
                 </Grid>
-                
+
                 <!-- Row 2: Sub Status Text -->
                 <TextBlock Grid.Row="2"
-                          Text="{Binding InstallSubText}" 
-                          FontSize="16" 
-                          HorizontalAlignment="Center" 
+                          Text="{Binding InstallSubText}"
+                          FontSize="16"
+                          HorizontalAlignment="Center"
                           VerticalAlignment="Center"
                           IsVisible="{Binding IsInstallMode}"
                           Foreground="{DynamicResource SystemBaseMediumColorBrush}" />
-                          
+
                 <TextBlock Grid.Row="2"
-                          Text="Supports .dockplugin files" 
-                          FontSize="16" 
-                          HorizontalAlignment="Center" 
+                          Text="Supports .dockplugin files"
+                          FontSize="16"
+                          HorizontalAlignment="Center"
                           VerticalAlignment="Center"
                           IsVisible="{Binding !IsInstallMode}"
                           Foreground="{DynamicResource SystemBaseMediumColorBrush}" />
-                
+
                 <!-- Row 3: Progress Ring (Bottom to avoid jumping) -->
                 <avaloniaProgressRing:ProgressRing Grid.Row="3"
-                                       Width="60" 
+                                       Width="60"
                                        Height="60"
                                        IsActive="{Binding ShowSpinner}"
                                        IsVisible="{Binding ShowSpinner}"
@@ -264,22 +264,22 @@
         </Border>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource SystemAccentColor}" 
+        <Border Grid.Row="2" Grid.Column="1" Background="{DynamicResource SystemAccentColor}"
                 BorderBrush="{DynamicResource SystemAccentColorDark2}" BorderThickness="0,1,0,0"
                 Margin="0,0,0,0"
                 ZIndex="10">
            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
                <TextBlock Grid.Column="0" FontSize="11" Text="Ready" Margin="8,4" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="White" />
-            
+
                <!-- Acrylic Toggle Button -->
                <Button x:Name="AcrylicButton" Grid.Column="2" Background="Transparent"
-                       HorizontalAlignment="Right" Margin="4,0" Foreground="White" MaxHeight="16" 
+                       HorizontalAlignment="Right" Margin="4,0" Foreground="White" MaxHeight="16"
                        Command="{Binding ToggleAcrylic}">
                    <StackPanel Orientation="Horizontal">
                        <PathIcon Width="16" Height="16" Data="{StaticResource AcrylicIcon}" Margin="4,0,0,0" />
                    </StackPanel>
                </Button>
-               
+
                <!-- Theme Toggle Button -->
                <Button HorizontalContentAlignment="Right" x:Name="ThemeButton" Grid.Column="3" Background="Transparent"
                        HorizontalAlignment="Right" Margin="4,0" Foreground="White" MaxHeight="16">

@@ -102,7 +102,7 @@ sealed class Program
         services.AddSingleton<AcrylicLayoutManager>();
         services.AddSingleton<InterPluginLogger>();
         services.AddSingleton<DockFactory>();
-        services.AddTransient<MainWindowViewModel>();
+        services.AddTransient<DockWindowViewModel>();
         
         // PLUGIN SERVICES
         services.AddSingleton<PluginInstallationService>();

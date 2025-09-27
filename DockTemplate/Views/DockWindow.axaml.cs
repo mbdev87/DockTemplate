@@ -7,12 +7,12 @@ using NLog;
 
 namespace DockTemplate.Views;
 
-public partial class MainWindow : Window
+public partial class DockWindow : Window
 {
     private bool _isDark = true; // App starts in dark theme
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public MainWindow()
+    public DockWindow()
     {
         InitializeComponent();
         InitializePlatformSpecificUI();
@@ -27,18 +27,18 @@ public partial class MainWindow : Window
         {
             var menuBarGrid = this.FindControl<Grid>("MenuBarGrid");
             var mainGrid = this.FindControl<Grid>("MainGrid");
-            
+
             if (menuBarGrid != null)
             {
                 menuBarGrid.IsVisible = false;
             }
-            
+
             // Set the first row (menu row) height to 0 on macOS
             if (mainGrid != null && mainGrid.RowDefinitions.Count > 0)
             {
                 mainGrid.RowDefinitions[0].Height = new GridLength(0);
             }
-            
+
             Logger.Info("macOS detected - using native menu bar");
         }
         else
@@ -71,7 +71,7 @@ public partial class MainWindow : Window
         if (IsPluginFile(e))
         {
             e.DragEffects = DragDropEffects.Copy;
-            if (DataContext is MainWindowViewModel viewModel)
+            if (DataContext is DockWindowViewModel viewModel)
             {
                 viewModel.ShowDropOverlay = true;
             }
@@ -84,7 +84,7 @@ public partial class MainWindow : Window
 
     private void OnDragLeave(object? sender, DragEventArgs e)
     {
-        if (DataContext is MainWindowViewModel viewModel)
+        if (DataContext is DockWindowViewModel viewModel)
         {
             viewModel.ShowDropOverlay = false;
         }
@@ -92,7 +92,7 @@ public partial class MainWindow : Window
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
-        if (DataContext is MainWindowViewModel viewModel)
+        if (DataContext is DockWindowViewModel viewModel)
         {
             if (!IsPluginFile(e))
             {
@@ -111,7 +111,7 @@ public partial class MainWindow : Window
             viewModel.ShowSpinner = true;
             viewModel.InstallStatusText = "Installing plugin...";
             viewModel.InstallSubText = "Preparing installation";
-            
+
             Logger.Info("Starting plugin installation UI sequence");
 
             foreach (var file in files)
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
                 if (IsPluginFile(file))
                 {
                     Logger.Info($"Sending plugin installation request: {System.IO.Path.GetFileName(file)}");
-                    
+
                     // Send message to background service to handle installation
                     ReactiveUI.MessageBus.Current.SendMessage(new DockTemplate.Messages.InstallPluginMessage(file));
                 }
@@ -138,7 +138,7 @@ public partial class MainWindow : Window
         var extension = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
         return extension == ".dockplugin" || extension == ".zip";
     }
-    
+
     /// <summary>
     /// Handle pointer pressed events for window dragging in acrylic mode
     /// </summary>

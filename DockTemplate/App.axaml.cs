@@ -137,11 +137,11 @@ public partial class App : Application
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var mainWindowViewModel = _serviceProvider?.GetRequiredService<MainWindowViewModel>() 
+            var dockWindowViewModel = _serviceProvider?.GetRequiredService<DockWindowViewModel>()
                 ?? throw new InvalidOperationException("Service provider not initialized");
-            desktop.MainWindow = new MainWindow
+            desktop.MainWindow = new DockWindow
             {
-                DataContext = mainWindowViewModel,
+                DataContext = dockWindowViewModel,
             };
         }
 
