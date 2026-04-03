@@ -14,7 +14,11 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
 
     [Reactive] public string CurrentUrl { get; set; } = string.Empty;
     [Reactive] public bool IsLoaded { get; set; }
-    [Reactive] public bool IsServerRunning { get; set; } = true; // Server managed by BlazorServerHost
+
+    [Reactive]
+    public bool IsServerRunning { get; set; } =
+        true; // Server managed by BlazorServerHost
+
     [Reactive] public string StatusMessage { get; set; } = "Dashboard ready";
 
     public EmbeddedDashboardViewModel(
@@ -45,7 +49,8 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
         try
         {
             StatusMessage = "✅ Loading dashboard...";
-            Console.WriteLine("🚀 [EMBEDDED DASHBOARD] Loading dashboard from centralized server");
+            Console.WriteLine(
+                "🚀 [EMBEDDED DASHBOARD] Loading dashboard from centralized server");
 
             var url = "http://localhost:5000/dashboard-embedded";
 
@@ -55,20 +60,24 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
             // Add theme and accent parameters if available
             if (_sharedThemeService != null)
             {
-                var theme = _sharedThemeService.Mode.ToString().ToLowerInvariant();
-                var accent = _sharedThemeService.OfficeColor.ToString().ToLowerInvariant();
+                var theme = _sharedThemeService.Mode.ToString()
+                    .ToLowerInvariant();
+                var accent = _sharedThemeService.OfficeColor.ToString()
+                    .ToLowerInvariant();
                 dashboardUrl += $"?theme={theme}&accent={accent}";
             }
 
             CurrentUrl = dashboardUrl;
             IsLoaded = true;
             StatusMessage = "✅ Dashboard ready";
-            Console.WriteLine($"✅ [EMBEDDED DASHBOARD] Dashboard loaded: {dashboardUrl}");
+            Console.WriteLine(
+                $"✅ [EMBEDDED DASHBOARD] Dashboard loaded: {dashboardUrl}");
         }
         catch (Exception ex)
         {
             StatusMessage = $"❌ Failed to load dashboard: {ex.Message}";
-            Console.WriteLine($"❌ [EMBEDDED DASHBOARD] Load failed: {ex.Message}");
+            Console.WriteLine(
+                $"❌ [EMBEDDED DASHBOARD] Load failed: {ex.Message}");
         }
     }
 
@@ -79,15 +88,21 @@ public class EmbeddedDashboardViewModel : Document, IDisposable
         try
         {
             // Update URL with current theme settings
-            if (_sharedThemeService != null && !string.IsNullOrEmpty(CurrentUrl))
+            if (_sharedThemeService != null &&
+                !string.IsNullOrEmpty(CurrentUrl))
             {
                 var baseUrl = CurrentUrl.Split('?')[0];
-                var theme = _sharedThemeService.Mode.ToString().ToLowerInvariant();
-                var accent = _sharedThemeService.OfficeColor.ToString().ToLowerInvariant();
-                CurrentUrl = $"{baseUrl}?theme={theme}&accent={accent}&refresh={DateTime.Now.Ticks}";
+                var theme = _sharedThemeService.Mode.ToString()
+                    .ToLowerInvariant();
+                var accent = _sharedThemeService.OfficeColor.ToString()
+                    .ToLowerInvariant();
+                CurrentUrl =
+                    $"{baseUrl}?theme={theme}&accent={accent}&refresh={DateTime.Now.Ticks}";
 
-                StatusMessage = $"🔄 Refreshed with theme: {theme}, accent: {accent}";
-                Console.WriteLine($"🔄 [EMBEDDED DASHBOARD] Refreshed URL: {CurrentUrl}");
+                StatusMessage =
+                    $"🔄 Refreshed with theme: {theme}, accent: {accent}";
+                Console.WriteLine(
+                    $"🔄 [EMBEDDED DASHBOARD] Refreshed URL: {CurrentUrl}");
             }
         }
         catch (Exception ex)

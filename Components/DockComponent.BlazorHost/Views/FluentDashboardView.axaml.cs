@@ -13,11 +13,13 @@ public partial class FluentDashboardView : UserControl
         try
         {
             WebView.Settings.LogFile = "fluent-dashboard-webview.log";
-            System.Diagnostics.Debug.WriteLine("🌐 FluentDashboard WebView settings initialized");
+            System.Diagnostics.Debug.WriteLine(
+                "🌐 FluentDashboard WebView settings initialized");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"⚠️ FluentDashboard WebView settings init warning: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine(
+                $"⚠️ FluentDashboard WebView settings init warning: {ex.Message}");
         }
 
         InitializeComponent();
@@ -30,7 +32,8 @@ public partial class FluentDashboardView : UserControl
 
         if (DataContext is FluentDashboardViewModel viewModel)
         {
-            System.Diagnostics.Debug.WriteLine($"🎨 FluentDashboardView bound to ViewModel: {viewModel.Title}");
+            System.Diagnostics.Debug.WriteLine(
+                $"🎨 FluentDashboardView bound to ViewModel: {viewModel.Title}");
 
             // Watch for URL changes and update WebView
             viewModel.WhenAnyValue(x => x.DashboardUrl)
@@ -38,7 +41,8 @@ public partial class FluentDashboardView : UserControl
                 {
                     if (!string.IsNullOrEmpty(url) && DashboardWebView != null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"🎨 Setting FluentDashboard WebView URL: {url}");
+                        System.Diagnostics.Debug.WriteLine(
+                            $"🎨 Setting FluentDashboard WebView URL: {url}");
                         DashboardWebView.Address = url;
                     }
                 });

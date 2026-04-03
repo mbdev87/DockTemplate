@@ -17,10 +17,10 @@ public class LoggingDataService : ReactiveObject
     public LoggingDataService(LoggingService loggingService)
     {
         _loggingService = loggingService;
-        
+
         // Subscribe to logging service changes
         _loggingService.LogEntries.CollectionChanged += OnLogEntriesChanged;
-        
+
         // Initial load of existing entries
         RefreshFilteredEntries();
     }
@@ -51,7 +51,8 @@ public class LoggingDataService : ReactiveObject
         }
     }
 
-    public string[] LogLevels { get; } = { "All", "Debug", "Info", "Warn", "Error", "Fatal" };
+    public string[] LogLevels { get; } =
+        { "All", "Debug", "Info", "Warn", "Error", "Fatal" };
 
     public void ClearLogs()
     {
@@ -59,7 +60,8 @@ public class LoggingDataService : ReactiveObject
         RefreshFilteredEntries();
     }
 
-    private void OnLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnLogEntriesChanged(object? sender,
+        NotifyCollectionChangedEventArgs e)
     {
         RefreshFilteredEntries();
     }
@@ -70,26 +72,33 @@ public class LoggingDataService : ReactiveObject
         {
             var allEntries = _loggingService.LogEntries.ToList();
             var filtered = allEntries.AsEnumerable();
-            
+
             // Filter by log level
-            if (SelectedLogLevel != "All" && !string.IsNullOrEmpty(SelectedLogLevel))
+            if (SelectedLogLevel != "All" &&
+                !string.IsNullOrEmpty(SelectedLogLevel))
             {
-                filtered = filtered.Where(entry => entry.Level.Equals(SelectedLogLevel, StringComparison.OrdinalIgnoreCase));
+                filtered = filtered.Where(entry =>
+                    entry.Level.Equals(SelectedLogLevel,
+                        StringComparison.OrdinalIgnoreCase));
             }
-            
+
             // Filter by text
             if (!string.IsNullOrWhiteSpace(FilterText))
             {
                 var filterLower = FilterText.ToLowerInvariant();
-                filtered = filtered.Where(entry => 
+                filtered = filtered.Where(entry =>
                     entry.Message.ToLowerInvariant().Contains(filterLower) ||
-                    (entry.Exception?.ToLowerInvariant().Contains(filterLower) ?? false));
+                    (entry.Exception?.ToLowerInvariant()
+                        .Contains(filterLower) ?? false));
             }
-            
-            var filteredList = filtered.TakeLast(500).ToList(); // Limit displayed entries for performance
-            
+
+            var filteredList =
+                filtered.TakeLast(500)
+                    .ToList(); // Limit displayed entries for performance
+
             // Update collection efficiently by comparing current vs new
-            if (FilteredEntries.Count != filteredList.Count || !FilteredEntries.SequenceEqual(filteredList))
+            if (FilteredEntries.Count != filteredList.Count ||
+                !FilteredEntries.SequenceEqual(filteredList))
             {
                 FilteredEntries.Clear();
                 foreach (var entry in filteredList)
@@ -100,7 +109,8 @@ public class LoggingDataService : ReactiveObject
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[LoggingDataService] Error refreshing entries: {ex.Message}");
+            Console.WriteLine(
+                $"[LoggingDataService] Error refreshing entries: {ex.Message}");
         }
     }
 }

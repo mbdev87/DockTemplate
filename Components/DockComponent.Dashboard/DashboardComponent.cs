@@ -15,9 +15,10 @@ public class DashboardComponent : IDockComponent
     {
         // Register component services in DI container
         context.Services.AddSingleton<DashboardDataService>();
-        
+
         // Load component styles
-        var stylesUri = new Uri("avares://DockComponent.Dashboard/Styles.axaml");
+        var stylesUri =
+            new Uri("avares://DockComponent.Dashboard/Styles.axaml");
         context.RegisterResources(stylesUri);
 
         // Register Dashboard as a document - DI resolution will happen later

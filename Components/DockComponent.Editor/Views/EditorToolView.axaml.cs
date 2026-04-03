@@ -10,10 +10,10 @@ public partial class EditorToolView : UserControl
     public EditorToolView()
     {
         InitializeComponent();
-        
+
         DataContextChanged += OnDataContextChanged;
     }
-    
+
     private void OnDataContextChanged(object? sender, System.EventArgs e)
     {
         if (DataContext is EditorToolViewModel viewModel)

@@ -12,9 +12,12 @@ public class ErrorEntry
     public string? FullException { get; set; } = null!;
     public string? Source { get; set; }
     public int? Line { get; set; }
-    
+
     public string FormattedTimestamp => Timestamp.ToString("HH:mm:ss.fff");
-    public bool HasSourceLocation => !string.IsNullOrEmpty(Source) && Line.HasValue;
+
+    public bool HasSourceLocation =>
+        !string.IsNullOrEmpty(Source) && Line.HasValue;
+
     public string? Code { get; set; }
     public string? LoggerName { get; set; }
 }

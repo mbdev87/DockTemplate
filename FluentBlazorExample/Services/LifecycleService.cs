@@ -6,34 +6,33 @@ using Microsoft.Extensions.Logging;
 
 namespace FluentBlazorExample.Services;
 
-public class LifecycleService : BackgroundService
+public class LifecycleService(
+    ILogger<LifecycleService> logger,
+    IHostApplicationLifetime lifetime)
+    : BackgroundService
 {
-    private readonly ILogger<LifecycleService> _logger;
-    private readonly IHostApplicationLifetime _lifetime;
     private DateTime _lastHeartbeat = DateTime.UtcNow;
-    private readonly TimeSpan _heartbeatTimeout = TimeSpan.FromSeconds(10); // 2 missed 3-second intervals + buffer
 
-    public LifecycleService(ILogger<LifecycleService> logger, IHostApplicationLifetime lifetime)
-    {
-        _logger = logger;
-        _lifetime = lifetime;
-    }
+    private readonly TimeSpan
+        _heartbeatTimeout =
+            TimeSpan.FromSeconds(10); // 2 missed 3-second intervals + buffer
 
     public void UpdateHeartbeat()
     {
         _lastHeartbeat = DateTime.UtcNow;
-        _logger.LogDebug("Heartbeat updated at {Timestamp}", _lastHeartbeat);
+        logger.LogDebug("Heartbeat updated at {Timestamp}", _lastHeartbeat);
     }
 
     public void TriggerShutdown()
     {
-        _logger.LogInformation("Shutdown triggered via endpoint");
-        _lifetime.StopApplication();
+        logger.LogInformation("Shutdown triggered via endpoint");
+        lifetime.StopApplication();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Lifecycle monitoring started - checking every 5 seconds");
+        logger.LogInformation(
+            "Lifecycle monitoring started - checking every 5 seconds");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -45,15 +44,19 @@ public class LifecycleService : BackgroundService
 
                 if (timeSinceLastHeartbeat > _heartbeatTimeout)
                 {
-                    _logger.LogWarning("Heartbeat timeout detected! Last heartbeat: {LastHeartbeat}, Time since: {TimeSince}",
+                    logger.LogWarning(
+                        "Heartbeat timeout detected! Last heartbeat: {LastHeartbeat}, Time since: {TimeSince}",
                         _lastHeartbeat, timeSinceLastHeartbeat);
 
-                    _logger.LogInformation("Initiating self-shutdown due to heartbeat timeout");
-                    _lifetime.StopApplication();
+                    logger.LogInformation(
+                        "Initiating self-shutdown due to heartbeat timeout");
+                    lifetime.StopApplication();
                     break;
                 }
 
-                _logger.LogTrace("Heartbeat check passed - last heartbeat: {TimeSince} ago", timeSinceLastHeartbeat);
+                logger.LogTrace(
+                    "Heartbeat check passed - last heartbeat: {TimeSince} ago",
+                    timeSinceLastHeartbeat);
             }
             catch (OperationCanceledException)
             {
@@ -62,10 +65,10 @@ public class LifecycleService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in heartbeat monitoring");
+                logger.LogError(ex, "Error in heartbeat monitoring");
             }
         }
 
-        _logger.LogInformation("Lifecycle monitoring stopped");
+        logger.LogInformation("Lifecycle monitoring stopped");
     }
 }

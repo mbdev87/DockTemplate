@@ -5,7 +5,7 @@
 <FluentButton Appearance="Appearance.Stealth"
               OnClick="ToggleTheme"
               Title="@GetThemeTitle()"
-              IconStart="@GetThemeIcon()" />
+              IconStart="@GetThemeIcon()"/>
 
 @code {
     private bool _disposed = false;
@@ -76,4 +76,5 @@
         _disposed = true;
         ThemeService.ThemeChanged -= OnThemeChanged;
     }
+
 }

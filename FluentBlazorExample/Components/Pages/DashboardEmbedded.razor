@@ -21,12 +21,20 @@
 
         <!-- Header Card -->
         <FluentCard>
-            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                    <FluentIcon Value="@(new Icons.Regular.Size28.DataUsage())" Color="Color.Accent" />
-                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
-                        <h2 style="margin: 0; color: var(--accent-fill-rest);">Project Analytics Dashboard</h2>
-                        <p style="margin: 0; color: var(--neutral-foreground-rest);">File System Analysis</p>
+            <FluentStack Orientation="Orientation.Horizontal"
+                         VerticalAlignment="VerticalAlignment.Center"
+                         HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                <FluentStack Orientation="Orientation.Horizontal"
+                             VerticalAlignment="VerticalAlignment.Center"
+                             HorizontalGap="12">
+                    <FluentIcon Value="@(new Icons.Regular.Size28.DataUsage())"
+                                Color="Color.Accent"/>
+                    <FluentStack Orientation="Orientation.Vertical"
+                                 VerticalGap="0">
+                        <h2 style="margin: 0; color: var(--accent-fill-rest);">
+                            Project Analytics Dashboard</h2>
+                        <p style="margin: 0; color: var(--neutral-foreground-rest);">
+                            File System Analysis</p>
                     </FluentStack>
                 </FluentStack>
                 <FluentButton Appearance="Appearance.Accent"
@@ -35,7 +43,7 @@
                               IconStart="@(new Icons.Regular.Size16.ArrowClockwise())">
                     @if (_isLoading)
                     {
-                        <FluentProgressRing Style="width: 16px; height: 16px;" />
+                        <FluentProgressRing Style="width: 16px; height: 16px;"/>
                         <span style="margin-left: 8px;">Loading...</span>
                     }
                     else
@@ -50,10 +58,15 @@
         <FluentGrid Spacing="3" Justify="JustifyContent.FlexStart">
             <FluentGridItem xs="12" md="4">
                 <FluentCard>
-                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                        <FluentIcon Value="@(new Icons.Regular.Size24.Folder())" Color="Color.Accent" />
-                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
-                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">Total Files</p>
+                    <FluentStack Orientation="Orientation.Horizontal"
+                                 VerticalAlignment="VerticalAlignment.Center"
+                                 HorizontalGap="12">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Folder())"
+                                    Color="Color.Accent"/>
+                        <FluentStack Orientation="Orientation.Vertical"
+                                     VerticalGap="0">
+                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">
+                                Total Files</p>
                             <h3 style="margin: 0; color: var(--accent-fill-rest);">@TotalFiles</h3>
                         </FluentStack>
                     </FluentStack>
@@ -62,10 +75,16 @@
 
             <FluentGridItem xs="12" md="4">
                 <FluentCard>
-                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                        <FluentIcon Value="@(new Icons.Regular.Size24.Database())" Color="Color.Success" />
-                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
-                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">Total Size</p>
+                    <FluentStack Orientation="Orientation.Horizontal"
+                                 VerticalAlignment="VerticalAlignment.Center"
+                                 HorizontalGap="12">
+                        <FluentIcon
+                            Value="@(new Icons.Regular.Size24.Database())"
+                            Color="Color.Success"/>
+                        <FluentStack Orientation="Orientation.Vertical"
+                                     VerticalGap="0">
+                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">
+                                Total Size</p>
                             <h3 style="margin: 0; color: var(--success-fill-rest);">@TotalSizeFormatted</h3>
                         </FluentStack>
                     </FluentStack>
@@ -74,10 +93,15 @@
 
             <FluentGridItem xs="12" md="4">
                 <FluentCard>
-                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                        <FluentIcon Value="@(new Icons.Regular.Size24.Tag())" Color="Color.Warning" />
-                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
-                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">File Types</p>
+                    <FluentStack Orientation="Orientation.Horizontal"
+                                 VerticalAlignment="VerticalAlignment.Center"
+                                 HorizontalGap="12">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Tag())"
+                                    Color="Color.Warning"/>
+                        <FluentStack Orientation="Orientation.Vertical"
+                                     VerticalGap="0">
+                            <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">
+                                File Types</p>
                             <h3 style="margin: 0; color: var(--warning-fill-rest);">@FileTypeStats.Count</h3>
                         </FluentStack>
                     </FluentStack>
@@ -88,18 +112,22 @@
         <!-- Data Grid -->
         <FluentCard>
             <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                <FluentStack Orientation="Orientation.Horizontal"
+                             VerticalAlignment="VerticalAlignment.Center"
+                             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
                     <h4 style="margin: 0;">File Details</h4>
                     <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">@Files.Count files</p>
                 </FluentStack>
 
                 <!-- Search Bar -->
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                <FluentStack Orientation="Orientation.Horizontal"
+                             VerticalAlignment="VerticalAlignment.Center"
+                             HorizontalGap="12">
                     <FluentTextField @bind-Value="SearchString"
                                      @oninput="OnSearchInput"
                                      @onkeypress="OnSearchKeyPress"
                                      Placeholder="Search files..."
-                                     Style="flex: 1; min-width: 250px;" />
+                                     Style="flex: 1; min-width: 250px;"/>
                     <FluentButton Appearance="Appearance.Accent"
                                   OnClick="PerformSearch"
                                   IconStart="@(new Icons.Regular.Size16.Search())">
@@ -118,15 +146,21 @@
                     <FluentDataGrid Items="@FilteredFiles.AsQueryable()"
                                     Pagination="@pagination"
                                     TGridItem="FileInfoItem">
-                        <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Name" />
-                        <PropertyColumn Property="@(c => c.Type)" Sortable="true" Title="Type" />
-                        <PropertyColumn Property="@(c => c.Extension)" Sortable="true" Title="Extension" />
-                        <PropertyColumn Property="@(c => c.SizeFormatted)" Sortable="false" Title="Size" />
-                        <PropertyColumn Property="@(c => c.Lines)" Sortable="true" Title="Lines" />
-                        <PropertyColumn Property="@(c => c.ModifiedFormatted)" Sortable="false" Title="Modified" />
+                        <PropertyColumn Property="@(c => c.Name)"
+                                        Sortable="true" Title="Name"/>
+                        <PropertyColumn Property="@(c => c.Type)"
+                                        Sortable="true" Title="Type"/>
+                        <PropertyColumn Property="@(c => c.Extension)"
+                                        Sortable="true" Title="Extension"/>
+                        <PropertyColumn Property="@(c => c.SizeFormatted)"
+                                        Sortable="false" Title="Size"/>
+                        <PropertyColumn Property="@(c => c.Lines)"
+                                        Sortable="true" Title="Lines"/>
+                        <PropertyColumn Property="@(c => c.ModifiedFormatted)"
+                                        Sortable="false" Title="Modified"/>
                     </FluentDataGrid>
 
-                    <FluentPaginator State="@pagination" />
+                    <FluentPaginator State="@pagination"/>
                 }
                 else
                 {
@@ -134,9 +168,11 @@
                                  VerticalAlignment="VerticalAlignment.Center"
                                  HorizontalAlignment="HorizontalAlignment.Center"
                                  Style="padding: 40px; text-align: center;">
-                        <FluentIcon Value="@(new Icons.Regular.Size48.Folder())" Color="Color.Neutral" />
+                        <FluentIcon Value="@(new Icons.Regular.Size48.Folder())"
+                                    Color="Color.Neutral"/>
                         <h5 style="margin-top: 12px;">No files found</h5>
-                        <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">Click refresh to scan the project files</p>
+                        <p style="margin: 0; font-size: 12px; color: var(--neutral-foreground-rest);">
+                            Click refresh to scan the project files</p>
                     </FluentStack>
                 }
             </FluentStack>
@@ -147,6 +183,7 @@
 </div>
 
 @code {
+
     [SupplyParameterFromQuery(Name = "theme")]
     public string? ThemeMode { get; set; }
 
@@ -325,4 +362,5 @@
         Dispose();
         return ValueTask.CompletedTask;
     }
+
 }

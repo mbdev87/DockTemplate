@@ -21,6 +21,7 @@ public class FileInfoItem
             order++;
             len = len / 1024;
         }
+
         return $"{len:0.##} {sizes[order]}";
     }
 }
@@ -44,6 +45,7 @@ public class FileTypeStats
             order++;
             len = len / 1024;
         }
+
         return $"{len:0.##} {sizes[order]}";
     }
 }
@@ -66,6 +68,7 @@ public class DashboardData
             order++;
             len = len / 1024;
         }
+
         return $"{len:0.##} {sizes[order]}";
     }
 }

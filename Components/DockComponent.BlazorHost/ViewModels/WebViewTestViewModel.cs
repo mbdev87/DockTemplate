@@ -2,7 +2,7 @@
 
 namespace DockComponent.BlazorHost.ViewModels;
 
-public class WebViewTestViewModel: Document, IDisposable
+public class WebViewTestViewModel : Document, IDisposable
 {
     public void Dispose()
     {

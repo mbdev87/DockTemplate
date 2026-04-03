@@ -18,12 +18,13 @@ public partial class DashboardView : UserControl
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
         Loaded += OnLoaded;
-        
+
         // Listen for theme changes
         PropertyChanged += OnPropertyChanged;
     }
 
-    private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void OnPropertyChanged(object? sender,
+        AvaloniaPropertyChangedEventArgs e)
     {
         if (e.Property.Name == nameof(ActualThemeVariant))
         {
@@ -31,7 +32,8 @@ public partial class DashboardView : UserControl
         }
     }
 
-    private void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void OnLoaded(object? sender,
+        Avalonia.Interactivity.RoutedEventArgs e)
     {
         // Trigger chart updates when the view is loaded
         Dispatcher.UIThread.Post(() =>
@@ -62,7 +64,8 @@ public partial class DashboardView : UserControl
             // Subscribe to collection changes
             if (viewModel.FileTypeStats != null)
             {
-                viewModel.FileTypeStats.CollectionChanged += OnFileTypeStatsChanged;
+                viewModel.FileTypeStats.CollectionChanged +=
+                    OnFileTypeStatsChanged;
             }
 
             if (viewModel.Files != null)
@@ -82,12 +85,14 @@ public partial class DashboardView : UserControl
         }
     }
 
-    private void OnFileTypeStatsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnFileTypeStatsChanged(object? sender,
+        NotifyCollectionChangedEventArgs e)
     {
         Dispatcher.UIThread.Post(UpdatePieChart);
     }
 
-    private void OnFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnFilesChanged(object? sender,
+        NotifyCollectionChangedEventArgs e)
     {
         Dispatcher.UIThread.Post(UpdateBarChart);
     }
@@ -103,11 +108,11 @@ public partial class DashboardView : UserControl
         if (_pieChart?.Plot == null) return;
 
         _pieChart.Plot.Clear();
-        
+
         // Configure the plot appearance using current theme
         var bgColor = GetThemeBackgroundColor();
         var fgColor = GetThemeForegroundColor();
-        
+
         _pieChart.Plot.FigureBackground.Color = bgColor;
         _pieChart.Plot.DataBackground.Color = bgColor;
 
@@ -124,11 +129,11 @@ public partial class DashboardView : UserControl
         if (_barChart?.Plot == null) return;
 
         _barChart.Plot.Clear();
-        
+
         // Configure the plot appearance using current theme
         var bgColor = GetThemeBackgroundColor();
         var fgColor = GetThemeForegroundColor();
-        
+
         _barChart.Plot.FigureBackground.Color = bgColor;
         _barChart.Plot.DataBackground.Color = bgColor;
 
@@ -142,18 +147,21 @@ public partial class DashboardView : UserControl
 
     private void UpdatePieChart()
     {
-        if (_pieChart?.Plot == null || DataContext is not DashboardViewModel viewModel) return;
+        if (_pieChart?.Plot == null ||
+            DataContext is not DashboardViewModel viewModel) return;
 
         _pieChart.Plot.Clear();
-        
+
         // Configure the plot appearance using current theme
         var bgColor = GetThemeBackgroundColor();
         var fgColor = GetThemeForegroundColor();
-        
+
         _pieChart.Plot.FigureBackground.Color = bgColor;
         _pieChart.Plot.DataBackground.Color = bgColor;
 
-        var stats = viewModel.FileTypeStats.Take(8).ToList(); // Limit to top 8 for readability
+        var stats =
+            viewModel.FileTypeStats.Take(8)
+                .ToList(); // Limit to top 8 for readability
         if (!stats.Any())
         {
             var text = _pieChart.Plot.Add.Text("No data available", 0, 0);
@@ -170,7 +178,7 @@ public partial class DashboardView : UserControl
 
             // Create pie chart - simplified for compatibility
             var pie = _pieChart.Plot.Add.Pie(values);
-            
+
             // Set colors for different file types
             var colors = new ScottPlot.Color[]
             {
@@ -181,7 +189,7 @@ public partial class DashboardView : UserControl
                 ScottPlot.Color.FromHex("#EF4444"), // Red
                 ScottPlot.Color.FromHex("#06B6D4"), // Cyan
                 ScottPlot.Color.FromHex("#F97316"), // Orange variant
-                ScottPlot.Color.FromHex("#84CC16")  // Lime
+                ScottPlot.Color.FromHex("#84CC16") // Lime
             };
 
             // Apply colors to pie slices
@@ -212,7 +220,8 @@ public partial class DashboardView : UserControl
         catch (Exception ex)
         {
             // If pie chart fails, show a simple message
-            var errorText = _pieChart.Plot.Add.Text($"Chart error: {ex.Message}", 0, 0);
+            var errorText =
+                _pieChart.Plot.Add.Text($"Chart error: {ex.Message}", 0, 0);
             errorText.LabelFontColor = ScottPlot.Color.FromHex("#EF4444");
             errorText.LabelFontSize = 10;
         }
@@ -222,18 +231,20 @@ public partial class DashboardView : UserControl
 
     private void UpdateBarChart()
     {
-        if (_barChart?.Plot == null || DataContext is not DashboardViewModel viewModel) return;
+        if (_barChart?.Plot == null ||
+            DataContext is not DashboardViewModel viewModel) return;
 
         _barChart.Plot.Clear();
-        
+
         // Configure the plot appearance using current theme
         var bgColor = GetThemeBackgroundColor();
         var fgColor = GetThemeForegroundColor();
-        
+
         _barChart.Plot.FigureBackground.Color = bgColor;
         _barChart.Plot.DataBackground.Color = bgColor;
 
-        var files = viewModel.Files.Where(f => f.Size > 0).OrderByDescending(f => f.Size).Take(10).ToList();
+        var files = viewModel.Files.Where(f => f.Size > 0)
+            .OrderByDescending(f => f.Size).Take(10).ToList();
         if (!files.Any())
         {
             var text = _barChart.Plot.Add.Text("No data available", 0, 0);
@@ -246,12 +257,13 @@ public partial class DashboardView : UserControl
         try
         {
             // Prepare data
-            var positions = Enumerable.Range(0, files.Count).Select(i => (double)i).ToArray();
+            var positions = Enumerable.Range(0, files.Count)
+                .Select(i => (double)i).ToArray();
             var sizes = files.Select(f => (double)f.Size).ToArray();
 
             // Create bar chart for file sizes
             var bars = _barChart.Plot.Add.Bars(positions, sizes);
-            
+
             // Set bar colors
             foreach (var bar in bars.Bars)
             {
@@ -274,13 +286,16 @@ public partial class DashboardView : UserControl
             _barChart.Plot.Axes.Bottom.MajorTickStyle.Color = fgColor;
 
             // Set tick labels for file names (abbreviated)
-            var tickLabels = files.Select(f => f.Name.Length > 10 ? f.Name[..7] + "..." : f.Name).ToArray();
+            var tickLabels = files
+                .Select(f => f.Name.Length > 10 ? f.Name[..7] + "..." : f.Name)
+                .ToArray();
             _barChart.Plot.Axes.Bottom.SetTicks(positions, tickLabels);
         }
         catch (Exception ex)
         {
             // If bar chart fails, show a simple message
-            var errorText = _barChart.Plot.Add.Text($"Chart error: {ex.Message}", 0, 0);
+            var errorText =
+                _barChart.Plot.Add.Text($"Chart error: {ex.Message}", 0, 0);
             errorText.LabelFontColor = ScottPlot.Color.FromHex("#EF4444");
             errorText.LabelFontSize = 10;
         }
@@ -292,35 +307,41 @@ public partial class DashboardView : UserControl
     {
         // Try to get theme from Application first, then fall back to ActualThemeVariant
         var app = Application.Current;
-        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark || ActualThemeVariant == ThemeVariant.Dark;
-        
+        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark ||
+                         ActualThemeVariant == ThemeVariant.Dark;
+
         // Use appropriate colors based on theme
-        return isDarkMode ? 
-            ScottPlot.Color.FromHex("#1E1E1E") :  // Dark theme background
-            ScottPlot.Color.FromHex("#FFFFFF");   // Light theme background
+        return isDarkMode
+            ? ScottPlot.Color.FromHex("#1E1E1E")
+            : // Dark theme background
+            ScottPlot.Color.FromHex("#FFFFFF"); // Light theme background
     }
 
     private ScottPlot.Color GetThemeForegroundColor()
     {
         // Try to get theme from Application first, then fall back to ActualThemeVariant
         var app = Application.Current;
-        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark || ActualThemeVariant == ThemeVariant.Dark;
-        
+        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark ||
+                         ActualThemeVariant == ThemeVariant.Dark;
+
         // Use appropriate colors based on theme
-        return isDarkMode ? 
-            ScottPlot.Color.FromHex("#CCCCCC") :  // Dark theme foreground
-            ScottPlot.Color.FromHex("#1E1E1E");   // Light theme foreground
+        return isDarkMode
+            ? ScottPlot.Color.FromHex("#CCCCCC")
+            : // Dark theme foreground
+            ScottPlot.Color.FromHex("#1E1E1E"); // Light theme foreground
     }
 
     private ScottPlot.Color GetThemeCardColor()
     {
         // Try to get theme from Application first, then fall back to ActualThemeVariant
         var app = Application.Current;
-        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark || ActualThemeVariant == ThemeVariant.Dark;
-        
+        var isDarkMode = app?.ActualThemeVariant == ThemeVariant.Dark ||
+                         ActualThemeVariant == ThemeVariant.Dark;
+
         // Use appropriate colors based on theme
-        return isDarkMode ? 
-            ScottPlot.Color.FromHex("#2D2D2D") :  // Dark theme card color
-            ScottPlot.Color.FromHex("#F5F5F5");   // Light theme card color
+        return isDarkMode
+            ? ScottPlot.Color.FromHex("#2D2D2D")
+            : // Dark theme card color
+            ScottPlot.Color.FromHex("#F5F5F5"); // Light theme card color
     }
 }

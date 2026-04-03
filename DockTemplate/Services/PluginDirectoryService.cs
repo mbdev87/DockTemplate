@@ -7,17 +7,19 @@ namespace DockTemplate.Services;
 public static class PluginDirectoryService
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     /// <summary>
     /// Gets the LocalAppData plugin directory: %LOCALAPPDATA%\DockTemplate\Components\
     /// </summary>
     public static string GetLocalAppDataPluginPath()
     {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var localAppData =
+            Environment.GetFolderPath(Environment.SpecialFolder
+                .LocalApplicationData);
         return Path.Combine(localAppData, "DockTemplate", "Components");
     }
 
-    
+
     /// <summary>
     /// Gets all plugin directories to scan (LocalAppData only)
     /// </summary>
@@ -25,10 +27,10 @@ public static class PluginDirectoryService
     {
         return new[]
         {
-            GetLocalAppDataPluginPath(),    // Production plugins
+            GetLocalAppDataPluginPath(), // Production plugins
         };
     }
-    
+
     /// <summary>
     /// Ensures the LocalAppData plugin directory exists
     /// </summary>
@@ -40,11 +42,13 @@ public static class PluginDirectoryService
             if (!Directory.Exists(pluginPath))
             {
                 Directory.CreateDirectory(pluginPath);
-                Logger.Info($"Created LocalAppData plugin directory: {pluginPath}");
+                Logger.Info(
+                    $"Created LocalAppData plugin directory: {pluginPath}");
             }
             else
             {
-                Logger.Info($"LocalAppData plugin directory exists: {pluginPath}");
+                Logger.Info(
+                    $"LocalAppData plugin directory exists: {pluginPath}");
             }
         }
         catch (Exception ex)

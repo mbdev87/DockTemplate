@@ -16,7 +16,7 @@ public static class FileOpenedHelper
     {
         var data = new FileOpenedMsg(filePath, fileName, language);
         var json = JsonSerializer.Serialize(data);
-        
+
         var message = new ComponentMessage("EditorComponent_FileOpened", json);
         MessageBus.Current.SendMessage(message);
     }

@@ -25,16 +25,19 @@ public class ThemeService : IThemeService
             {
                 var oldValue = _mode;
                 _mode = value;
-                Console.WriteLine($"[THEME] ThemeService: Mode changed from {oldValue} to {_mode}");
+                Console.WriteLine(
+                    $"[THEME] ThemeService: Mode changed from {oldValue} to {_mode}");
 
                 try
                 {
                     ThemeChanged?.Invoke();
-                    Console.WriteLine($"[THEME] ThemeService: ThemeChanged event fired");
+                    Console.WriteLine(
+                        $"[THEME] ThemeService: ThemeChanged event fired");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[THEME] ThemeService: Error firing ThemeChanged event: {ex.Message}");
+                    Console.WriteLine(
+                        $"[THEME] ThemeService: Error firing ThemeChanged event: {ex.Message}");
                 }
             }
         }
@@ -48,7 +51,8 @@ public class ThemeService : IThemeService
             if (_officeColor != value)
             {
                 _officeColor = value;
-                Console.WriteLine($"ThemeService: OfficeColor changed to {_officeColor}");
+                Console.WriteLine(
+                    $"ThemeService: OfficeColor changed to {_officeColor}");
                 ThemeChanged?.Invoke();
             }
         }
@@ -63,7 +67,8 @@ public class ThemeService : IThemeService
     public void ToggleTheme()
     {
         var currentMode = Mode;
-        Console.WriteLine($"[THEME] ThemeService: ToggleTheme() called, current mode: {currentMode}");
+        Console.WriteLine(
+            $"[THEME] ThemeService: ToggleTheme() called, current mode: {currentMode}");
 
         var newMode = currentMode switch
         {
@@ -73,8 +78,10 @@ public class ThemeService : IThemeService
             _ => DesignThemeModes.System
         };
 
-        Console.WriteLine($"[THEME] ThemeService: Setting mode from {currentMode} to {newMode}");
+        Console.WriteLine(
+            $"[THEME] ThemeService: Setting mode from {currentMode} to {newMode}");
         Mode = newMode;
-        Console.WriteLine($"[THEME] ThemeService: ToggleTheme() completed, final mode: {Mode}");
+        Console.WriteLine(
+            $"[THEME] ThemeService: ToggleTheme() completed, final mode: {Mode}");
     }
 }

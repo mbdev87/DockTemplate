@@ -7,7 +7,7 @@ namespace DockComponent.Editor.Views;
 public class LineHighlightRenderer : IBackgroundRenderer
 {
     public int? HighlightedLine { get; set; }
-    
+
     public KnownLayer Layer => KnownLayer.Background;
 
     public void Draw(TextView textView, DrawingContext drawingContext)
@@ -22,24 +22,28 @@ public class LineHighlightRenderer : IBackgroundRenderer
                 return;
 
             var line = textView.Document.GetLineByNumber(lineNumber);
-            
+
             foreach (var visualLine in textView.VisualLines)
             {
-                if (visualLine.FirstDocumentLine.LineNumber <= lineNumber && 
+                if (visualLine.FirstDocumentLine.LineNumber <= lineNumber &&
                     visualLine.LastDocumentLine.LineNumber >= lineNumber)
                 {
-                    var lineTop = visualLine.VisualTop - textView.ScrollOffset.Y;
+                    var lineTop =
+                        visualLine.VisualTop - textView.ScrollOffset.Y;
                     var lineHeight = visualLine.Height;
-                    
-                    if (lineTop + lineHeight >= 0 && lineTop <= textView.Bounds.Height)
+
+                    if (lineTop + lineHeight >= 0 &&
+                        lineTop <= textView.Bounds.Height)
                     {
                         var rect = new Rect(
-                            0, 
+                            0,
                             lineTop,
                             Math.Max(textView.Bounds.Width, 2000),
                             lineHeight);
 
-                        var brush = new SolidColorBrush(Color.FromArgb(120, 255, 255, 0));
+                        var brush =
+                            new SolidColorBrush(
+                                Color.FromArgb(120, 255, 255, 0));
                         drawingContext.DrawRectangle(brush, null, rect);
                     }
                 }

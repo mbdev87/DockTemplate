@@ -15,8 +15,10 @@
         </Grid.RowDefinitions>
 
         <!-- Control Panel -->
-        <Border Grid.Row="0" Background="{DynamicResource TextControlBackground}" 
-                BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="0,0,0,1" 
+        <Border Grid.Row="0"
+                Background="{DynamicResource TextControlBackground}"
+                BorderBrush="{DynamicResource TextControlBorderBrush}"
+                BorderThickness="0,0,0,1"
                 Padding="15,10">
             <Grid>
                 <Grid.RowDefinitions>
@@ -25,12 +27,14 @@
                 </Grid.RowDefinitions>
 
                 <!-- Title Row -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+                <StackPanel Grid.Row="0" Orientation="Horizontal"
+                            VerticalAlignment="Center" Margin="0,0,0,10">
                     <TextBlock Text="🌐" FontSize="16" Margin="0,0,8,0" />
-                    <TextBlock Text="Web Host" FontWeight="Bold" FontSize="14" 
-                               Foreground="{DynamicResource SystemAccentColor}" Margin="0,0,15,0" />
-                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" 
-                               Foreground="{DynamicResource TextForegroundColor}" 
+                    <TextBlock Text="Web Host" FontWeight="Bold" FontSize="14"
+                               Foreground="{DynamicResource SystemAccentColor}"
+                               Margin="0,0,15,0" />
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                               Foreground="{DynamicResource TextForegroundColor}"
                                VerticalAlignment="Center" />
                 </StackPanel>
 
@@ -48,31 +52,33 @@
                              FontSize="12" Padding="8,6" Margin="0,0,10,0" />
 
                     <!-- Action Buttons -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                Spacing="8">
                         <Button Content="📋 Load" FontSize="11" Padding="12,6"
                                 Command="{Binding LoadUrlCommand}"
                                 CommandParameter="{Binding #UrlTextBox.Text}"
                                 Background="{DynamicResource SystemAccentColorDark1}"
                                 Foreground="White" CornerRadius="4" />
-                        
+
                         <Button Content="🗑️ Clear" FontSize="11" Padding="8,6"
                                 Command="{Binding ClearCommand}"
-                                Background="#DC3545" Foreground="White" CornerRadius="4"
+                                Background="#DC3545" Foreground="White"
+                                CornerRadius="4"
                                 IsVisible="{Binding IsLoaded}" />
-                        
+
                         <Button Content="📋" FontSize="11" Padding="8,6"
                                 Command="{Binding CopyUrlCommand}"
                                 Background="{DynamicResource TextControlBackground}"
-                                Foreground="{DynamicResource TextForegroundColor}" 
+                                Foreground="{DynamicResource TextForegroundColor}"
                                 BorderBrush="{DynamicResource TextControlBorderBrush}"
                                 BorderThickness="1" CornerRadius="4"
                                 IsVisible="{Binding IsLoaded}"
                                 ToolTip.Tip="Copy URL" />
-                        
+
                         <Button Content="🌐" FontSize="11" Padding="8,6"
                                 Command="{Binding OpenInBrowserCommand}"
                                 Background="{DynamicResource TextControlBackground}"
-                                Foreground="{DynamicResource TextForegroundColor}" 
+                                Foreground="{DynamicResource TextForegroundColor}"
                                 BorderBrush="{DynamicResource TextControlBorderBrush}"
                                 BorderThickness="1" CornerRadius="4"
                                 IsVisible="{Binding IsLoaded}"
@@ -84,39 +90,53 @@
 
         <!-- WebView Container -->
         <Border Grid.Row="1" Background="{DynamicResource EditorBackground}"
-                BorderBrush="{DynamicResource TextControlBorderBrush}" BorderThickness="0">
+                BorderBrush="{DynamicResource TextControlBorderBrush}"
+                BorderThickness="0">
             <Grid>
                 <!-- Actual WebView (shown when URL is loaded) -->
                 <webView:WebView x:Name="BlazorWebView"
-                               IsVisible="{Binding IsLoaded}"
-                               Address="{Binding CurrentUrl}"
-                               Margin="2" />
+                                 IsVisible="{Binding IsLoaded}"
+                                 Address="{Binding CurrentUrl}"
+                                 Margin="2" />
 
                 <!-- Empty State (shown when no URL) -->
                 <Border IsVisible="{Binding !IsLoaded}"
                         Background="{DynamicResource EditorBackground}">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="15">
-                        <TextBlock Text="🌐" FontSize="48" HorizontalAlignment="Center" />
-                        <TextBlock Text="Web Host Component" 
-                                   FontSize="18" FontWeight="Bold" 
-                                   Foreground="{DynamicResource SystemAccentColor}" 
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center" Spacing="15">
+                        <TextBlock Text="🌐" FontSize="48"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="Enter a URL above to load web content" 
-                                   FontSize="14" Foreground="{DynamicResource TextForegroundColor}" 
+                        <TextBlock Text="Web Host Component"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource SystemAccentColor}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="Powered by OutSystems WebView + Chromium - full browser rendering within your desktop app!" 
-                                   FontSize="12" Foreground="{DynamicResource EditorForeground}" 
-                                   HorizontalAlignment="Center" TextWrapping="Wrap"
-                                   MaxWidth="400" TextAlignment="Center" />
-                        
-                        <StackPanel Spacing="8" HorizontalAlignment="Center" Margin="0,10,0,0">
-                            <TextBlock Text="Try these examples:" FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextForegroundColor}" HorizontalAlignment="Center" />
-                            <TextBlock Text="• localhost:5000" FontSize="11" Foreground="{DynamicResource EditorForeground}" 
+                        <TextBlock Text="Enter a URL above to load web content"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextForegroundColor}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock
+                            Text="Powered by OutSystems WebView + Chromium - full browser rendering within your desktop app!"
+                            FontSize="12"
+                            Foreground="{DynamicResource EditorForeground}"
+                            HorizontalAlignment="Center" TextWrapping="Wrap"
+                            MaxWidth="400" TextAlignment="Center" />
+
+                        <StackPanel Spacing="8" HorizontalAlignment="Center"
+                                    Margin="0,10,0,0">
+                            <TextBlock Text="Try these examples:" FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextForegroundColor}"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Text="• https://google.com" FontSize="11" Foreground="{DynamicResource EditorForeground}" 
+                            <TextBlock Text="• localhost:5000" FontSize="11"
+                                       Foreground="{DynamicResource EditorForeground}"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Text="• https://blazor.net" FontSize="11" Foreground="{DynamicResource EditorForeground}" 
+                            <TextBlock Text="• https://google.com"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource EditorForeground}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="• https://blazor.net"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource EditorForeground}"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </StackPanel>

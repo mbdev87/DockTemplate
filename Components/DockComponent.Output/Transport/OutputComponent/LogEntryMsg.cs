@@ -8,7 +8,11 @@ namespace DockComponent.Output.Transport.OutputComponent;
 /// Message emitted when Output logs an entry
 /// Contract: OutputComponent_LogEntry (v1)
 /// </summary>
-public record LogEntryMsg(string Level, string Message, string Source, DateTime Timestamp);
+public record LogEntryMsg(
+    string Level,
+    string Message,
+    string Source,
+    DateTime Timestamp);
 
 public static class LogEntryHelper
 {
@@ -16,7 +20,7 @@ public static class LogEntryHelper
     {
         var data = new LogEntryMsg(level, message, source, DateTime.UtcNow);
         var json = JsonSerializer.Serialize(data);
-        
+
         var message2 = new ComponentMessage("OutputComponent_LogEntry", json);
         MessageBus.Current.SendMessage(message2);
     }

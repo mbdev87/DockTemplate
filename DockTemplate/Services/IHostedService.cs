@@ -26,13 +26,15 @@ public abstract class BackgroundService : IHostedService, IDisposable
                     {
                         await ExecuteAsync(_stoppingCts.Token);
                     }
-                    catch (OperationCanceledException) when (_stoppingCts.Token.IsCancellationRequested)
+                    catch (OperationCanceledException) when (_stoppingCts.Token
+                        .IsCancellationRequested)
                     {
                         // Expected during shutdown
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error(ex, $"Background service failed: {ex.Message}");
+                        Logger.Error(ex,
+                            $"Background service failed: {ex.Message}");
                         throw;
                     }
                 },
@@ -50,7 +52,8 @@ public abstract class BackgroundService : IHostedService, IDisposable
         if (_executingTask == null) return;
 
         await _stoppingCts.CancelAsync();
-        await Task.WhenAny(_executingTask, Task.Delay(TimeSpan.FromSeconds(30), cancellationToken));
+        await Task.WhenAny(_executingTask,
+            Task.Delay(TimeSpan.FromSeconds(30), cancellationToken));
     }
 
     protected abstract Task ExecuteAsync(CancellationToken stoppingToken);

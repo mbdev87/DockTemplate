@@ -9,22 +9,20 @@ using DockComponent.Base;
 
 namespace DockTemplate.Services;
 
-public class AcrylicLayoutManager : ReactiveObject
+public class AcrylicLayoutManager(ISettingsService? settingsService = null)
+    : ReactiveObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
-    [Reactive] public bool IsAcrylicLayoutActive { get; set; } = true; // Start in acrylic mode
+
+    [Reactive]
+    public bool IsAcrylicLayoutActive { get; set; } =
+        true; // Start in acrylic mode
+
     [Reactive] public IDockable? AcrylicSidebarTool { get; set; }
-    
-    private readonly ComponentRegistry _componentRegistry;
-    private readonly ISettingsService? _settingsService;
-    
-    public AcrylicLayoutManager(ISettingsService? settingsService = null)
-    {
-        _componentRegistry = ComponentRegistry.Instance;
-        _settingsService = settingsService;
-    }
-    
+
+    private readonly ComponentRegistry _componentRegistry =
+        ComponentRegistry.Instance;
+
     /// <summary>
     /// Initialize acrylic setting early during app startup (synchronous)
     /// </summary>
@@ -33,9 +31,11 @@ public class AcrylicLayoutManager : ReactiveObject
         try
         {
             // Use global settings (already loaded by ThemeService)
-            IsAcrylicLayoutActive = DockComponent.Base.GlobalSettings.EnableAcrylic;
+            IsAcrylicLayoutActive =
+                DockComponent.Base.GlobalSettings.EnableAcrylic;
             _isEarlyInitialized = true;
-            Logger.Info($"🎨 Loaded acrylic setting EARLY from global settings: {IsAcrylicLayoutActive}");
+            Logger.Info(
+                $"🎨 Loaded acrylic setting EARLY from global settings: {IsAcrylicLayoutActive}");
         }
         catch (Exception ex)
         {
@@ -53,27 +53,30 @@ public class AcrylicLayoutManager : ReactiveObject
     public void InitializeAcrylicMode()
     {
         // Only load from settings service if we didn't already load early
-        if (!_isEarlyInitialized && _settingsService != null)
+        if (!_isEarlyInitialized && settingsService != null)
         {
-            IsAcrylicLayoutActive = _settingsService.Settings.UI.EnableAcrylic;
-            Logger.Info($"🎨 Loaded acrylic setting from config: {IsAcrylicLayoutActive}");
+            IsAcrylicLayoutActive = settingsService.Settings.UI.EnableAcrylic;
+            Logger.Info(
+                $"🎨 Loaded acrylic setting from config: {IsAcrylicLayoutActive}");
         }
         else if (_isEarlyInitialized)
         {
-            Logger.Info($"🎨 Acrylic setting already loaded early: {IsAcrylicLayoutActive}");
+            Logger.Info(
+                $"🎨 Acrylic setting already loaded early: {IsAcrylicLayoutActive}");
         }
-        
+
         if (IsAcrylicLayoutActive)
         {
             var primaryLeftTool = GetPrimaryLeftTool();
             if (primaryLeftTool != null)
             {
                 AcrylicSidebarTool = primaryLeftTool;
-                Logger.Info($"🎨 Initialized acrylic mode with sidebar tool: {primaryLeftTool.Title}");
+                Logger.Info(
+                    $"🎨 Initialized acrylic mode with sidebar tool: {primaryLeftTool.Title}");
             }
         }
     }
-    
+
     /// <summary>
     /// Toggles between normal and acrylic layout modes
     /// </summary>
@@ -87,11 +90,11 @@ public class AcrylicLayoutManager : ReactiveObject
         {
             EnableAcrylicLayout();
         }
-        
+
         // Save setting
         SaveAcrylicSetting();
     }
-    
+
     /// <summary>
     /// Enables acrylic layout with primary left tool in sidebar
     /// </summary>
@@ -100,15 +103,17 @@ public class AcrylicLayoutManager : ReactiveObject
         var primaryLeftTool = GetPrimaryLeftTool();
         if (primaryLeftTool == null)
         {
-            Logger.Warn("No left tools available for acrylic layout - showing empty sidebar");
+            Logger.Warn(
+                "No left tools available for acrylic layout - showing empty sidebar");
         }
-        
+
         AcrylicSidebarTool = primaryLeftTool;
         IsAcrylicLayoutActive = true;
-        
-        Logger.Info($"🎨 Acrylic layout enabled with sidebar tool: {primaryLeftTool?.Title ?? "None"}");
+
+        Logger.Info(
+            $"🎨 Acrylic layout enabled with sidebar tool: {primaryLeftTool?.Title ?? "None"}");
     }
-    
+
     /// <summary>
     /// Disables acrylic layout and returns to normal dock mode
     /// </summary>
@@ -116,10 +121,11 @@ public class AcrylicLayoutManager : ReactiveObject
     {
         AcrylicSidebarTool = null;
         IsAcrylicLayoutActive = false;
-        
-        Logger.Info("🎨 Acrylic layout disabled - returned to normal dock mode");
+
+        Logger.Info(
+            "🎨 Acrylic layout disabled - returned to normal dock mode");
     }
-    
+
     /// <summary>
     /// Gets the primary left tool for acrylic sidebar
     /// Priority: Primary marked tool > First left tool > null
@@ -129,33 +135,35 @@ public class AcrylicLayoutManager : ReactiveObject
         var leftTools = _componentRegistry.ComponentTools
             .Where(t => t.Position == DockPosition.Left)
             .ToList();
-            
+
         if (!leftTools.Any())
         {
             Logger.Info("No left tools found for acrylic layout");
             return null;
         }
-        
+
         // First priority: tool marked as primary
         var primaryTool = leftTools.FirstOrDefault(t => t.IsPrimary);
         if (primaryTool?.ViewModel is IDockable primaryDockable)
         {
-            Logger.Info($"Found primary left tool for acrylic sidebar: {primaryTool.Id}");
+            Logger.Info(
+                $"Found primary left tool for acrylic sidebar: {primaryTool.Id}");
             return primaryDockable;
         }
-        
+
         // Second priority: first available left tool
         var firstTool = leftTools.FirstOrDefault();
         if (firstTool?.ViewModel is IDockable firstDockable)
         {
-            Logger.Info($"Using first left tool for acrylic sidebar: {firstTool.Id}");
+            Logger.Info(
+                $"Using first left tool for acrylic sidebar: {firstTool.Id}");
             return firstDockable;
         }
-        
+
         Logger.Warn("No suitable left tools found for acrylic layout");
         return null;
     }
-    
+
     /// <summary>
     /// Checks if a tool should be shown in the acrylic sidebar
     /// </summary>
@@ -163,26 +171,28 @@ public class AcrylicLayoutManager : ReactiveObject
     {
         return IsAcrylicLayoutActive && AcrylicSidebarTool == tool;
     }
-    
+
     /// <summary>
     /// Gets all left tools that should NOT be in the acrylic sidebar
     /// (these go back to the normal left dock)
     /// </summary>
-    public System.Collections.Generic.IEnumerable<IDockable> GetNormalLeftTools()
+    public System.Collections.Generic.IEnumerable<IDockable>
+        GetNormalLeftTools()
     {
         if (!IsAcrylicLayoutActive) yield break;
-        
+
         var leftTools = _componentRegistry.ComponentTools
-            .Where(t => t.Position == DockPosition.Left && t.ViewModel is IDockable)
+            .Where(t =>
+                t.Position == DockPosition.Left && t.ViewModel is IDockable)
             .Select(t => t.ViewModel as IDockable)
             .Where(d => d != null && d != AcrylicSidebarTool);
-            
+
         foreach (var tool in leftTools)
         {
             yield return tool!;
         }
     }
-    
+
     /// <summary>
     /// Saves the current acrylic setting to persistent storage
     /// </summary>
@@ -190,11 +200,11 @@ public class AcrylicLayoutManager : ReactiveObject
     {
         // Update global settings immediately
         DockComponent.Base.GlobalSettings.EnableAcrylic = IsAcrylicLayoutActive;
-        
-        if (_settingsService != null)
+
+        if (settingsService != null)
         {
-            _settingsService.SetAcrylic(IsAcrylicLayoutActive);
-            _ = Task.Run(async () => await _settingsService.SaveSettingsAsync());
+            settingsService.SetAcrylic(IsAcrylicLayoutActive);
+            _ = Task.Run(async () => await settingsService.SaveSettingsAsync());
             Logger.Info($"🎨 Saved acrylic setting: {IsAcrylicLayoutActive}");
         }
     }

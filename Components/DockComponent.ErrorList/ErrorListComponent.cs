@@ -16,17 +16,19 @@ namespace DockComponent.ErrorList
             // Register services in DI container for potential host use
             context.Services.AddSingleton<ErrorService>();
             context.Services.AddTransient<ErrorListViewModel>();
-            
+
             // Load component styles - CRITICAL for Avalonia View discovery!
-            var stylesUri = new Uri("avares://DockComponent.ErrorList/Styles.axaml");
+            var stylesUri =
+                new Uri("avares://DockComponent.ErrorList/Styles.axaml");
             context.RegisterResources(stylesUri);
-            
+
             // Create ErrorList tool with component-managed dependencies
             // Components maintain their own instance management for now
             var errorService = new ErrorService();
             var errorListViewModel = new ErrorListViewModel(errorService);
-            
-            context.RegisterTool("ErrorList", errorListViewModel, DockPosition.Bottom);
+
+            context.RegisterTool("ErrorList", errorListViewModel,
+                DockPosition.Bottom);
         }
     }
 }

@@ -22,11 +22,13 @@ public class BlazorServerHost : IHostedService, IDisposable
     private Timer? _heartbeatTimer;
     private readonly HttpClient _httpClient;
 
-    public BlazorServerHost(ILogger<BlazorServerHost> logger, string? blazorPath = null)
+    public BlazorServerHost(ILogger<BlazorServerHost> logger,
+        string? blazorPath = null)
     {
         _logger = logger;
         _blazorPath = blazorPath ?? ExtractEmbeddedBlazorApp();
-        _signalFilePath = Path.Combine(Path.GetTempPath(), "blazor-app-url.txt");
+        _signalFilePath =
+            Path.Combine(Path.GetTempPath(), "blazor-app-url.txt");
         _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
 
         // Register shutdown handlers
@@ -39,29 +41,36 @@ public class BlazorServerHost : IHostedService, IDisposable
         try
         {
             // For embedded hosting, point directly to the built FluentBlazorExample
-            var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var assemblyLocation = System.Reflection.Assembly
+                .GetExecutingAssembly().Location;
             var pluginDir = Path.GetDirectoryName(assemblyLocation);
 
             // Look for FluentBlazorExample.dll in various likely locations
             var possiblePaths = new[]
             {
                 // Direct reference to built output
-                Path.Combine(AppContext.BaseDirectory, "FluentBlazorExample.dll"),
+                Path.Combine(AppContext.BaseDirectory,
+                    "FluentBlazorExample.dll"),
                 // Relative to plugin directory
                 Path.Combine(pluginDir, "FluentBlazorExample.dll"),
                 Path.Combine(pluginDir, "..", "FluentBlazorExample.dll"),
                 Path.Combine(pluginDir, "..", "..", "FluentBlazorExample.dll"),
                 // Development build location
-                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "FluentBlazorExample", "bin", "Debug", "net9.0", "FluentBlazorExample.dll"),
+                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..",
+                    "FluentBlazorExample", "bin", "Debug", "net9.0",
+                    "FluentBlazorExample.dll"),
                 // Built in solution
-                Path.Combine(Directory.GetCurrentDirectory(), "FluentBlazorExample", "bin", "Debug", "net9.0", "FluentBlazorExample.dll")
+                Path.Combine(Directory.GetCurrentDirectory(),
+                    "FluentBlazorExample", "bin", "Debug", "net9.0",
+                    "FluentBlazorExample.dll")
             };
 
             foreach (var path in possiblePaths)
             {
                 if (File.Exists(path))
                 {
-                    _logger.LogInformation("Found Blazor app at: {BlazorPath}", path);
+                    _logger.LogInformation("Found Blazor app at: {BlazorPath}",
+                        path);
                     Console.WriteLine($"🎯 Found Blazor app at: {path}");
                     return path;
                 }
@@ -74,10 +83,12 @@ public class BlazorServerHost : IHostedService, IDisposable
             // List the current directory contents for debugging
             var currentDir = Directory.GetCurrentDirectory();
             Console.WriteLine($"🔍 Current directory: {currentDir}");
-            Console.WriteLine($"🔍 AppContext.BaseDirectory: {AppContext.BaseDirectory}");
+            Console.WriteLine(
+                $"🔍 AppContext.BaseDirectory: {AppContext.BaseDirectory}");
             Console.WriteLine($"🔍 Assembly location: {assemblyLocation}");
 
-            throw new FileNotFoundException("Could not find FluentBlazorExample.dll in any expected location");
+            throw new FileNotFoundException(
+                "Could not find FluentBlazorExample.dll in any expected location");
         }
         catch (Exception ex)
         {
@@ -111,13 +122,17 @@ public class BlazorServerHost : IHostedService, IDisposable
             // Find available port
             _port = FindAvailablePort(5000, 5020);
 
-            _logger.LogInformation("Starting Blazor server from: {BlazorPath}", _blazorPath);
+            _logger.LogInformation("Starting Blazor server from: {BlazorPath}",
+                _blazorPath);
             Console.WriteLine($"🚀 Starting Blazor server from: {_blazorPath}");
 
             if (!File.Exists(_blazorPath))
             {
-                _logger.LogError("Blazor application not found at: {BlazorPath}", _blazorPath);
-                Console.WriteLine($"❌ Blazor application not found at: {_blazorPath}");
+                _logger.LogError(
+                    "Blazor application not found at: {BlazorPath}",
+                    _blazorPath);
+                Console.WriteLine(
+                    $"❌ Blazor application not found at: {_blazorPath}");
                 return;
             }
 
@@ -126,7 +141,8 @@ public class BlazorServerHost : IHostedService, IDisposable
             var startInfo = new ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = $"\"{_blazorPath}\" --urls=http://localhost:{_port} --environment=Development",
+                Arguments =
+                    $"\"{_blazorPath}\" --urls=http://localhost:{_port} --environment=Development",
                 WorkingDirectory = workingDir,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -134,7 +150,8 @@ public class BlazorServerHost : IHostedService, IDisposable
                 CreateNoWindow = true
             };
 
-            Console.WriteLine($"🔧 Command: {startInfo.FileName} {startInfo.Arguments}");
+            Console.WriteLine(
+                $"🔧 Command: {startInfo.FileName} {startInfo.Arguments}");
             Console.WriteLine($"🔧 Working directory: {workingDir}");
 
             _blazorProcess = new Process { StartInfo = startInfo };
@@ -167,12 +184,16 @@ public class BlazorServerHost : IHostedService, IDisposable
 
             // Write URL to signal file for auto-integration
             var url = $"http://localhost:{_port}";
-            await File.WriteAllTextAsync(_signalFilePath, url, cancellationToken);
+            await File.WriteAllTextAsync(_signalFilePath, url,
+                cancellationToken);
 
             // Start heartbeat timer (every 3 seconds)
-            _heartbeatTimer = new Timer(SendHeartbeat, url, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3));
+            _heartbeatTimer = new Timer(SendHeartbeat, url,
+                TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3));
 
-            _logger.LogInformation("Blazor server started at: {Url} with HTTP heartbeat monitoring", url);
+            _logger.LogInformation(
+                "Blazor server started at: {Url} with HTTP heartbeat monitoring",
+                url);
         }
         catch (Exception ex)
         {
@@ -195,7 +216,8 @@ public class BlazorServerHost : IHostedService, IDisposable
 
                 if (!shutdownSuccess)
                 {
-                    _logger.LogWarning("HTTP shutdown failed, trying process termination");
+                    _logger.LogWarning(
+                        "HTTP shutdown failed, trying process termination");
 
                     // Fallback: try SIGTERM equivalent
                     try
@@ -204,14 +226,16 @@ public class BlazorServerHost : IHostedService, IDisposable
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to send termination signal");
+                        _logger.LogWarning(ex,
+                            "Failed to send termination signal");
                     }
                 }
 
                 // Wait for graceful shutdown with longer timeout
                 if (!_blazorProcess.WaitForExit(5000))
                 {
-                    _logger.LogWarning("Graceful shutdown timeout, force killing process tree");
+                    _logger.LogWarning(
+                        "Graceful shutdown timeout, force killing process tree");
                     _blazorProcess.Kill(entireProcessTree: true);
                 }
 
@@ -264,19 +288,23 @@ public class BlazorServerHost : IHostedService, IDisposable
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{baseUrl}/heartbeat");
+                var response =
+                    await _httpClient.GetAsync($"{baseUrl}/heartbeat");
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogTrace("Heartbeat sent successfully");
                 }
                 else
                 {
-                    _logger.LogWarning("Heartbeat failed with status: {StatusCode}", response.StatusCode);
+                    _logger.LogWarning(
+                        "Heartbeat failed with status: {StatusCode}",
+                        response.StatusCode);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to send heartbeat to Blazor app");
+                _logger.LogWarning(ex,
+                    "Failed to send heartbeat to Blazor app");
             }
         });
     }
@@ -286,17 +314,20 @@ public class BlazorServerHost : IHostedService, IDisposable
         try
         {
             var shutdownUrl = $"http://localhost:{_port}/shutdown";
-            _logger.LogInformation("Attempting graceful shutdown via {ShutdownUrl}", shutdownUrl);
+            _logger.LogInformation(
+                "Attempting graceful shutdown via {ShutdownUrl}", shutdownUrl);
 
             var response = await _httpClient.PostAsync(shutdownUrl, null);
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("Graceful shutdown initiated successfully");
+                _logger.LogInformation(
+                    "Graceful shutdown initiated successfully");
                 return true;
             }
             else
             {
-                _logger.LogWarning("Shutdown endpoint returned: {StatusCode}", response.StatusCode);
+                _logger.LogWarning("Shutdown endpoint returned: {StatusCode}",
+                    response.StatusCode);
                 return false;
             }
         }
@@ -309,7 +340,8 @@ public class BlazorServerHost : IHostedService, IDisposable
 
     private void OnProcessExit(object? sender, EventArgs e)
     {
-        _logger.LogInformation("Process exit detected, initiating Blazor shutdown");
+        _logger.LogInformation(
+            "Process exit detected, initiating Blazor shutdown");
         _ = Task.Run(TryGracefulShutdown);
     }
 

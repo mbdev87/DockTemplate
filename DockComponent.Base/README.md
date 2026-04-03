@@ -1,6 +1,7 @@
 # DockComponent Plugin Architecture
 
-A revolutionary plugin system that enables true team independence while maintaining seamless integration through message passing.
+A revolutionary plugin system that enables true team independence while
+maintaining seamless integration through message passing.
 
 ## 🏗️ Cross-Team Plugin Sharing
 
@@ -34,14 +35,18 @@ graph LR
     class Dashboard,Editor,ErrorList,Output,Charts externalPlugin
 ```
 
-**Key Insight**: Each team works on their own components with full debugging, while importing others' work as compiled plugins.
+**Key Insight**: Each team works on their own components with full debugging,
+while importing others' work as compiled plugins.
 
 ## 🚨 CRITICAL PLUGIN ARCHITECTURE RULE 🚨
 
 **NEVER CREATE CROSS-COMPONENT DEPENDENCIES!**
 
-Each component MUST be completely isolated. If Component A needs to send a message that Component B also needs to send, **DUPLICATE THE MESSAGE CLASS** in both components. Use the message exporter system to help users copy message contracts, but NEVER create project references between components.
-Treat this as REST API. 
+Each component MUST be completely isolated. If Component A needs to send a
+message that Component B also needs to send, **DUPLICATE THE MESSAGE CLASS** in
+both components. Use the message exporter system to help users copy message
+contracts, but NEVER create project references between components.
+Treat this as REST API.
 
 ❌ **WRONG:** `using DockComponent.Editor.Messages;` in Output component
 ✅ **RIGHT:** Duplicate the message class in each component that needs it
@@ -51,26 +56,35 @@ Treat this as REST API.
 ## 🔑 Key Architectural Features
 
 ### **Team Isolation**
-- **Team A** works on core IDE features (Editor, ErrorList, SolutionExplorer, Output) 
+
+- **Team A** works on core IDE features (Editor, ErrorList, SolutionExplorer,
+  Output)
 - **Team B** works on Dashboard & Analytics features
 - **Zero shared dependencies** between teams - complete independence
 
 ### **Message Contract Copying**
-- **📋 Copy/Paste Pattern**: Teams copy message classes from each other's documentation
-- **📄 README-driven contracts**: Each component documents its messages for others to copy
+
+- **📋 Copy/Paste Pattern**: Teams copy message classes from each other's
+  documentation
+- **📄 README-driven contracts**: Each component documents its messages for
+  others to copy
 - **No shared message libraries** - each team owns their message definitions
 
 ### **Development Experience**
-- **🔧 Author Mode**: Each team has full debugging access to their own source code
-- **🔌 Plugin Integration**: Teams use each other's compiled .dockplugin files  
+
+- **🔧 Author Mode**: Each team has full debugging access to their own source
+  code
+- **🔌 Plugin Integration**: Teams use each other's compiled .dockplugin files
 - **✅ Selective debugging**: Can debug your own components, not others' plugins
 
 ### **Communication Layer**
+
 - **🚌 ReactiveUI MessageBus**: Pure JSON message passing
 - **Fire-and-forget pattern**: No RPC or tight coupling
 - **Convention-based naming**: `{ComponentName}_{MessageName}` format
 
 ### **Consumer Experience**
+
 - **🚀 DockTemplate.Empty**: Completely empty shell for end users
 - **⚡ Zero-to-Hero Demo**: Transform empty app into full IDE via drag & drop
 - **🔒 Plugin-only mode**: No source code access, pure plugin consumption
@@ -119,11 +133,13 @@ DockComponent.{PluginName}/
 ## 🔄 Development Workflows
 
 ### **Author Mode** (DockTemplate):
+
 - Direct project references to plugin source code
 - Full debugging and development capabilities
 - Can mix source plugins + compiled plugins
 
 ### **Consumer Mode** (DockTemplate.Empty):
+
 - Pure plugin loading from .dockplugin files
 - Zero source code dependencies
 - Demonstrates real-world plugin usage
@@ -138,12 +154,14 @@ DockComponent.{PluginName}/
 ## 🎯 Plugin Communication
 
 ### Plugin Communication:
+
 - **Pure message bus** (ReactiveUI MessageBus)
 - **JSON serialization** for all data transfer
 - **Fire-and-forget** messaging (no RPC)
 - **No knowledge** of other plugins' internals
 
 ### Example Message Handling:
+
 ```csharp
 // Sending a message
 var message = new ComponentMessage(
@@ -170,8 +188,10 @@ This architecture enables the ultimate demo experience:
 - Watch full IDE emerge from pure plugins
 - Show source vs. plugin integration approaches side-by-side
 
-**This architecture demonstrates that powerful, integrated experiences can emerge from completely independent, loosely-coupled components.**
+**This architecture demonstrates that powerful, integrated experiences can
+emerge from completely independent, loosely-coupled components.**
 
 ---
 
-*Built on Avalonia UI, ReactiveUI, and the Dock.Avalonia framework for professional cross-platform desktop applications.*
+*Built on Avalonia UI, ReactiveUI, and the Dock.Avalonia framework for
+professional cross-platform desktop applications.*

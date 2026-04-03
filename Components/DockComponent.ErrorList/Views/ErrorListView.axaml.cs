@@ -22,7 +22,7 @@ public partial class ErrorListView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        
+
         // Setup double-click handling for navigation to source
         if (this.Find<DataGrid>("ErrorDataGrid") is { } dataGrid)
         {
@@ -40,7 +40,8 @@ public partial class ErrorListView : UserControl
 
     private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (sender is DataGrid dataGrid && DataContext is ErrorListViewModel viewModel)
+        if (sender is DataGrid dataGrid &&
+            DataContext is ErrorListViewModel viewModel)
         {
             viewModel.SelectedError = dataGrid.SelectedItem as ErrorEntry;
         }
@@ -48,15 +49,17 @@ public partial class ErrorListView : UserControl
 
     private void OnErrorDoubleClicked(object? sender, TappedEventArgs e)
     {
-        if (DataContext is ErrorListViewModel viewModel && 
+        if (DataContext is ErrorListViewModel viewModel &&
             viewModel.SelectedError is { } selectedError)
         {
-            System.Console.WriteLine($"[ErrorListView] Double-clicked on error: {selectedError.Message}");
+            System.Console.WriteLine(
+                $"[ErrorListView] Double-clicked on error: {selectedError.Message}");
             viewModel.OnErrorDoubleClicked(selectedError);
         }
         else
         {
-            System.Console.WriteLine("[ErrorListView] Double-click but no selected error");
+            System.Console.WriteLine(
+                "[ErrorListView] Double-click but no selected error");
         }
     }
 
@@ -72,19 +75,21 @@ public partial class ErrorListView : UserControl
 
 public class ErrorLevelToIconConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object? Convert(object? value, Type targetType, object? parameter,
+        CultureInfo culture)
     {
         return value?.ToString() switch
         {
             "Error" => "❌",
-            "Fatal" => "💀", 
+            "Fatal" => "💀",
             "Warn" => "⚠️",
             "Warning" => "⚠️",
             _ => "ℹ️"
         };
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object? ConvertBack(object? value, Type targetType,
+        object? parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }
@@ -92,7 +97,8 @@ public class ErrorLevelToIconConverter : IValueConverter
 
 public class ErrorLevelToColorConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object? Convert(object? value, Type targetType, object? parameter,
+        CultureInfo culture)
     {
         var brush = value?.ToString() switch
         {
@@ -105,7 +111,8 @@ public class ErrorLevelToColorConverter : IValueConverter
         return brush;
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object? ConvertBack(object? value, Type targetType,
+        object? parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }

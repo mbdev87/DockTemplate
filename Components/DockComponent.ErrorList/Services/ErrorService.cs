@@ -11,12 +11,16 @@ namespace DockComponent.ErrorList.Services
 {
     public class ErrorService : ReactiveObject
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger =
+            LogManager.GetCurrentClassLogger();
+
         private readonly ObservableCollection<ErrorEntry> _allErrors = new();
-        private readonly ObservableCollection<ErrorEntry> _filteredErrors = new();
+
+        private readonly ObservableCollection<ErrorEntry> _filteredErrors =
+            new();
 
         public ObservableCollection<ErrorEntry> Errors => _filteredErrors;
-        
+
         [Reactive] public string FilterText { get; set; } = string.Empty;
         [Reactive] public string SelectedSeverity { get; set; } = "All";
 
@@ -29,7 +33,8 @@ namespace DockComponent.ErrorList.Services
                 {
                     try
                     {
-                        var errorEntry = JsonSerializer.Deserialize<ErrorEntry>(msg.Payload);
+                        var errorEntry =
+                            JsonSerializer.Deserialize<ErrorEntry>(msg.Payload);
                         if (errorEntry != null)
                         {
                             _allErrors.Insert(0, errorEntry);
@@ -39,7 +44,8 @@ namespace DockComponent.ErrorList.Services
                     }
                     catch (Exception ex)
                     {
-                        LogError($"❌ Failed to deserialize error entry message: {ex.Message}");
+                        LogError(
+                            $"❌ Failed to deserialize error entry message: {ex.Message}");
                     }
                 });
 
@@ -48,31 +54,36 @@ namespace DockComponent.ErrorList.Services
                 .Subscribe(_ => ApplyFilters());
 
             // Log service initialization
-            LogInfo("✅ Error Service initialized - listening for error messages from other components");
+            LogInfo(
+                "✅ Error Service initialized - listening for error messages from other components");
         }
 
 
         private void ApplyFilters()
         {
             _filteredErrors.Clear();
-            
+
             var filtered = _allErrors.AsEnumerable();
-            
+
             // Apply severity filter
             if (SelectedSeverity != "All")
             {
-                filtered = filtered.Where(entry => entry.Level == SelectedSeverity);
+                filtered =
+                    filtered.Where(entry => entry.Level == SelectedSeverity);
             }
-            
+
             // Apply text filter
             if (!string.IsNullOrWhiteSpace(FilterText))
             {
-                filtered = filtered.Where(entry => 
-                    (entry.Message?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (entry.Source?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (entry.Code?.Contains(FilterText, StringComparison.OrdinalIgnoreCase) ?? false));
+                filtered = filtered.Where(entry =>
+                    (entry.Message?.Contains(FilterText,
+                        StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (entry.Source?.Contains(FilterText,
+                        StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (entry.Code?.Contains(FilterText,
+                        StringComparison.OrdinalIgnoreCase) ?? false));
             }
-            
+
             foreach (var entry in filtered)
                 _filteredErrors.Add(entry);
         }
@@ -100,27 +111,31 @@ namespace DockComponent.ErrorList.Services
             ApplyFilters();
             UpdateCounts();
         }
-        
+
         // Helper methods to send messages to both NLog and inter-plugin Output panel
-        private void LogInfo(string message, string? filePath = null, int? lineNumber = null)
+        private void LogInfo(string message, string? filePath = null,
+            int? lineNumber = null)
         {
             Logger.Info(message);
             SendLogMessage("Info", message, filePath, lineNumber);
         }
-        
-        private void LogError(string message, string? filePath = null, int? lineNumber = null)
+
+        private void LogError(string message, string? filePath = null,
+            int? lineNumber = null)
         {
             Logger.Error(message);
             SendLogMessage("Error", message, filePath, lineNumber);
         }
-        
-        private void LogWarn(string message, string? filePath = null, int? lineNumber = null)
+
+        private void LogWarn(string message, string? filePath = null,
+            int? lineNumber = null)
         {
             Logger.Warn(message);
             SendLogMessage("Warn", message, filePath, lineNumber);
         }
-        
-        private void SendLogMessage(string level, string message, string? filePath, int? lineNumber)
+
+        private void SendLogMessage(string level, string message,
+            string? filePath, int? lineNumber)
         {
             var logMessage = new LogMessage
             {
@@ -131,7 +146,7 @@ namespace DockComponent.ErrorList.Services
                 FilePath = filePath,
                 LineNumber = lineNumber
             };
-            
+
             var componentMessage = LogMessageTransport.Create(logMessage);
             MessageBus.Current.SendMessage(componentMessage);
         }

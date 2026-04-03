@@ -8,11 +8,18 @@
 <p>This component demonstrates showing data.</p>
 
 <!-- This page is rendered in SSR mode, so the FluentDataGrid component does not offer any interactivity (like sorting). -->
-<FluentDataGrid Id="weathergrid" Items="@forecasts" GridTemplateColumns="1fr 1fr 1fr 2fr" Loading="@(forecasts == null)" Style="height:204px;" TGridItem="WeatherForecast">
-    <PropertyColumn Title="Date" Property="@(c => c!.Date)" Align="Align.Start"/>
-    <PropertyColumn Title="Temp. (C)" Property="@(c => c!.TemperatureC)" Align="Align.Center"/>
-    <PropertyColumn Title="Temp. (F)" Property="@(c => c!.TemperatureF)" Align="Align.Center"/>
-    <PropertyColumn Title="Summary" Property="@(c => c!.Summary)" Align="Align.End"/>
+<FluentDataGrid Id="weathergrid" Items="@forecasts"
+                GridTemplateColumns="1fr 1fr 1fr 2fr"
+                Loading="@(forecasts == null)" Style="height:204px;"
+                TGridItem="WeatherForecast">
+    <PropertyColumn Title="Date" Property="@(c => c!.Date)"
+                    Align="Align.Start"/>
+    <PropertyColumn Title="Temp. (C)" Property="@(c => c!.TemperatureC)"
+                    Align="Align.Center"/>
+    <PropertyColumn Title="Temp. (F)" Property="@(c => c!.TemperatureF)"
+                    Align="Align.Center"/>
+    <PropertyColumn Title="Summary" Property="@(c => c!.Summary)"
+                    Align="Align.End"/>
 </FluentDataGrid>
 
 @code {
@@ -40,4 +47,5 @@
         public string? Summary { get; set; }
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
     }
+
 }

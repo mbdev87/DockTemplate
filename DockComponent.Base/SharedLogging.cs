@@ -21,7 +21,7 @@ public class SharedLoggingService : ISharedLoggingService
     private static SharedLoggingService? _instance;
     private static readonly object _lock = new object();
     private static bool _isConfigured = false;
-    
+
     public static SharedLoggingService Instance
     {
         get
@@ -36,10 +36,11 @@ public class SharedLoggingService : ISharedLoggingService
                     }
                 }
             }
+
             return _instance;
         }
     }
-    
+
     public ObservableCollection<LogEntry> LogEntries { get; } = new();
     public ObservableCollection<ErrorEntry> ErrorEntries { get; } = new();
 
@@ -56,23 +57,26 @@ public class SharedLoggingService : ISharedLoggingService
             {
                 // Already configured, just log that a new component is using it
                 var logger = LogManager.GetLogger(componentName);
-                logger.Debug($"[SharedLogging] {componentName} connected to shared logging service");
+                logger.Debug(
+                    $"[SharedLogging] {componentName} connected to shared logging service");
                 return;
             }
 
             // First component to request logging - configure NLog globally
             ConfigureGlobalNLog();
             _isConfigured = true;
-            
+
             var setupLogger = LogManager.GetLogger("SharedLogging");
-            setupLogger.Info($"[SharedLogging] Global logging configured by {componentName}");
+            setupLogger.Info(
+                $"[SharedLogging] Global logging configured by {componentName}");
         }
     }
 
     private void ConfigureGlobalNLog()
     {
-        var config = LogManager.Configuration ?? new NLog.Config.LoggingConfiguration();
-        
+        var config = LogManager.Configuration ??
+                     new NLog.Config.LoggingConfiguration();
+
         // Create shared UILogTarget with consistent formatting
         var sharedUITarget = new SharedUILogTarget(this);
         sharedUITarget.Name = "SharedUITarget";
@@ -80,14 +84,14 @@ public class SharedLoggingService : ISharedLoggingService
             "${longdate} ${level:uppercase=true} ${logger:shortName=true} ${message} " +
             "[${callsite-filename}:${callsite-linenumber} ${callsite-method}] " +
             "${exception:format=tostring}";
-        
+
         // Remove any existing UI targets to prevent duplicates
         config.RemoveTarget("UITarget");
         config.RemoveTarget("SharedUITarget");
-        
+
         config.AddTarget(sharedUITarget);
         config.AddRule(LogLevel.Debug, LogLevel.Fatal, sharedUITarget);
-        
+
         LogManager.Configuration = config;
     }
 
@@ -98,7 +102,7 @@ public class SharedLoggingService : ISharedLoggingService
             var entry = new LogEntry(
                 logEvent.Level.Name,
                 logEvent.FormattedMessage ?? string.Empty,
-                logEvent.LoggerName ?? "Unknown", 
+                logEvent.LoggerName ?? "Unknown",
                 logEvent.TimeStamp
             )
             {
@@ -111,6 +115,7 @@ public class SharedLoggingService : ISharedLoggingService
             {
                 LogEntries.RemoveAt(0);
             }
+
             LogEntries.Add(entry);
 
             // If it's an error/warning/fatal, create error entry and send via message bus
@@ -128,9 +133,9 @@ public class SharedLoggingService : ISharedLoggingService
                     LoggerName = logEvent.LoggerName,
                     Timestamp = logEvent.TimeStamp
                 };
-                
+
                 ErrorEntries.Add(errorEntry);
-                
+
                 // Send error via component message bus for ErrorList component
                 var errorMessage = new ComponentMessage(
                     "SharedLogging_ErrorReported",
@@ -142,7 +147,8 @@ public class SharedLoggingService : ISharedLoggingService
         catch (Exception ex)
         {
             // Fallback logging to prevent infinite loops
-            Console.WriteLine($"[SharedLoggingService] Error processing log entry: {ex.Message}");
+            Console.WriteLine(
+                $"[SharedLoggingService] Error processing log entry: {ex.Message}");
         }
     }
 }
@@ -152,17 +158,11 @@ public class SharedLoggingService : ISharedLoggingService
 /// <summary>
 /// Shared NLog target that feeds the SharedLoggingService
 /// </summary>
-public class SharedUILogTarget : TargetWithLayout
+public class SharedUILogTarget(SharedLoggingService sharedLoggingService)
+    : TargetWithLayout
 {
-    private readonly SharedLoggingService _sharedLoggingService;
-
-    public SharedUILogTarget(SharedLoggingService sharedLoggingService)
-    {
-        _sharedLoggingService = sharedLoggingService;
-    }
-
     protected override void Write(LogEventInfo logEvent)
     {
-        _sharedLoggingService.AddLogEntry(logEvent);
+        sharedLoggingService.AddLogEntry(logEvent);
     }
 }

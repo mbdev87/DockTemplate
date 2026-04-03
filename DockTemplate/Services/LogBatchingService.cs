@@ -7,19 +7,17 @@ using DockComponent.Base;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedMember.Global
+
 namespace DockTemplate.Services;
 
-public class LogBatchingService : BackgroundService
+public class LogBatchingService(ILogger<LogBatchingService> logger)
+    : BackgroundService
 {
     private readonly ConcurrentQueue<ErrorEntry> _errorQueue = new();
-    private readonly ILogger<LogBatchingService> _logger;
     private readonly TimeSpan _batchInterval = TimeSpan.FromMilliseconds(100);
     private const int MaxBatchSize = 50;
-
-    public LogBatchingService(ILogger<LogBatchingService> logger)
-    {
-        _logger = logger;
-    }
 
     public void EnqueueError(ErrorEntry errorEntry)
     {
@@ -28,7 +26,7 @@ public class LogBatchingService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("LogBatchingService started");
+        logger.LogInformation("LogBatchingService started");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -43,11 +41,11 @@ public class LogBatchingService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing log batch");
+                logger.LogError(ex, "Error processing log batch");
             }
         }
 
-        _logger.LogInformation("LogBatchingService stopped");
+        logger.LogInformation("LogBatchingService stopped");
     }
 
     private async Task ProcessBatch()
@@ -56,8 +54,9 @@ public class LogBatchingService : BackgroundService
             return;
 
         var batch = new List<ErrorEntry>();
-        
-        while (batch.Count < MaxBatchSize && _errorQueue.TryDequeue(out var errorEntry))
+
+        while (batch.Count < MaxBatchSize &&
+               _errorQueue.TryDequeue(out var errorEntry))
         {
             batch.Add(errorEntry);
         }
@@ -69,8 +68,9 @@ public class LogBatchingService : BackgroundService
                 Entries = batch.ToArray()
             };
 
-            await Task.Run(() => MessageBus.Current.SendMessage(batchedMessage));
-            _logger.LogDebug("Sent batch of {Count} error entries", batch.Count);
+            await Task.Run(() =>
+                MessageBus.Current.SendMessage(batchedMessage));
+            logger.LogDebug("Sent batch of {Count} error entries", batch.Count);
         }
     }
 }

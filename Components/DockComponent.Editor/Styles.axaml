@@ -7,15 +7,18 @@
     <!-- Fix focus borders for documents -->
     <!-- Target borders around focused content areas -->
     <Style Selector="ContentControl Border:focus">
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource SystemAccentColor}" />
     </Style>
-    
+
     <Style Selector="Border:focus">
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource SystemAccentColor}" />
     </Style>
-    
+
     <!-- Target any focused visual elements in documents -->
     <Style Selector="UserControl:focus Border">
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="BorderBrush"
+                Value="{DynamicResource SystemAccentColor}" />
     </Style>
 </Styles>

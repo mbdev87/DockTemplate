@@ -43,7 +43,8 @@ public partial class DockWindow : Window
         }
         else
         {
-            Logger.Info($"Platform detected: {RuntimeInformation.OSDescription} - using in-window menu");
+            Logger.Info(
+                $"Platform detected: {RuntimeInformation.OSDescription} - using in-window menu");
         }
     }
 
@@ -100,7 +101,8 @@ public partial class DockWindow : Window
                 return;
             }
 
-            var files = e.Data.GetFiles()?.Select(f => f.Path.LocalPath).Where(f => !string.IsNullOrEmpty(f)).ToArray();
+            var files = e.Data.GetFiles()?.Select(f => f.Path.LocalPath)
+                .Where(f => !string.IsNullOrEmpty(f)).ToArray();
             if (files == null || !files.Any())
             {
                 viewModel.ShowDropOverlay = false;
@@ -118,10 +120,12 @@ public partial class DockWindow : Window
             {
                 if (IsPluginFile(file))
                 {
-                    Logger.Info($"Sending plugin installation request: {System.IO.Path.GetFileName(file)}");
+                    Logger.Info(
+                        $"Sending plugin installation request: {System.IO.Path.GetFileName(file)}");
 
                     // Send message to background service to handle installation
-                    ReactiveUI.MessageBus.Current.SendMessage(new DockTemplate.Messages.InstallPluginMessage(file));
+                    ReactiveUI.MessageBus.Current.SendMessage(
+                        new DockTemplate.Messages.InstallPluginMessage(file));
                 }
             }
         }
@@ -129,13 +133,15 @@ public partial class DockWindow : Window
 
     private bool IsPluginFile(DragEventArgs e)
     {
-        var files = e.Data.GetFiles()?.Select(f => f.Path.LocalPath).Where(f => !string.IsNullOrEmpty(f)).ToArray();
+        var files = e.Data.GetFiles()?.Select(f => f.Path.LocalPath)
+            .Where(f => !string.IsNullOrEmpty(f)).ToArray();
         return files?.Any(IsPluginFile) == true;
     }
 
     private bool IsPluginFile(string filePath)
     {
-        var extension = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+        var extension =
+            System.IO.Path.GetExtension(filePath).ToLowerInvariant();
         return extension == ".dockplugin" || extension == ".zip";
     }
 

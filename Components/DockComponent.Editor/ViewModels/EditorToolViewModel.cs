@@ -36,12 +36,14 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
     private readonly CompositeDisposable _disposables = new();
     private string _currentFilePath = string.Empty;
     private TextEditor? _textEditor;
-    private DockComponent.Editor.Views.LineHighlightRenderer? _lineHighlightRenderer;
+
+    private DockComponent.Editor.Views.LineHighlightRenderer?
+        _lineHighlightRenderer;
 
     public EditorToolViewModel()
     {
         OpenFileCommand = ReactiveCommand.CreateFromTask(OpenFileAsync);
-        SaveFileCommand = ReactiveCommand.CreateFromTask(SaveFileAsync, 
+        SaveFileCommand = ReactiveCommand.CreateFromTask(SaveFileAsync,
             this.WhenAnyValue(x => x.HasUnsavedChanges));
         SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsFileAsync);
         NewFileCommand = ReactiveCommand.Create(NewFile);
@@ -100,34 +102,38 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             var currentApp = Application.Current;
             var actualTheme = currentApp?.ActualThemeVariant;
             var requestedTheme = currentApp?.RequestedThemeVariant;
-            
+
             // Determine if we're in dark mode
-            var isDark = (actualTheme == ThemeVariant.Dark) || 
-                        (actualTheme == null && requestedTheme == ThemeVariant.Dark);
-            
+            var isDark = (actualTheme == ThemeVariant.Dark) ||
+                         (actualTheme == null &&
+                          requestedTheme == ThemeVariant.Dark);
+
             var themeName = isDark ? ThemeName.DarkPlus : ThemeName.LightPlus;
-            
-            Logger.Info($"[Editor] Reinstalling TextMate: ActualTheme={actualTheme}, RequestedTheme={requestedTheme}, Using={themeName}");
-            
+
+            Logger.Info(
+                $"[Editor] Reinstalling TextMate: ActualTheme={actualTheme}, RequestedTheme={requestedTheme}, Using={themeName}");
+
             // Dispose old installation if it exists
             var old = TextMateInstallation;
-            
+
             // Create new registry options with current theme
             var registryOptions = new RegistryOptions(themeName);
-            
+
             // Reinstall TextMate completely
             TextMateInstallation = _textEditor.InstallTextMate(registryOptions);
-            
+
             // Apply grammar for current language
             var fileExtension = GetFileExtensionForLanguage(CurrentLanguage);
-            var language = registryOptions.GetLanguageByExtension(fileExtension);
-            
+            var language =
+                registryOptions.GetLanguageByExtension(fileExtension);
+
             if (language != null)
             {
-                TextMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(language.Id));
+                TextMateInstallation.SetGrammar(
+                    registryOptions.GetScopeByLanguageId(language.Id));
                 Logger.Info($"[Editor] Applied grammar for {CurrentLanguage}");
             }
-            
+
             // Force refresh the editor content to trigger highlighting
             if (!string.IsNullOrEmpty(Document.Text))
             {
@@ -138,6 +144,7 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
                 _textEditor.CaretOffset = cursorPosition;
                 Logger.Info($"[Editor] Forced content refresh");
             }
+
             old?.Dispose();
         }
         catch (Exception ex)
@@ -178,7 +185,7 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         return extension switch
         {
             ".cs" => "csharp",
-            ".md" => "markdown", 
+            ".md" => "markdown",
             ".txt" => "plaintext",
             ".json" => "json",
             ".xml" => "xml",
@@ -198,8 +205,9 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         {
             // In a real implementation, use OpenFileDialog
             // For now, simulate with a hardcoded file for demo
-            var filePath = @"C:\temp\sample.cs"; // This would come from file dialog
-            
+            var filePath =
+                @"C:\temp\sample.cs"; // This would come from file dialog
+
             if (File.Exists(filePath))
             {
                 var content = await File.ReadAllTextAsync(filePath);
@@ -231,7 +239,7 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             await File.WriteAllTextAsync(_currentFilePath, Document.Text);
             HasUnsavedChanges = false;
             StatusText = $"Saved: {CurrentFileName}";
-            
+
             // Emit file saved message
             FileSavedHelper.Emit(_currentFilePath, CurrentFileName);
         }
@@ -247,9 +255,11 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         {
             // In a real implementation, use SaveFileDialog
             // For now, simulate with a temp file
-            var fileName = CurrentFileName == "untitled.txt" ? "new_file.txt" : CurrentFileName;
+            var fileName = CurrentFileName == "untitled.txt"
+                ? "new_file.txt"
+                : CurrentFileName;
             var filePath = Path.Combine(Path.GetTempPath(), fileName);
-            
+
             await File.WriteAllTextAsync(filePath, Document.Text);
             CurrentFileName = Path.GetFileName(filePath);
             _currentFilePath = filePath;
@@ -279,7 +289,8 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         {
             if (!File.Exists(filePath))
             {
-                Logger.Warn($"[EditorToolViewModel] File does not exist, ignoring request: {filePath}");
+                Logger.Warn(
+                    $"[EditorToolViewModel] File does not exist, ignoring request: {filePath}");
                 StatusText = $"File not found: {Path.GetFileName(filePath)}";
                 return false;
             }
@@ -292,16 +303,20 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             HasUnsavedChanges = false;
             StatusText = $"Opened: {CurrentFileName}";
             ApplySyntaxHighlighting();
-            
+
             // Emit file opened message
-            FileOpenedHelper.Emit(_currentFilePath, CurrentFileName, CurrentLanguage);
-            Logger.Info($"[EditorToolViewModel] Successfully opened file: {filePath}");
+            FileOpenedHelper.Emit(_currentFilePath, CurrentFileName,
+                CurrentLanguage);
+            Logger.Info(
+                $"[EditorToolViewModel] Successfully opened file: {filePath}");
             return true;
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"[EditorToolViewModel] Error opening file: {filePath}");
-            StatusText = $"Error opening {Path.GetFileName(filePath)}: {ex.Message}";
+            Logger.Error(ex,
+                $"[EditorToolViewModel] Error opening file: {filePath}");
+            StatusText =
+                $"Error opening {Path.GetFileName(filePath)}: {ex.Message}";
             return false;
         }
     }
@@ -313,25 +328,30 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             var errorMsg = ErrorClickedHelper.TryParse(message.Payload);
             if (errorMsg == null)
             {
-                Logger.Warn($"[EditorToolViewModel] Failed to parse error navigation message");
+                Logger.Warn(
+                    $"[EditorToolViewModel] Failed to parse error navigation message");
                 return;
             }
-            
+
             // Only process if this editor is for the target file
-            if (!string.IsNullOrEmpty(_currentFilePath) && 
-                string.Equals(_currentFilePath, errorMsg.FilePath, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(_currentFilePath) &&
+                string.Equals(_currentFilePath, errorMsg.FilePath,
+                    StringComparison.OrdinalIgnoreCase))
             {
-                Logger.Info($"[EditorToolViewModel] Received error navigation for MY file: {errorMsg.FilePath}:{errorMsg.LineNumber}");
+                Logger.Info(
+                    $"[EditorToolViewModel] Received error navigation for MY file: {errorMsg.FilePath}:{errorMsg.LineNumber}");
                 NavigateToLine(errorMsg.LineNumber);
             }
             else
             {
-                Logger.Info($"[EditorToolViewModel] Ignoring error navigation for different file. My file: {_currentFilePath}, Target: {errorMsg.FilePath}");
+                Logger.Info(
+                    $"[EditorToolViewModel] Ignoring error navigation for different file. My file: {_currentFilePath}, Target: {errorMsg.FilePath}");
             }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"[EditorToolViewModel] Error processing error navigation message: {ex.Message}");
+            Logger.Error(ex,
+                $"[EditorToolViewModel] Error processing error navigation message: {ex.Message}");
         }
     }
 
@@ -342,12 +362,14 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             var navMsg = NavigateToSourceMessageTransport.Parse(message);
             if (navMsg == null)
             {
-                Logger.Warn($"[EditorToolViewModel] Failed to parse file navigation message");
+                Logger.Warn(
+                    $"[EditorToolViewModel] Failed to parse file navigation message");
                 return;
             }
-            
-            Logger.Info($"[EditorToolViewModel] Received file navigation request: {navMsg.FilePath}:{navMsg.LineNumber}");
-            
+
+            Logger.Info(
+                $"[EditorToolViewModel] Received file navigation request: {navMsg.FilePath}:{navMsg.LineNumber}");
+
             // Load the file on UI thread
             Dispatcher.UIThread.Post(async () =>
             {
@@ -355,24 +377,27 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
                 bool fileOpened = await OpenFileWithPath(navMsg.FilePath);
                 if (!fileOpened)
                 {
-                    Logger.Warn($"[EditorToolViewModel] File not opened, ignoring line navigation request: {navMsg.FilePath}");
+                    Logger.Warn(
+                        $"[EditorToolViewModel] File not opened, ignoring line navigation request: {navMsg.FilePath}");
                     return;
                 }
-                
+
                 // Small delay to ensure UI is updated before navigation
                 await Task.Delay(100);
-                
+
                 // Navigate to the specific line if requested
                 if (navMsg.LineNumber > 0)
                 {
-                    Logger.Info($"[EditorToolViewModel] Attempting line navigation to {navMsg.LineNumber}");
+                    Logger.Info(
+                        $"[EditorToolViewModel] Attempting line navigation to {navMsg.LineNumber}");
                     NavigateToLine(navMsg.LineNumber);
                 }
             });
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"[EditorToolViewModel] Error processing file navigation message: {ex.Message}");
+            Logger.Error(ex,
+                $"[EditorToolViewModel] Error processing file navigation message: {ex.Message}");
         }
     }
 
@@ -380,13 +405,15 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
     {
         if (_textEditor == null)
         {
-            Logger.Warn($"[EditorToolViewModel] Cannot navigate - no text editor available");
+            Logger.Warn(
+                $"[EditorToolViewModel] Cannot navigate - no text editor available");
             return;
         }
 
         try
         {
-            Logger.Info($"[EditorToolViewModel] Navigating to line {lineNumber}");
+            Logger.Info(
+                $"[EditorToolViewModel] Navigating to line {lineNumber}");
 
             // Ensure line highlighting renderer is set up
             SetupLineHighlighting();
@@ -396,20 +423,22 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             {
                 var oldLine = _lineHighlightRenderer.HighlightedLine;
                 _lineHighlightRenderer.HighlightedLine = null;
-                Logger.Info($"[EditorToolViewModel] Cleared old highlight (was line {oldLine})");
+                Logger.Info(
+                    $"[EditorToolViewModel] Cleared old highlight (was line {oldLine})");
             }
 
             // Validate line number
             if (lineNumber <= 0 || lineNumber > _textEditor.Document.LineCount)
             {
-                Logger.Warn($"[EditorToolViewModel] Invalid line number: {lineNumber} (max: {_textEditor.Document.LineCount})");
+                Logger.Warn(
+                    $"[EditorToolViewModel] Invalid line number: {lineNumber} (max: {_textEditor.Document.LineCount})");
                 return;
             }
 
             // Get the line and set caret
             var line = _textEditor.Document.GetLineByNumber(lineNumber);
             _textEditor.CaretOffset = line.Offset;
-            
+
             // Scroll to line and focus
             _textEditor.ScrollToLine(lineNumber);
             _textEditor.Focus();
@@ -418,21 +447,26 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
             if (_lineHighlightRenderer != null)
             {
                 _lineHighlightRenderer.HighlightedLine = lineNumber;
-                Logger.Info($"[EditorToolViewModel] Set highlight to line {lineNumber}");
+                Logger.Info(
+                    $"[EditorToolViewModel] Set highlight to line {lineNumber}");
 
                 // Force complete redraw by removing and re-adding renderer
-                _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
-                _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
-                
+                _textEditor.TextArea.TextView.BackgroundRenderers.Remove(
+                    _lineHighlightRenderer);
+                _textEditor.TextArea.TextView.BackgroundRenderers.Add(
+                    _lineHighlightRenderer);
+
                 // Force visual refresh
                 _textEditor.TextArea.TextView.InvalidateVisual();
-                
-                Logger.Info($"[EditorToolViewModel] Forced renderer refresh for line {lineNumber}");
+
+                Logger.Info(
+                    $"[EditorToolViewModel] Forced renderer refresh for line {lineNumber}");
             }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"[EditorToolViewModel] Error navigating to line {lineNumber}");
+            Logger.Error(ex,
+                $"[EditorToolViewModel] Error navigating to line {lineNumber}");
         }
     }
 
@@ -443,13 +477,16 @@ public class EditorToolViewModel : ViewModelBase, IDisposable
         // Remove existing renderer if any
         if (_lineHighlightRenderer != null)
         {
-            _textEditor.TextArea.TextView.BackgroundRenderers.Remove(_lineHighlightRenderer);
+            _textEditor.TextArea.TextView.BackgroundRenderers.Remove(
+                _lineHighlightRenderer);
         }
 
         // Create and add new renderer
-        _lineHighlightRenderer = new DockComponent.Editor.Views.LineHighlightRenderer();
-        _textEditor.TextArea.TextView.BackgroundRenderers.Add(_lineHighlightRenderer);
-        
+        _lineHighlightRenderer =
+            new DockComponent.Editor.Views.LineHighlightRenderer();
+        _textEditor.TextArea.TextView.BackgroundRenderers.Add(
+            _lineHighlightRenderer);
+
         Logger.Info($"[EditorToolViewModel] Set up line highlighting renderer");
     }
 

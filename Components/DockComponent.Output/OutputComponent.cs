@@ -14,20 +14,23 @@ namespace DockComponent.Output
         public void Register(IDockComponentContext context)
         {
             // Register services
-            var loggingDataService = context.Services.FirstOrDefault(e => e.ServiceType == typeof(LoggingDataService))?.ImplementationInstance;
+            var loggingDataService = context.Services
+                .FirstOrDefault(e =>
+                    e.ServiceType == typeof(LoggingDataService))
+                ?.ImplementationInstance;
             if (loggingDataService == null)
             {
                 var n = new LoggingDataService();
                 context.Services.AddSingleton<LoggingDataService>(n);
                 // Load component styles - CRITICAL for Avalonia View discovery!
-                var stylesUri = new Uri("avares://DockComponent.Output/Styles.axaml");
+                var stylesUri =
+                    new Uri("avares://DockComponent.Output/Styles.axaml");
                 context.RegisterResources(stylesUri);
-            
+
                 // Register the Output tool - the factory will resolve dependencies
-                context.RegisterTool("Output", new OutputViewModel(n), DockPosition.Bottom);
+                context.RegisterTool("Output", new OutputViewModel(n),
+                    DockPosition.Bottom);
             }
-            
-           
         }
     }
 }

@@ -14,7 +14,7 @@ public partial class SolutionExplorerView : UserControl
     public SolutionExplorerView()
     {
         InitializeComponent();
-        
+
         // Handle double-click for file opening
         var treeView = this.FindControl<TreeView>("FileTree");
         if (treeView != null)
@@ -34,17 +34,18 @@ public partial class SolutionExplorerView : UserControl
         }
     }
 
-    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnViewModelPropertyChanged(object? sender,
+        PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SolutionExplorerViewModel.SelectedItem))
         {
-            if (DataContext is SolutionExplorerViewModel viewModel && viewModel.SelectedItem != null)
+            if (DataContext is SolutionExplorerViewModel viewModel &&
+                viewModel.SelectedItem != null)
             {
                 // Use a slight delay to ensure the UI has updated
-                Dispatcher.UIThread.Post(() =>
-                {
-                    ScrollToSelectedItem(viewModel.SelectedItem);
-                }, DispatcherPriority.Background);
+                Dispatcher.UIThread.Post(
+                    () => { ScrollToSelectedItem(viewModel.SelectedItem); },
+                    DispatcherPriority.Background);
             }
         }
     }
@@ -58,17 +59,19 @@ public partial class SolutionExplorerView : UserControl
             {
                 // First ensure the TreeView has focus so selection is visible
                 treeView.Focus();
-                
+
                 // Try to bring the item into view
                 treeView.ScrollIntoView(selectedItem);
                 selectedItem.ShouldScrollIntoView = false; // Reset the flag
-                
-                System.Console.WriteLine($"[SolutionExplorerView] Scrolled to item: {selectedItem.Name}");
+
+                System.Console.WriteLine(
+                    $"[SolutionExplorerView] Scrolled to item: {selectedItem.Name}");
             }
         }
         catch (Exception ex)
         {
-            System.Console.WriteLine($"[SolutionExplorerView] Error scrolling to item: {ex.Message}");
+            System.Console.WriteLine(
+                $"[SolutionExplorerView] Error scrolling to item: {ex.Message}");
         }
     }
 
@@ -76,7 +79,7 @@ public partial class SolutionExplorerView : UserControl
     {
         var treeView = sender as TreeView;
         var selectedItem = treeView?.SelectedItem as FileSystemItemViewModel;
-        
+
         if (selectedItem != null)
         {
             // Double-click opens files or toggles directory expansion

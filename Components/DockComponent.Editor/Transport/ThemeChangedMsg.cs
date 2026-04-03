@@ -2,13 +2,8 @@ using Avalonia.Styling;
 
 namespace DockComponent.Editor.Transport
 {
-    public class ThemeChangedMsg
+    public class ThemeChangedMsg(ThemeVariant newTheme)
     {
-        public ThemeVariant NewTheme { get; }
-
-        public ThemeChangedMsg(ThemeVariant newTheme)
-        {
-            NewTheme = newTheme;
-        }
+        public ThemeVariant NewTheme { get; } = newTheme;
     }
 }

@@ -10,56 +10,56 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Models\" />
-        <AvaloniaResource Include="Assets\**" />
+        <Folder Include="Models\"/>
+        <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.3.4" />
-        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
-        <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.4" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.4" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.4" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.4" />
+        <PackageReference Include="Avalonia" Version="11.3.4"/>
+        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0"/>
+        <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0"/>
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.4"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.4"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.4"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.4"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Include="Avalonia.Diagnostics" Version="11.3.4">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.4" />
-        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10" />
-        <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.2.2" />
-        <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
-        <PackageReference Include="NLog" Version="6.0.3" />
-        <PackageReference Include="ReactiveUI.Fody" Version="19.5.31" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.4"/>
+        <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.10.10"/>
+        <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.2.2"/>
+        <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7"/>
+        <PackageReference Include="NLog" Version="6.0.3"/>
+        <PackageReference Include="ReactiveUI.Fody" Version="19.5.31"/>
         <PackageReference Include="Fody" Version="6.8.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Dock.Avalonia" Version="11.3.2.2" />
-        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.2.2" />
-        <PackageReference Include="Dock.Serializer" Version="11.3.0.12" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-        <PackageReference Include="ScottPlot.Avalonia" Version="5.0.56" />
+        <PackageReference Include="Dock.Avalonia" Version="11.3.2.2"/>
+        <PackageReference Include="Dock.Model.Mvvm" Version="11.3.2.2"/>
+        <PackageReference Include="Dock.Serializer" Version="11.3.0.12"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
+        <PackageReference Include="ScottPlot.Avalonia" Version="5.0.56"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Components\DockComponent.BlazorHost\DockComponent.BlazorHost.csproj" />
-      <ProjectReference Include="..\DockComponent.Base\DockComponent.Base.csproj" />
-      <ProjectReference Include="..\Components\DockComponent.Editor\DockComponent.Editor.csproj" />
-      <ProjectReference Include="..\Components\DockComponent.SolutionExplorer\DockComponent.SolutionExplorer.csproj" />
-      <ProjectReference Include="..\Components\DockComponent.Output\DockComponent.Output.csproj" />
-      <ProjectReference Include="..\Components\DockComponent.ErrorList\DockComponent.ErrorList.csproj" />
+        <ProjectReference Include="..\Components\DockComponent.BlazorHost\DockComponent.BlazorHost.csproj"/>
+        <ProjectReference Include="..\DockComponent.Base\DockComponent.Base.csproj"/>
+        <ProjectReference Include="..\Components\DockComponent.Editor\DockComponent.Editor.csproj"/>
+        <ProjectReference Include="..\Components\DockComponent.SolutionExplorer\DockComponent.SolutionExplorer.csproj"/>
+        <ProjectReference Include="..\Components\DockComponent.Output\DockComponent.Output.csproj"/>
+        <ProjectReference Include="..\Components\DockComponent.ErrorList\DockComponent.ErrorList.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="NLog.config">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <None Update="NLog.config">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <!-- Build and copy Blazor plugin -->
@@ -67,24 +67,24 @@
         <!-- Build the Blazor project -->
         <MSBuild Projects="..\FluentBlazorExample\FluentBlazorExample.csproj"
                  Targets="Build"
-                 Properties="Configuration=$(Configuration);TargetFramework=net9.0" />
+                 Properties="Configuration=$(Configuration);TargetFramework=net9.0"/>
 
         <!-- Copy everything from Blazor bin to a folder under Avalonia -->
         <ItemGroup>
-            <BlazorFiles Include="..\FluentBlazorExample\bin\$(Configuration)\net9.0\**\*" />
+            <BlazorFiles Include="..\FluentBlazorExample\bin\$(Configuration)\net9.0\**\*"/>
         </ItemGroup>
 
         <Copy SourceFiles="@(BlazorFiles)"
               DestinationFolder="$(OutputPath)\Blazor\%(RecursiveDir)"
-              SkipUnchangedFiles="true" />
+              SkipUnchangedFiles="true"/>
 
         <!-- Also copy wwwroot manually since it's needed for static assets -->
         <ItemGroup>
-            <BlazorWwwRootFiles Include="..\FluentBlazorExample\wwwroot\**\*" />
+            <BlazorWwwRootFiles Include="..\FluentBlazorExample\wwwroot\**\*"/>
         </ItemGroup>
 
         <Copy SourceFiles="@(BlazorWwwRootFiles)"
               DestinationFolder="$(OutputPath)\Blazor\wwwroot\%(RecursiveDir)"
-              SkipUnchangedFiles="true" />
+              SkipUnchangedFiles="true"/>
     </Target>
 </Project>

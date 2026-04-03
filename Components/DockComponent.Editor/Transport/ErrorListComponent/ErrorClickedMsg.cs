@@ -7,7 +7,12 @@ namespace DockComponent.Editor.Transport.ErrorListComponent;
 /// Contract: ErrorListComponent_ErrorClicked (v1)
 /// Copy/pasted from ErrorList team's documentation
 /// </summary>
-public record ErrorClickedMsg(string FilePath, int LineNumber, string ErrorMessage, string ErrorLevel, DateTime Timestamp);
+public record ErrorClickedMsg(
+    string FilePath,
+    int LineNumber,
+    string ErrorMessage,
+    string ErrorLevel,
+    DateTime Timestamp);
 
 public static class ErrorClickedHelper
 {

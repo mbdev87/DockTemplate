@@ -23,14 +23,26 @@ public class DockWindowViewModel : ViewModelBase
     [Reactive] public bool ShowDropOverlay { get; set; } = false;
     [Reactive] public bool ShowSpinner { get; set; } = false;
     [Reactive] public bool IsInstallMode { get; set; } = false;
-    [Reactive] public string InstallStatusText { get; set; } = "Installing plugin...";
-    [Reactive] public string InstallSubText { get; set; } = "Please wait while we process your plugin";
+
+    [Reactive]
+    public string InstallStatusText { get; set; } = "Installing plugin...";
+
+    [Reactive]
+    public string InstallSubText { get; set; } =
+        "Please wait while we process your plugin";
+
     [Reactive] public bool IsAcrylicEnabled { get; set; } = true;
 
     // Acrylic Layout Properties
-    public bool IsAcrylicLayoutActive => _acrylicLayoutManager.IsAcrylicLayoutActive;
-    public object? AcrylicSidebarContent => _acrylicLayoutManager.AcrylicSidebarTool;
-    public GridLength AcrylicSidebarWidth => IsAcrylicLayoutActive ? new GridLength(280) : new GridLength(0);
+    public bool IsAcrylicLayoutActive =>
+        _acrylicLayoutManager.IsAcrylicLayoutActive;
+
+    public object? AcrylicSidebarContent =>
+        _acrylicLayoutManager.AcrylicSidebarTool;
+
+    public GridLength AcrylicSidebarWidth => IsAcrylicLayoutActive
+        ? new GridLength(280)
+        : new GridLength(0);
 
     // Note: Window is always acrylic-capable, we control the effect through content layering
 
@@ -41,7 +53,9 @@ public class DockWindowViewModel : ViewModelBase
     public ICommand InstallPlugin { get; }
     public ICommand ToggleAcrylic { get; }
 
-    public DockWindowViewModel(DockFactory dockFactory, InterPluginLogger interPluginLogger, AcrylicLayoutManager acrylicLayoutManager)
+    public DockWindowViewModel(DockFactory dockFactory,
+        InterPluginLogger interPluginLogger,
+        AcrylicLayoutManager acrylicLayoutManager)
     {
         _factory = dockFactory;
         _interPluginLogger = interPluginLogger;
@@ -51,9 +65,11 @@ public class DockWindowViewModel : ViewModelBase
         IsAcrylicEnabled = DockComponent.Base.GlobalSettings.EnableAcrylic;
 
         // CRITICAL: Make sure AcrylicLayoutManager reflects the global setting
-        _acrylicLayoutManager.IsAcrylicLayoutActive = DockComponent.Base.GlobalSettings.EnableAcrylic;
+        _acrylicLayoutManager.IsAcrylicLayoutActive =
+            DockComponent.Base.GlobalSettings.EnableAcrylic;
 
-        Logger.Info($"🎨 DockWindow initialized with acrylic setting: {IsAcrylicEnabled}, Manager: {_acrylicLayoutManager.IsAcrylicLayoutActive}");
+        Logger.Info(
+            $"🎨 DockWindow initialized with acrylic setting: {IsAcrylicEnabled}, Manager: {_acrylicLayoutManager.IsAcrylicLayoutActive}");
 
         // Connect AcrylicLayoutManager to DockFactory for dynamic tool placement
         if (dockFactory != null)
@@ -76,6 +92,7 @@ public class DockWindowViewModel : ViewModelBase
             // Demonstrate real inter-plugin messaging
             DemonstrateInterPluginMessaging();
         }
+
         Layout = layout;
 
         // Layout is ready to use directly
@@ -103,11 +120,13 @@ public class DockWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(AcrylicSidebarContent));
             this.RaisePropertyChanged(nameof(AcrylicSidebarWidth));
 
-            Logger.Info($"🎨 Acrylic layout toggled - Active: {IsAcrylicLayoutActive}, UI: {IsAcrylicEnabled}");
+            Logger.Info(
+                $"🎨 Acrylic layout toggled - Active: {IsAcrylicLayoutActive}, UI: {IsAcrylicEnabled}");
         });
 
         // Subscribe to AcrylicLayoutManager property changes
-        _acrylicLayoutManager.WhenAnyValue(x => x.IsAcrylicLayoutActive, x => x.AcrylicSidebarTool)
+        _acrylicLayoutManager.WhenAnyValue(x => x.IsAcrylicLayoutActive,
+                x => x.AcrylicSidebarTool)
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(IsAcrylicLayoutActive));
@@ -163,7 +182,8 @@ public class DockWindowViewModel : ViewModelBase
             Layout = layout;
 
             // Fire UILoadedMessage to re-integrate all existing components into the fresh layout
-            Logger.Info("Layout reset complete - re-integrating all components");
+            Logger.Info(
+                "Layout reset complete - re-integrating all components");
             MessageBus.Current.SendMessage(new UILoadedMessage());
         }
     }
@@ -172,22 +192,26 @@ public class DockWindowViewModel : ViewModelBase
     {
         factory.ActiveDockableChanged += (_, args) =>
         {
-            Debug.WriteLine($"[ActiveDockableChanged] Title='{args.Dockable?.Title}'");
+            Debug.WriteLine(
+                $"[ActiveDockableChanged] Title='{args.Dockable?.Title}'");
         };
 
         factory.FocusedDockableChanged += (_, args) =>
         {
-            Debug.WriteLine($"[FocusedDockableChanged] Title='{args.Dockable?.Title}'");
+            Debug.WriteLine(
+                $"[FocusedDockableChanged] Title='{args.Dockable?.Title}'");
         };
 
         factory.DockableAdded += (_, args) =>
         {
-            Debug.WriteLine($"[DockableAdded] Title='{args.Dockable?.Title}'");
+            Debug.WriteLine(
+                $"[DockableAdded] Title='{args.Dockable?.Title}'");
         };
 
         factory.DockableRemoved += (_, args) =>
         {
-            Debug.WriteLine($"[DockableRemoved] Title='{args.Dockable?.Title}'");
+            Debug.WriteLine(
+                $"[DockableRemoved] Title='{args.Dockable?.Title}'");
         };
     }
 
@@ -205,7 +229,8 @@ public class DockWindowViewModel : ViewModelBase
             var status = component.IsEnabled ? "✅ Enabled" : "❌ Disabled";
             Logger.Info($"  {component.Name} v{component.Version} - {status}");
             Logger.Info($"    Path: {component.AssemblyPath}");
-            Logger.Info($"    Loaded: {component.LoadedAt:yyyy-MM-dd HH:mm:ss}");
+            Logger.Info(
+                $"    Loaded: {component.LoadedAt:yyyy-MM-dd HH:mm:ss}");
         }
 
         // TODO: Show actual Plugin Manager window
@@ -221,7 +246,8 @@ public class DockWindowViewModel : ViewModelBase
     // Removed ReloadAllPlugins - too complex for runtime operation
     // Users should restart the application to reload plugins properly
 
-    private void OnPluginInstallationStarted(PluginInstallationStartedMessage message)
+    private void OnPluginInstallationStarted(
+        PluginInstallationStartedMessage message)
     {
         Logger.Info($"Plugin installation started: {message.PluginFileName}");
         // Switch to install mode and start spinner
@@ -231,11 +257,13 @@ public class DockWindowViewModel : ViewModelBase
         InstallSubText = $"Processing {message.PluginFileName}";
     }
 
-    private void OnPluginInstallationCompleted(PluginInstallationCompletedMessage message)
+    private void OnPluginInstallationCompleted(
+        PluginInstallationCompletedMessage message)
     {
         if (message.Success)
         {
-            Logger.Info($"✅ Plugin installation completed: {message.PluginFileName}");
+            Logger.Info(
+                $"✅ Plugin installation completed: {message.PluginFileName}");
 
             // Just fade out while still spinning - no success message flash
             ShowDropOverlay = false;
@@ -251,7 +279,8 @@ public class DockWindowViewModel : ViewModelBase
         }
         else
         {
-            Logger.Error($"❌ Plugin installation failed: {message.PluginFileName} - {message.ErrorMessage}");
+            Logger.Error(
+                $"❌ Plugin installation failed: {message.PluginFileName} - {message.ErrorMessage}");
 
             ShowSpinner = false;
             InstallStatusText = "❌ Installation failed";
@@ -280,11 +309,13 @@ public class DockWindowViewModel : ViewModelBase
         {
             await Task.Delay(2000); // Wait for Output component to be ready
 
-            _interPluginLogger.Info("🚀 DockTemplate application started successfully");
+            _interPluginLogger.Info(
+                "🚀 DockTemplate application started successfully");
 
             await Task.Delay(1000);
             _interPluginLogger.Info("📦 Plugin system initialized and ready");
-            _interPluginLogger.Info("✨ All plugins loaded and inter-component communication established!");
+            _interPluginLogger.Info(
+                "✨ All plugins loaded and inter-component communication established!");
         });
     }
 }

@@ -1,14 +1,10 @@
+// ReSharper disable UnusedMember.Global
+
 namespace DockComponent.Editor.Transport
 {
-    public class EditorReadyMsg
+    public class EditorReadyMsg(string filePath, string title)
     {
-        public string FilePath { get; }
-        public string Title { get; }
-
-        public EditorReadyMsg(string filePath, string title)
-        {
-            FilePath = filePath;
-            Title = title;
-        }
+        public string FilePath { get; } = filePath;
+        public string Title { get; } = title;
     }
 }

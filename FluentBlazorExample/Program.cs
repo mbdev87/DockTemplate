@@ -9,7 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 // CRITICAL: Set content root to current directory when running as embedded server
 // This ensures static assets are resolved from the copied location, not the host app
 var currentDirectory = Directory.GetCurrentDirectory();
-var assemblyDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? currentDirectory;
+var assemblyDirectory =
+    Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly()
+        .Location) ?? currentDirectory;
 
 builder.Configuration.SetBasePath(assemblyDirectory);
 builder.Environment.ContentRootPath = assemblyDirectory;
@@ -27,7 +29,8 @@ builder.Services.AddFluentUIComponents();
 builder.Services.AddSingleton<IDashboardService, DashboardService>();
 builder.Services.AddSingleton<IThemeService, ThemeService>();
 builder.Services.AddSingleton<LifecycleService>();
-builder.Services.AddHostedService<LifecycleService>(provider => provider.GetRequiredService<LifecycleService>());
+builder.Services.AddHostedService<LifecycleService>(provider =>
+    provider.GetRequiredService<LifecycleService>());
 
 var app = builder.Build();
 
@@ -65,7 +68,8 @@ app.MapPost("/shutdown", () =>
         await Task.Delay(100); // Give time to return response
         lifecycleService.TriggerShutdown();
     });
-    return Results.Ok(new { status = "shutting down", timestamp = DateTime.UtcNow });
+    return Results.Ok(new
+        { status = "shutting down", timestamp = DateTime.UtcNow });
 });
 
 app.Run();

@@ -19,16 +19,21 @@ public class BlazorHostViewModel : Document, IDisposable
     {
         Title = "🌐 Web Host";
         Id = "BlazorHost";
-        
-        System.Diagnostics.Debug.WriteLine("🏗️ BlazorHostViewModel constructor called");
+
+        System.Diagnostics.Debug.WriteLine(
+            "🏗️ BlazorHostViewModel constructor called");
 
         // Commands
         LoadUrlCommand = ReactiveCommand.Create<string>(LoadUrl);
-        ClearCommand = ReactiveCommand.Create(Clear, this.WhenAnyValue(x => x.IsLoaded));
-        CopyUrlCommand = ReactiveCommand.Create(CopyUrl, this.WhenAnyValue(x => x.IsLoaded));
-        OpenInBrowserCommand = ReactiveCommand.Create(OpenInBrowser, this.WhenAnyValue(x => x.IsLoaded));
-        
-        System.Diagnostics.Debug.WriteLine("🏗️ BlazorHostViewModel commands created");
+        ClearCommand =
+            ReactiveCommand.Create(Clear, this.WhenAnyValue(x => x.IsLoaded));
+        CopyUrlCommand =
+            ReactiveCommand.Create(CopyUrl, this.WhenAnyValue(x => x.IsLoaded));
+        OpenInBrowserCommand = ReactiveCommand.Create(OpenInBrowser,
+            this.WhenAnyValue(x => x.IsLoaded));
+
+        System.Diagnostics.Debug.WriteLine(
+            "🏗️ BlazorHostViewModel commands created");
 
         // Auto-load the Blazor dashboard URL
         LoadUrl("http://localhost:5000/dashboard-embedded");
@@ -45,9 +50,10 @@ public class BlazorHostViewModel : Document, IDisposable
         System.Diagnostics.Debug.WriteLine($"🚀 LoadUrl called with: '{url}'");
         try
         {
-            if (string.IsNullOrWhiteSpace(url)) 
+            if (string.IsNullOrWhiteSpace(url))
             {
-                System.Diagnostics.Debug.WriteLine("❌ LoadUrl: URL is null/empty");
+                System.Diagnostics.Debug.WriteLine(
+                    "❌ LoadUrl: URL is null/empty");
                 return;
             }
 
@@ -55,17 +61,20 @@ public class BlazorHostViewModel : Document, IDisposable
             if (!url.StartsWith("http://") && !url.StartsWith("https://"))
             {
                 url = "http://" + url;
-                System.Diagnostics.Debug.WriteLine($"🔧 LoadUrl: Added protocol, now: '{url}'");
+                System.Diagnostics.Debug.WriteLine(
+                    $"🔧 LoadUrl: Added protocol, now: '{url}'");
             }
 
-            System.Diagnostics.Debug.WriteLine($"📝 LoadUrl: About to set properties - CurrentUrl='{CurrentUrl}' → '{url}', IsLoaded={IsLoaded} → true");
+            System.Diagnostics.Debug.WriteLine(
+                $"📝 LoadUrl: About to set properties - CurrentUrl='{CurrentUrl}' → '{url}', IsLoaded={IsLoaded} → true");
 
             // Update properties directly - should trigger ReactiveUI notifications
             CurrentUrl = url;
             IsLoaded = true;
             StatusMessage = $"✅ Loading: {url}";
-            
-            System.Diagnostics.Debug.WriteLine($"✅ LoadUrl: Properties set - CurrentUrl='{CurrentUrl}', IsLoaded={IsLoaded}, StatusMessage='{StatusMessage}'");
+
+            System.Diagnostics.Debug.WriteLine(
+                $"✅ LoadUrl: Properties set - CurrentUrl='{CurrentUrl}', IsLoaded={IsLoaded}, StatusMessage='{StatusMessage}'");
         }
         catch (Exception ex)
         {
@@ -82,11 +91,11 @@ public class BlazorHostViewModel : Document, IDisposable
             CurrentUrl = string.Empty;
             IsLoaded = false;
             StatusMessage = "🗑️ Cleared";
-            
+
             // Emit message that content was cleared
-            MessageBus.Current.SendMessage(new BlazorAppStoppedMsg 
-            { 
-                Port = 0 
+            MessageBus.Current.SendMessage(new BlazorAppStoppedMsg
+            {
+                Port = 0
             });
         }
         catch (Exception ex)
@@ -101,8 +110,12 @@ public class BlazorHostViewModel : Document, IDisposable
         {
             if (!string.IsNullOrEmpty(CurrentUrl))
             {
-                var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                    ? desktop.MainWindow : null;
+                var topLevel =
+                    Avalonia.Application.Current?.ApplicationLifetime is
+                        Avalonia.Controls.ApplicationLifetimes.
+                        IClassicDesktopStyleApplicationLifetime desktop
+                        ? desktop.MainWindow
+                        : null;
                 var clipboard = topLevel?.Clipboard;
                 clipboard?.SetTextAsync(CurrentUrl);
                 StatusMessage = "📋 URL copied to clipboard!";

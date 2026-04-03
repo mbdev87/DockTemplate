@@ -6,9 +6,11 @@ namespace DockComponent.SolutionExplorer.Converters;
 
 public class FileExtensionToMaterialIconConverter : IValueConverter
 {
-    public static readonly FileExtensionToMaterialIconConverter Instance = new();
+    public static readonly FileExtensionToMaterialIconConverter
+        Instance = new();
 
-    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter,
+        CultureInfo culture)
     {
         if (value is not string filePath)
             return MaterialIconKind.File; // Default file icon
@@ -40,19 +42,20 @@ public class FileExtensionToMaterialIconConverter : IValueConverter
         }
 
         var extension = Path.GetExtension(filePath).ToLowerInvariant();
-        var fileName = Path.GetFileNameWithoutExtension(filePath).ToLowerInvariant();
+        var fileName = Path.GetFileNameWithoutExtension(filePath)
+            .ToLowerInvariant();
 
         // Special files by name
         if (fileName switch
-        {
-            "readme" => (MaterialIconKind?)MaterialIconKind.FileDocument,
-            "license" => MaterialIconKind.Certificate,
-            "changelog" or "changes" => MaterialIconKind.ClipboardText,
-            "dockerfile" => MaterialIconKind.Docker,
-            "makefile" => MaterialIconKind.Hammer,
-            "gruntfile" or "gulpfile" => MaterialIconKind.Cog,
-            _ => null
-        } is MaterialIconKind specialIcon)
+            {
+                "readme" => (MaterialIconKind?)MaterialIconKind.FileDocument,
+                "license" => MaterialIconKind.Certificate,
+                "changelog" or "changes" => MaterialIconKind.ClipboardText,
+                "dockerfile" => MaterialIconKind.Docker,
+                "makefile" => MaterialIconKind.Hammer,
+                "gruntfile" or "gulpfile" => MaterialIconKind.Cog,
+                _ => null
+            } is MaterialIconKind specialIcon)
         {
             return specialIcon;
         }
@@ -151,7 +154,8 @@ public class FileExtensionToMaterialIconConverter : IValueConverter
         };
     }
 
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter,
+        CultureInfo culture)
     {
         throw new NotImplementedException();
     }

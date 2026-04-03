@@ -18,25 +18,22 @@ using NLog;
 
 namespace DockComponent.ErrorList.ViewModels;
 
-public class PendingHighlightRequest
+public class PendingHighlightRequest(
+    string filePath,
+    int lineNumber,
+    string errorMessage,
+    string errorLevel)
 {
-    public string FilePath { get; set; }
-    public int LineNumber { get; set; }
-    public string ErrorMessage { get; set; }
-    public string ErrorLevel { get; set; }
+    public string FilePath { get; set; } = filePath;
+    public int LineNumber { get; set; } = lineNumber;
+    public string ErrorMessage { get; set; } = errorMessage;
+    public string ErrorLevel { get; set; } = errorLevel;
     public DateTime RequestTime { get; set; } = DateTime.Now;
-
-    public PendingHighlightRequest(string filePath, int lineNumber, string errorMessage, string errorLevel)
-    {
-        FilePath = filePath;
-        LineNumber = lineNumber;
-        ErrorMessage = errorMessage;
-        ErrorLevel = errorLevel;
-    }
 
     public override string ToString()
     {
-        return $"PendingHighlight(File:{System.IO.Path.GetFileName(FilePath)}, Line:{LineNumber})";
+        return
+            $"PendingHighlight(File:{System.IO.Path.GetFileName(FilePath)}, Line:{LineNumber})";
     }
 }
 
@@ -45,8 +42,10 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ErrorService _errorService;
     private readonly CompositeDisposable _disposables = new();
-    
-    private static readonly ConcurrentDictionary<string, PendingHighlightRequest> _pendingHighlights = new();
+
+    private static readonly
+        ConcurrentDictionary<string, PendingHighlightRequest>
+        _pendingHighlights = new();
 
     // ITool implementation
     [Reactive] public string Id { get; set; } = "ErrorList";
@@ -80,13 +79,13 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
     // ErrorListViewModel specific properties
     public ObservableCollection<ErrorEntry> Errors => _errorService.Errors;
     [Reactive] public ErrorEntry? SelectedError { get; set; }
-    
+
     public string FilterText
     {
         get => _errorService.FilterText;
         set => _errorService.FilterText = value;
     }
-    
+
     public string SelectedSeverity
     {
         get => _errorService.SelectedSeverity;
@@ -101,17 +100,19 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
 
     // Summary properties
     public int ErrorCount => _errorService.ErrorCount;
-    public int WarningCount => _errorService.WarningCount; 
+    public int WarningCount => _errorService.WarningCount;
     public int TotalCount => Errors.Count;
 
-    public string Summary => $"🔴 {ErrorCount} Errors  🟡 {WarningCount} Warnings";
+    public string Summary =>
+        $"🔴 {ErrorCount} Errors  🟡 {WarningCount} Warnings";
 
     public ErrorListViewModel(ErrorService errorService)
     {
         _errorService = errorService;
 
         ClearErrorsCommand = ReactiveCommand.Create(ClearErrors);
-        NavigateToErrorCommand = ReactiveCommand.Create<ErrorEntry>(NavigateToError);
+        NavigateToErrorCommand =
+            ReactiveCommand.Create<ErrorEntry>(NavigateToError);
         CopyErrorCommand = ReactiveCommand.Create<ErrorEntry>(CopyError);
 
         // Subscribe to error service property changes to update summary
@@ -129,13 +130,13 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
                 }, DispatcherPriority.Background);
             }
         };
-        
+
         // Subscribe to editor ready messages for ping-pong pattern
         MessageBus.Current.Listen<ComponentMessage>()
             .Where(msg => msg.Name.EndsWith("_EditorReady"))
             .Subscribe(msg => OnEditorReady(msg))
             .DisposeWith(_disposables);
-        
+
         // Subscribe to errors collection changes
         _errorService.Errors.CollectionChanged += (s, e) =>
         {
@@ -158,18 +159,22 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
 
     private void NavigateToError(ErrorEntry? error)
     {
-        if (error == null || string.IsNullOrWhiteSpace(error.Code) || !error.Line.HasValue) return;
+        if (error == null || string.IsNullOrWhiteSpace(error.Code) ||
+            !error.Line.HasValue) return;
 
         try
         {
-            LogInfo($"🧭 Navigating to {error.Source}:{error.Line}", error.Code, error.Line);
-            
+            LogInfo($"🧭 Navigating to {error.Source}:{error.Line}", error.Code,
+                error.Line);
+
             // Use pure message-based navigation - no more callbacks!
             OnErrorDoubleClicked(error);
         }
         catch (Exception ex)
         {
-            LogError($"❌ Failed to navigate to {error.Source}:{error.Line}: {ex.Message}", error.Code, error.Line);
+            LogError(
+                $"❌ Failed to navigate to {error.Source}:{error.Line}: {ex.Message}",
+                error.Code, error.Line);
         }
     }
 
@@ -180,7 +185,8 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
         try
         {
             var fileName = System.IO.Path.GetFileName(error.Source);
-            var text = $"{error.Level}: {error.Message} ({fileName}:{error.Line})";
+            var text =
+                $"{error.Level}: {error.Message} ({fileName}:{error.Line})";
             // TODO: Copy to clipboard when Avalonia clipboard API is available
             LogInfo($"📋 Copied error: {text}", error.Code, error.Line);
         }
@@ -194,7 +200,7 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
     {
         var filePath = error.Code ?? "unknown";
         var lineNumber = error.Line ?? 1;
-        
+
         var errorClickedMsg = new ErrorClickedMsg
         {
             FilePath = filePath,
@@ -202,14 +208,14 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
             ErrorMessage = error.Message ?? "unknown error",
             ErrorLevel = error.Level ?? "Error"
         };
-        
+
         var componentMessage = new ComponentMessage(
             "ErrorList_ErrorClicked",
             JsonSerializer.Serialize(errorClickedMsg)
         );
-        
+
         MessageBus.Current.SendMessage(componentMessage);
-        
+
         // Also send navigation message to Editor to open the file
         var navMessage = new NavigateToSourceMessage
         {
@@ -217,10 +223,11 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
             LineNumber = lineNumber,
             Context = $"Error: {error.Message}"
         };
-        
-        var navComponentMessage = NavigateToSourceMessageTransport.Create(navMessage);
+
+        var navComponentMessage =
+            NavigateToSourceMessageTransport.Create(navMessage);
         MessageBus.Current.SendMessage(navComponentMessage);
-        
+
         // Also send message to SolutionExplorer to expand and focus on the file
         if (System.IO.File.Exists(filePath))
         {
@@ -230,17 +237,18 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
             );
             MessageBus.Current.SendMessage(expandFileMsg);
         }
-        
+
         var pendingRequest = new PendingHighlightRequest(
-            filePath, 
-            lineNumber, 
+            filePath,
+            lineNumber,
             error.Message ?? "unknown error",
             error.Level ?? "Error"
         );
-        
+
         _pendingHighlights.TryAdd(filePath, pendingRequest);
-        
-        LogInfo($"🚀 Navigation messages sent for {System.IO.Path.GetFileName(filePath)}:{lineNumber}");
+
+        LogInfo(
+            $"🚀 Navigation messages sent for {System.IO.Path.GetFileName(filePath)}:{lineNumber}");
     }
 
     private void OnEditorReady(ComponentMessage message)
@@ -248,28 +256,32 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
         try
         {
             // Parse the editor ready message to get the file path
-            var editorReadyData = JsonSerializer.Deserialize<JsonElement>(message.Payload);
+            var editorReadyData =
+                JsonSerializer.Deserialize<JsonElement>(message.Payload);
             var filePath = editorReadyData.GetProperty("FilePath").GetString();
-            
-            if (filePath != null && _pendingHighlights.TryRemove(filePath, out var pendingRequest))
+
+            if (filePath != null &&
+                _pendingHighlights.TryRemove(filePath, out var pendingRequest))
             {
-                Logger.Info($"[ErrorList] Editor ready for {System.IO.Path.GetFileName(filePath)}, sending scroll message for line {pendingRequest.LineNumber}");
-                
+                Logger.Info(
+                    $"[ErrorList] Editor ready for {System.IO.Path.GetFileName(filePath)}, sending scroll message for line {pendingRequest.LineNumber}");
+
                 // Send ErrorNavigationMsg to trigger line highlighting in the now-ready editor
                 var scrollMsg = new ErrorNavigationMsg(
                     pendingRequest.FilePath,
                     pendingRequest.LineNumber
                 );
-                
+
                 var componentMessage = new ComponentMessage(
-                    "ErrorList_ScrollToLine", 
+                    "ErrorList_ScrollToLine",
                     JsonSerializer.Serialize(scrollMsg)
                 );
-                
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     MessageBus.Current.SendMessage(componentMessage);
-                    Logger.Info($"[ErrorList] Scroll message sent for {System.IO.Path.GetFileName(filePath)}:{pendingRequest.LineNumber}");
+                    Logger.Info(
+                        $"[ErrorList] Scroll message sent for {System.IO.Path.GetFileName(filePath)}:{pendingRequest.LineNumber}");
                 }, DispatcherPriority.Background);
             }
         }
@@ -282,79 +294,118 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
     // ITool interface methods
     public string? GetControlRecyclingId() => Id;
     public virtual bool OnClose() => true;
-    public virtual void OnSelected() { }
 
-    public void GetVisibleBounds(out double x, out double y, out double width, out double height)
+    public virtual void OnSelected()
+    {
+    }
+
+    public void GetVisibleBounds(out double x, out double y, out double width,
+        out double height)
     {
         x = y = width = height = double.NaN;
     }
 
-    public void SetVisibleBounds(double x, double y, double width, double height) { }
-    public virtual void OnVisibleBoundsChanged(double x, double y, double width, double height) { }
+    public void SetVisibleBounds(double x, double y, double width,
+        double height)
+    {
+    }
 
-    public void GetPinnedBounds(out double x, out double y, out double width, out double height)
+    public virtual void OnVisibleBoundsChanged(double x, double y, double width,
+        double height)
+    {
+    }
+
+    public void GetPinnedBounds(out double x, out double y, out double width,
+        out double height)
     {
         x = y = width = height = double.NaN;
     }
 
-    public void SetPinnedBounds(double x, double y, double width, double height) { }
-    public virtual void OnPinnedBoundsChanged(double x, double y, double width, double height) { }
+    public void SetPinnedBounds(double x, double y, double width, double height)
+    {
+    }
 
-    public void GetTabBounds(out double x, out double y, out double width, out double height)
+    public virtual void OnPinnedBoundsChanged(double x, double y, double width,
+        double height)
+    {
+    }
+
+    public void GetTabBounds(out double x, out double y, out double width,
+        out double height)
     {
         x = y = width = height = double.NaN;
     }
 
-    public void SetTabBounds(double x, double y, double width, double height) { }
-    public virtual void OnTabBoundsChanged(double x, double y, double width, double height) { }
+    public void SetTabBounds(double x, double y, double width, double height)
+    {
+    }
+
+    public virtual void OnTabBoundsChanged(double x, double y, double width,
+        double height)
+    {
+    }
 
     public void GetPointerPosition(out double x, out double y)
     {
         x = y = double.NaN;
     }
 
-    public void SetPointerPosition(double x, double y) { }
-    public virtual void OnPointerPositionChanged(double x, double y) { }
+    public void SetPointerPosition(double x, double y)
+    {
+    }
+
+    public virtual void OnPointerPositionChanged(double x, double y)
+    {
+    }
 
     public void GetPointerScreenPosition(out double x, out double y)
     {
         x = y = double.NaN;
     }
 
-    public void SetPointerScreenPosition(double x, double y) { }
-    public virtual void OnPointerScreenPositionChanged(double x, double y) { }
+    public void SetPointerScreenPosition(double x, double y)
+    {
+    }
+
+    public virtual void OnPointerScreenPositionChanged(double x, double y)
+    {
+    }
 
     public void Dispose()
     {
         _disposables?.Dispose();
     }
-    
+
     // Helper methods to send messages to both NLog and inter-plugin Output panel
-    private void LogInfo(string message, string? filePath = null, int? lineNumber = null)
+    private void LogInfo(string message, string? filePath = null,
+        int? lineNumber = null)
     {
         Logger.Info(message);
         SendLogMessage("Info", message, filePath, lineNumber);
     }
-    
-    private void LogError(string message, string? filePath = null, int? lineNumber = null)
+
+    private void LogError(string message, string? filePath = null,
+        int? lineNumber = null)
     {
         Logger.Error(message);
         SendLogMessage("Error", message, filePath, lineNumber);
     }
-    
-    private void LogWarn(string message, string? filePath = null, int? lineNumber = null)
+
+    private void LogWarn(string message, string? filePath = null,
+        int? lineNumber = null)
     {
         Logger.Warn(message);
         SendLogMessage("Warn", message, filePath, lineNumber);
     }
-    
+
     public void GenerateTestErrors()
     {
         Logger.Error("Test error: double click on me to jump to source");
         Logger.Warn("Test warning: this is a sample warning message");
     }
-    
-    private void SendLogMessage(string level, string message, string? filePath, int? lineNumber)
+
+    private void SendLogMessage(string level, string message, string? filePath,
+        int? lineNumber)
     {
         var logMessage = new LogMessage
         {
@@ -365,7 +416,7 @@ public class ErrorListViewModel : ReactiveObject, ITool, IDisposable
             FilePath = filePath,
             LineNumber = lineNumber
         };
-        
+
         var componentMessage = LogMessageTransport.Create(logMessage);
         MessageBus.Current.SendMessage(componentMessage);
     }

@@ -60,7 +60,7 @@ sealed class Program
 
         using var provider = Initialize();
         ServiceProvider = provider;
-        
+
         BuildAvaloniaApp(provider).StartWithClassicDesktopLifetime(args);
     }
 
@@ -70,14 +70,15 @@ sealed class Program
         {
             Console.WriteLine("[Initialize] Creating service collection...");
             var services = new ServiceCollection();
-            
+
             Console.WriteLine("[Initialize] Configuring services...");
             ConfigureServices(services);
-            
+
             Console.WriteLine("[Initialize] Building service provider...");
             var provider = services.BuildServiceProvider();
-            
-            Console.WriteLine("[Initialize] Service provider built successfully");
+
+            Console.WriteLine(
+                "[Initialize] Service provider built successfully");
             return provider;
         }
         catch (Exception ex)
@@ -92,26 +93,28 @@ sealed class Program
     {
         services.AddSingleton<LoggingService, LoggingService>();
         services.AddLogging();
-        
+
         // SHELL SERVICES
         services.AddSingleton<App>(provider => new App(provider));
         services.AddSingleton<IViewLocator, ViewLocator>();
         services.AddSingleton<ISettingsService, SettingsService>();
-        services.AddSingleton<DockTemplate.Services.IThemeService, DockTemplate.Services.ThemeService>();
+        services
+            .AddSingleton<DockTemplate.Services.IThemeService,
+                DockTemplate.Services.ThemeService>();
         services.AddSingleton<IDockLayoutService, DockLayoutService>();
         services.AddSingleton<AcrylicLayoutManager>();
         services.AddSingleton<InterPluginLogger>();
         services.AddSingleton<DockFactory>();
         services.AddTransient<DockWindowViewModel>();
-        
+
         // PLUGIN SERVICES
         services.AddSingleton<PluginInstallationService>();
-        services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<PluginInstallationService>());
+        services.AddSingleton<IHostedService>(provider =>
+            provider.GetRequiredService<PluginInstallationService>());
         services.AddSingleton<ComponentLoader>();
         // Note: PluginDirectoryService is static - no need to register
-        
 
-        
+
         // COMPONENT SERVICES - Direct registration for author/debug mode
         RegisterEditorComponent(services);
         RegisterErrorListComponent(services);
@@ -119,82 +122,101 @@ sealed class Program
         RegisterSolutionExplorerComponent(services);
         RegisterBlazorHostComponent(services);
     }
-    
+
     private static void RegisterEditorComponent(IServiceCollection services)
     {
         services.AddSingleton<TextMateService>();
         // DocumentViewModel is created dynamically by DockFactory
     }
-    
+
     private static void RegisterErrorListComponent(IServiceCollection services)
     {
         services.AddSingleton<ErrorListViewModel>();
-        
+
         // Component registration will happen after DockFactory is available
         // Store component for later registration
-        ComponentsToRegister.Add(() => {
-            var dockFactory = ServiceProvider?.GetRequiredService<DockFactory>();
+        ComponentsToRegister.Add(() =>
+        {
+            var dockFactory =
+                ServiceProvider?.GetRequiredService<DockFactory>();
             if (dockFactory != null)
             {
-                var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
-                var component = new DockComponent.ErrorList.ErrorListComponent();
+                var context = new DockComponentContext(dockFactory, services,
+                    Guid.NewGuid());
+                var component =
+                    new DockComponent.ErrorList.ErrorListComponent();
                 component.Register(context);
             }
         });
     }
-    
+
     private static void RegisterOutputComponent(IServiceCollection services)
     {
         services.AddSingleton<OutputViewModel>();
-        
-        ComponentsToRegister.Add(() => {
-            var dockFactory = ServiceProvider?.GetRequiredService<DockFactory>();
+
+        ComponentsToRegister.Add(() =>
+        {
+            var dockFactory =
+                ServiceProvider?.GetRequiredService<DockFactory>();
             if (dockFactory != null)
             {
-                var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
+                var context = new DockComponentContext(dockFactory, services,
+                    Guid.NewGuid());
                 var component = new DockComponent.Output.OutputComponent();
                 component.Register(context);
             }
         });
     }
-    
-    private static void RegisterSolutionExplorerComponent(IServiceCollection services)
+
+    private static void RegisterSolutionExplorerComponent(
+        IServiceCollection services)
     {
         services.AddSingleton<SolutionExplorerViewModel>();
-        
-        ComponentsToRegister.Add(() => {
-            var dockFactory = ServiceProvider?.GetRequiredService<DockFactory>();
+
+        ComponentsToRegister.Add(() =>
+        {
+            var dockFactory =
+                ServiceProvider?.GetRequiredService<DockFactory>();
             if (dockFactory != null)
             {
-                var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
-                var component = new DockComponent.SolutionExplorer.SolutionExplorerComponent();
+                var context = new DockComponentContext(dockFactory, services,
+                    Guid.NewGuid());
+                var component =
+                    new DockComponent.SolutionExplorer.
+                        SolutionExplorerComponent();
                 component.Register(context);
             }
         });
     }
-    
+
     private static void RegisterBlazorHostComponent(IServiceCollection services)
     {
         services.AddSingleton<BlazorHostViewModel>();
-        
-        ComponentsToRegister.Add(() => {
-            var dockFactory = ServiceProvider?.GetRequiredService<DockFactory>();
+
+        ComponentsToRegister.Add(() =>
+        {
+            var dockFactory =
+                ServiceProvider?.GetRequiredService<DockFactory>();
             if (dockFactory != null)
             {
-                var context = new DockComponentContext(dockFactory, services, Guid.NewGuid());
-                var component = new DockComponent.BlazorHost.BlazorHostComponent();
+                var context = new DockComponentContext(dockFactory, services,
+                    Guid.NewGuid());
+                var component =
+                    new DockComponent.BlazorHost.BlazorHostComponent();
                 component.Register(context);
             }
         });
     }
-    
+
     public static void RegisterAllComponents()
     {
-        Console.WriteLine($"[Program] Registering {ComponentsToRegister.Count} components...");
+        Console.WriteLine(
+            $"[Program] Registering {ComponentsToRegister.Count} components...");
         foreach (var registerAction in ComponentsToRegister)
         {
             registerAction();
         }
+
         Console.WriteLine("[Program] Component registration complete");
     }
 
@@ -206,18 +228,19 @@ sealed class Program
             .WithInterFont()
             .UseReactiveUI()
             .LogToTrace();
-            
+
         return builder;
     }
 
     public static AppBuilder BuildAvaloniaApp()
     {
-        var builder = AppBuilder.Configure(() => Initialize().GetRequiredService<App>())
+        var builder = AppBuilder
+            .Configure(() => Initialize().GetRequiredService<App>())
             .UsePlatformDetect()
             .WithInterFont()
             .UseReactiveUI()
             .LogToTrace();
-            
+
         return builder;
     }
 }

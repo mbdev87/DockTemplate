@@ -22,7 +22,7 @@ public class WebHostManager : ReactiveObject
     public void LoadUrl(string url)
     {
         if (string.IsNullOrEmpty(url)) return;
-        
+
         CurrentUrl = url;
         IsLoaded = !string.IsNullOrEmpty(url);
     }

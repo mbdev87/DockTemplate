@@ -18,19 +18,21 @@ public partial class OutputView : UserControl
     public OutputView()
     {
         InitializeComponent();
-        
+
         _logListBox = this.FindControl<ListBox>("LogListBox");
-        
+
         DataContextChanged += OnDataContextChanged;
         Loaded += OnLoaded;
     }
 
-    private void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void OnLoaded(object? sender,
+        Avalonia.Interactivity.RoutedEventArgs e)
     {
         // Find the ScrollViewer inside the ListBox
         if (_logListBox != null)
         {
-            _scrollViewer = _logListBox.FindLogicalDescendantOfType<ScrollViewer>();
+            _scrollViewer =
+                _logListBox.FindLogicalDescendantOfType<ScrollViewer>();
         }
     }
 
@@ -40,19 +42,23 @@ public partial class OutputView : UserControl
         {
             // Subscribe to log entries changes for auto-scroll
             viewModel.LogEntries.CollectionChanged += OnLogEntriesChanged;
-            
+
             // Subscribe to AutoScroll property changes
             viewModel.WhenAnyValue(x => x.AutoScroll)
                 .Subscribe(autoScroll => _isAutoScrollEnabled = autoScroll);
         }
     }
 
-    private void OnLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnLogEntriesChanged(object? sender,
+        NotifyCollectionChangedEventArgs e)
     {
-        if (_isAutoScrollEnabled && (e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Reset))
+        if (_isAutoScrollEnabled &&
+            (e.Action == NotifyCollectionChangedAction.Add ||
+             e.Action == NotifyCollectionChangedAction.Reset))
         {
             // Auto-scroll to bottom when new entries are added or collection is refreshed
-            Dispatcher.UIThread.Post(ScrollToEnd, DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(ScrollToEnd,
+                DispatcherPriority.Background);
         }
     }
 

@@ -12,13 +12,13 @@
         </Grid.RowDefinitions>
 
         <!-- Top Half: GitHub -->
-        <webView:WebView Grid.Row="0" 
-                       Address="https://github.com/mbdev87/DockTemplate"
-                       Margin="0" />
+        <webView:WebView Grid.Row="0"
+                         Address="https://github.com/mbdev87/DockTemplate"
+                         Margin="0" />
 
         <!-- Bottom Half: Avalonia Playground -->
-        <webView:WebView Grid.Row="1" 
-                       Address="https://play.avaloniaui.net/"
-                       Margin="0" />
+        <webView:WebView Grid.Row="1"
+                         Address="https://play.avaloniaui.net/"
+                         Margin="0" />
     </Grid>
 </UserControl>

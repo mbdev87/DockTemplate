@@ -27,23 +27,24 @@ public class DocumentViewModel : Document, IDisposable
     {
         _textMateService = textMateService;
         Document.TextChanged += (_, _) => HasUnsavedChanges = true;
-        
+
         // Subscribe to theme changes
         MessageBus.Current.Listen<ThemeChangedMsg>()
-            .Subscribe(message => 
+            .Subscribe(message =>
             {
-                Logger.Info($"[{Title}] Received theme change message: {message.NewTheme}");
-                
+                Logger.Info(
+                    $"[{Title}] Received theme change message: {message.NewTheme}");
+
                 // Delay theme update to allow UI to finish theme transition
-                Dispatcher.UIThread.Post(() =>
-                {
-                    _textMateService.UpdateTheme(message.NewTheme);
-                }, DispatcherPriority.Background);
+                Dispatcher.UIThread.Post(
+                    () => { _textMateService.UpdateTheme(message.NewTheme); },
+                    DispatcherPriority.Background);
             })
             .DisposeWith(_disposables);
     }
 
-    public DocumentViewModel(string id, string title, TextMateService textMateService) : this(textMateService)
+    public DocumentViewModel(string id, string title,
+        TextMateService textMateService) : this(textMateService)
     {
         Id = id;
         Title = title;
@@ -55,19 +56,25 @@ public class DocumentViewModel : Document, IDisposable
         try
         {
             // Use the document ID as cache key - this allows caching across editor switches
-            var documentId = !string.IsNullOrEmpty(Title) ? Title : Id ?? "unknown";
-            
-            Logger.Info($"[{Title}] Setting up TextMate using service for document: {documentId}, Language: {CurrentLanguage}");
-            Logger.Info($"[{Title}] TextEditor instance: {textEditor.GetHashCode()}");
-            
+            var documentId =
+                !string.IsNullOrEmpty(Title) ? Title : Id ?? "unknown";
+
+            Logger.Info(
+                $"[{Title}] Setting up TextMate using service for document: {documentId}, Language: {CurrentLanguage}");
+            Logger.Info(
+                $"[{Title}] TextEditor instance: {textEditor.GetHashCode()}");
+
             // Get or create cached TextMate context
-            _textMateContext = _textMateService.GetOrCreateContext(documentId, CurrentLanguage, textEditor);
-            
+            _textMateContext =
+                _textMateService.GetOrCreateContext(documentId, CurrentLanguage,
+                    textEditor);
+
             Logger.Info($"[{Title}] TextMate context ready for {documentId}");
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, $"Error setting up TextMate for {Title}: {ex.Message}");
+            Logger.Error(ex,
+                $"Error setting up TextMate for {Title}: {ex.Message}");
         }
     }
 
@@ -80,13 +87,15 @@ public class DocumentViewModel : Document, IDisposable
 
     public void NavigateToLine(int lineNumber, string? context = null)
     {
-        Logger.Info($"[{Title}] NavigateToLine called - sending message bus navigation to line {lineNumber}");
-        
+        Logger.Info(
+            $"[{Title}] NavigateToLine called - sending message bus navigation to line {lineNumber}");
+
         // Send message directly on bus - no property change nonsense
         var navigationMsg = new ErrorNavigationMsg(FilePath ?? "", lineNumber);
         MessageBus.Current.SendMessage(navigationMsg);
-        
-        Logger.Info($"[{Title}] Navigation message sent via bus for line {lineNumber}");
+
+        Logger.Info(
+            $"[{Title}] Navigation message sent via bus for line {lineNumber}");
     }
 
 
@@ -134,10 +143,11 @@ public class DocumentViewModel : Document, IDisposable
         // Notify service that this document is being disposed
         if (_textMateContext != null && !string.IsNullOrEmpty(Title))
         {
-            var documentId = !string.IsNullOrEmpty(Title) ? Title : Id ?? "unknown";
+            var documentId =
+                !string.IsNullOrEmpty(Title) ? Title : Id ?? "unknown";
             _textMateService.RemoveContext(documentId);
         }
-        
+
         _disposables?.Dispose();
     }
 }

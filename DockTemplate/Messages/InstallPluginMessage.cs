@@ -1,37 +1,24 @@
 namespace DockTemplate.Messages;
 
-public class InstallPluginMessage
+public class InstallPluginMessage(string pluginPath)
 {
-    public string PluginPath { get; }
-    public string PluginFileName { get; }
+    public string PluginPath { get; } = pluginPath;
 
-    public InstallPluginMessage(string pluginPath)
-    {
-        PluginPath = pluginPath;
-        PluginFileName = System.IO.Path.GetFileName(pluginPath);
-    }
+    public string PluginFileName { get; } =
+        System.IO.Path.GetFileName(pluginPath);
 }
 
-public class PluginInstallationStartedMessage
+public class PluginInstallationStartedMessage(string pluginFileName)
 {
-    public string PluginFileName { get; }
-
-    public PluginInstallationStartedMessage(string pluginFileName)
-    {
-        PluginFileName = pluginFileName;
-    }
+    public string PluginFileName { get; } = pluginFileName;
 }
 
-public class PluginInstallationCompletedMessage
+public class PluginInstallationCompletedMessage(
+    string pluginFileName,
+    bool success,
+    string? errorMessage = null)
 {
-    public string PluginFileName { get; }
-    public bool Success { get; }
-    public string? ErrorMessage { get; }
-
-    public PluginInstallationCompletedMessage(string pluginFileName, bool success, string? errorMessage = null)
-    {
-        PluginFileName = pluginFileName;
-        Success = success;
-        ErrorMessage = errorMessage;
-    }
+    public string PluginFileName { get; } = pluginFileName;
+    public bool Success { get; } = success;
+    public string? ErrorMessage { get; } = errorMessage;
 }

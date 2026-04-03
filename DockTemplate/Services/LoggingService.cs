@@ -10,29 +10,35 @@ public class LoggingService : ReactiveObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly LogBatchingService? _batchingService;
-    
-    [Reactive] public ObservableCollection<LogEntry> LogEntries { get; set; } = new();
-    [Reactive] public ObservableCollection<ErrorEntry> ErrorEntries { get; set; } = new();
-    
+
+    [Reactive]
+    public ObservableCollection<LogEntry> LogEntries { get; set; } = new();
+
+    [Reactive]
+    public ObservableCollection<ErrorEntry> ErrorEntries { get; set; } = new();
+
     public LoggingService(LogBatchingService? batchingService = null)
     {
         _batchingService = batchingService;
-        
+
         // Connect to SharedLoggingService and configure global logging
         ConnectToSharedLogging();
-        Logger.Info("LoggingService initialized and connected to SharedLoggingService");
+        Logger.Info(
+            "LoggingService initialized and connected to SharedLoggingService");
     }
 
     private void ConnectToSharedLogging()
     {
         // Initialize shared logging service for host application
-        SharedLoggingService.Instance.ConfigureComponentLogging("HostApplication");
-        
+        SharedLoggingService.Instance.ConfigureComponentLogging(
+            "HostApplication");
+
         // Sync our collections with the shared service
         LogEntries = SharedLoggingService.Instance.LogEntries;
         ErrorEntries = SharedLoggingService.Instance.ErrorEntries;
-        
-        Logger.Info("LoggingService connected to SharedLoggingService - all components will use consistent logging");
+
+        Logger.Info(
+            "LoggingService connected to SharedLoggingService - all components will use consistent logging");
     }
 
     // Note: AddLogEntry is now handled by SharedLoggingService

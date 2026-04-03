@@ -15,6 +15,7 @@ public class DashboardService : IDashboardService
         {
             await RefreshDataAsync();
         }
+
         return _cachedData;
     }
 
@@ -44,7 +45,8 @@ public class DashboardService : IDashboardService
             Console.WriteLine($"🔍 [DASHBOARD] Current dir: {currentDir}");
             Console.WriteLine($"🎯 [DASHBOARD] Project root: {projectRoot}");
 
-            var files = Directory.GetFiles(projectRoot, "*", SearchOption.AllDirectories)
+            var files = Directory
+                .GetFiles(projectRoot, "*", SearchOption.AllDirectories)
                 .Where(f => !IsIgnoredPath(f))
                 .Take(1000) // Limit for performance
                 .ToList();
@@ -55,7 +57,8 @@ public class DashboardService : IDashboardService
             return new DashboardData
             {
                 Files = fileInfoItems.OrderByDescending(f => f.Size).ToList(),
-                FileTypeStats = typeStats.OrderByDescending(s => s.Count).ToList()
+                FileTypeStats =
+                    typeStats.OrderByDescending(s => s.Count).ToList()
             };
         }
         catch (Exception ex)
@@ -94,13 +97,18 @@ public class DashboardService : IDashboardService
         {
             // Ignore errors when counting lines
         }
+
         return 0;
     }
 
     private bool IsTextFile(string filePath)
     {
         var extension = Path.GetExtension(filePath).ToLowerInvariant();
-        return new[] { ".cs", ".xaml", ".axaml", ".json", ".xml", ".txt", ".md", ".js", ".ts", ".css", ".html", ".py", ".java", ".cpp", ".h", ".razor" }
+        return new[]
+            {
+                ".cs", ".xaml", ".axaml", ".json", ".xml", ".txt", ".md", ".js",
+                ".ts", ".css", ".html", ".py", ".java", ".cpp", ".h", ".razor"
+            }
             .Contains(extension);
     }
 
@@ -131,7 +139,9 @@ public class DashboardService : IDashboardService
         var stats = files.GroupBy(f => f.Extension)
             .Select(g => new FileTypeStats
             {
-                Extension = string.IsNullOrEmpty(g.Key) ? "(no extension)" : g.Key,
+                Extension = string.IsNullOrEmpty(g.Key)
+                    ? "(no extension)"
+                    : g.Key,
                 Count = g.Count(),
                 TotalSize = g.Sum(f => f.Size)
             })
@@ -140,7 +150,9 @@ public class DashboardService : IDashboardService
         var totalCount = stats.Sum(s => s.Count);
         foreach (var stat in stats)
         {
-            stat.Percentage = totalCount > 0 ? (double)stat.Count / totalCount * 100 : 0;
+            stat.Percentage = totalCount > 0
+                ? (double)stat.Count / totalCount * 100
+                : 0;
         }
 
         return stats;
@@ -154,13 +166,15 @@ public class DashboardService : IDashboardService
         while (currentDir != null)
         {
             // Check if we're in a DockTemplate directory or one of its children
-            if (currentDir.Name.Equals("DockTemplate", StringComparison.OrdinalIgnoreCase))
+            if (currentDir.Name.Equals("DockTemplate",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 return currentDir.FullName;
             }
 
             // Check if there's a DockTemplate subdirectory
-            var dockTemplateSubdir = Path.Combine(currentDir.FullName, "DockTemplate");
+            var dockTemplateSubdir =
+                Path.Combine(currentDir.FullName, "DockTemplate");
             if (Directory.Exists(dockTemplateSubdir))
             {
                 return dockTemplateSubdir;
@@ -179,18 +193,25 @@ public class DashboardService : IDashboardService
             {
                 return currentDir.FullName;
             }
+
             currentDir = currentDir.Parent;
         }
 
         // Fallback: return start path
-        Console.WriteLine($"⚠️ [DASHBOARD] Could not find DockTemplate root, using: {startPath}");
+        Console.WriteLine(
+            $"⚠️ [DASHBOARD] Could not find DockTemplate root, using: {startPath}");
         return startPath;
     }
 
     private bool IsIgnoredPath(string path)
     {
-        var ignoredPaths = new[] { "bin", "obj", ".git", "node_modules", ".vs", ".vscode", "packages" };
-        return ignoredPaths.Any(ignored => path.Contains($"{Path.DirectorySeparatorChar}{ignored}{Path.DirectorySeparatorChar}") ||
-                                          path.Contains($"{Path.DirectorySeparatorChar}{ignored}"));
+        var ignoredPaths = new[]
+        {
+            "bin", "obj", ".git", "node_modules", ".vs", ".vscode", "packages"
+        };
+        return ignoredPaths.Any(ignored =>
+            path.Contains(
+                $"{Path.DirectorySeparatorChar}{ignored}{Path.DirectorySeparatorChar}") ||
+            path.Contains($"{Path.DirectorySeparatorChar}{ignored}"));
     }
 }
