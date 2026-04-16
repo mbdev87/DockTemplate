@@ -8,22 +8,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4"/>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
-    <PackageReference Include="xunit" Version="2.9.3"/>
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4"/>
-    <PackageReference Include="NSubstitute" Version="5.3.0"/>
-    <PackageReference Include="ReactiveUI" Version="20.1.63"/>
-    <PackageReference Include="Dock.Model.Mvvm" Version="11.3.2.2"/>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="ReactiveUI" Version="20.1.63" />
+    <PackageReference Include="Dock.Model.Mvvm" Version="11.3.2.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DockComponent.Base\DockComponent.Base.csproj"/>
-    <ProjectReference Include="..\DockTemplate\DockTemplate.csproj"/>
+    <ProjectReference Include="..\DockComponent.Base\DockComponent.Base.csproj" />
+    <ProjectReference Include="..\DockTemplate\DockTemplate.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit"/>
+    <Using Include="Xunit" />
   </ItemGroup>
 
 </Project>
