@@ -181,6 +181,9 @@ public class DockWindowViewModel : ViewModelBase
             _factory?.InitLayout(layout);
             Layout = layout;
 
+            // Clear layout manager tracking so components can be re-added to the fresh docks
+            (_factory as DockFactory)?.ResetLayoutIntegration();
+
             // Fire UILoadedMessage to re-integrate all existing components into the fresh layout
             Logger.Info(
                 "Layout reset complete - re-integrating all components");

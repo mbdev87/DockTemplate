@@ -6,6 +6,7 @@ using System.Text.Json;
 using DockComponent.Base;
 using DockComponent.SolutionExplorer.ViewModels;
 using DockTemplate.Messages;
+using DockTemplate.Services;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
@@ -27,6 +28,10 @@ public class DockFactory : Factory
 
     // Reference to acrylic layout manager for dynamic tool placement
     public Services.AcrylicLayoutManager? AcrylicLayoutManager { get; set; }
+
+    // Layout manager: owns dedup — a tool ID can only appear once per dock position
+    private readonly Services.DockLayoutManager _layoutManager = new();
+    public Services.IDockLayoutManager LayoutManager => _layoutManager;
 
     // Note: Component registrations are now stored in the singleton ComponentRegistry
     // This factory creates MINIMAL layout - components will add themselves dynamically
@@ -194,7 +199,15 @@ public class DockFactory : Factory
         // Components will be integrated via MessageBus after UI is fully loaded
     }
 
-    private readonly HashSet<Guid> _integratedComponentInstances = new();
+    /// <summary>
+    /// Call this when the layout is fully recreated (new dock objects) to allow
+    /// tools to be re-added. Do NOT call on theme switch or other non-destructive changes.
+    /// </summary>
+    public void ResetLayoutIntegration()
+    {
+        _layoutManager.ClearAll();
+        Logger.Info("[DockFactory] Layout integration reset — tools will be re-integrated into fresh docks");
+    }
 
     public void IntegrateComponentsAfterUILoad()
     {
@@ -202,207 +215,99 @@ public class DockFactory : Factory
         Logger.Info(
             $"IntegrateComponentsAfterUILoad called - integrating {registry.ComponentDocuments.Count} documents and {registry.ComponentTools.Count} tools");
 
-        // Clear integration tracking to allow re-integration of components into fresh layout
-        _integratedComponentInstances.Clear();
-        Logger.Info(
-            $"Cleared component integration tracking - all components will be re-integrated into the new layout");
-
-        // Initialize acrylic layout manager with primary tool
         AcrylicLayoutManager?.InitializeAcrylicMode();
-
         RefreshLayoutAfterAcrylicToggle();
 
-        // Integrate component documents using the same flow as opening files
         foreach (var componentDoc in registry.ComponentDocuments.Where(d =>
                      d.Position == DockComponent.Base.DockPosition.Document))
         {
-            // Check if this component instance is already integrated
-            if (_integratedComponentInstances.Contains(componentDoc
-                    .ComponentInstanceId))
-            {
-                Logger.Info(
-                    $"Component document {componentDoc.Id} (Instance: {componentDoc.ComponentInstanceId}) already integrated - skipping");
+            if (!_layoutManager.TryAddDocument(componentDoc))
                 continue;
-            }
 
-            if (componentDoc.ViewModel is IDockable dockable)
+            if (componentDoc.ViewModel is IDockable dockable && _documentDock?.VisibleDockables != null)
             {
-                Logger.Info(
-                    $"Adding component document via dock integration: {componentDoc.Id} (Instance: {componentDoc.ComponentInstanceId})");
-
-                // Use the same approach as opening a document - add to document dock
-                if (_documentDock?.VisibleDockables != null)
-                {
-                    var currentDockables =
-                        _documentDock.VisibleDockables.ToList();
-                    currentDockables.Add(dockable);
-                    _documentDock.VisibleDockables =
-                        CreateList(currentDockables.ToArray());
-
-                    // Set as active to make it visible
-                    _documentDock.ActiveDockable = dockable;
-
-                    // Mark this component instance as integrated
-                    _integratedComponentInstances.Add(componentDoc
-                        .ComponentInstanceId);
-
-                    Logger.Info(
-                        $"Successfully integrated component document: {componentDoc.Id}");
-                }
+                var currentDockables = _documentDock.VisibleDockables.ToList();
+                currentDockables.Add(dockable);
+                _documentDock.VisibleDockables = CreateList(currentDockables.ToArray());
+                _documentDock.ActiveDockable = dockable;
+                Logger.Info($"Integrated document: {componentDoc.Id}");
             }
         }
 
-        // Integrate component tools into their dock positions
-        if (registry.ComponentTools.Any())
+        if (!registry.ComponentTools.Any()) return;
+
+        Logger.Info($"Integrating {registry.ComponentTools.Count} component tools into dock layout");
+
+        foreach (var tool in registry.ComponentTools)
         {
-            Logger.Info(
-                $"Integrating {registry.ComponentTools.Count} component tools into dock layout");
+            if (!_layoutManager.TryAddTool(tool))
+                continue;
 
-            foreach (var tool in registry.ComponentTools)
+            if (tool.ViewModel is not IDockable dockable)
             {
-                // Check if this component instance is already integrated
-                if (_integratedComponentInstances.Contains(
-                        tool.ComponentInstanceId))
-                {
-                    Logger.Info(
-                        $"Component tool {tool.Id} (Instance: {tool.ComponentInstanceId}) already integrated - skipping");
-                    continue;
-                }
-
-                if (tool.ViewModel is IDockable dockable)
-                {
-                    Logger.Info(
-                        $"Integrating tool: {tool.Id} at position {tool.Position} (Instance: {tool.ComponentInstanceId})");
-
-                    switch (tool.Position)
-                    {
-                        case DockComponent.Base.DockPosition.Left:
-                            // Check if this tool should be in acrylic sidebar instead of normal left dock
-                            if (AcrylicLayoutManager?.IsAcrylicLayoutActive ==
-                                true &&
-                                AcrylicLayoutManager?.IsToolInAcrylicSidebar(
-                                    dockable) == true)
-                            {
-                                Logger.Info(
-                                    $"Skipping {tool.Id} from left dock - it's in acrylic sidebar");
-                                // Mark as integrated but don't add to left dock
-                                _integratedComponentInstances.Add(
-                                    tool.ComponentInstanceId);
-                            }
-                            else
-                            {
-                                if (_leftDock != null)
-                                {
-                                    _leftDock.VisibleDockables ??=
-                                        new List<IDockable>();
-                                    if (_leftDock?.VisibleDockables != null)
-                                    {
-                                        var leftDockables =
-                                            _leftDock.VisibleDockables.ToList();
-                                        leftDockables.Add(dockable);
-                                        _leftDock.VisibleDockables =
-                                            CreateList(leftDockables.ToArray());
-                                        _leftDock.ActiveDockable = dockable;
-
-                                        // Force UI refresh by setting focus to the active dockable
-                                        if (_leftDock.ActiveDockable is
-                                            IDockable activeDockable)
-                                        {
-                                            this.SetFocusedDockable(_leftDock,
-                                                activeDockable);
-                                        }
-
-                                        _leftDock.IsEmpty =
-                                            _leftDock.VisibleDockables.Count ==
-                                            0;
-
-                                        // Mark this component instance as integrated
-                                        _integratedComponentInstances.Add(
-                                            tool.ComponentInstanceId);
-
-                                        Logger.Info(
-                                            $"Successfully integrated {tool.Id} into left dock with UI refresh");
-                                    }
-                                }
-                            }
-
-                            break;
-
-                        case DockComponent.Base.DockPosition.Right:
-                            if (_rightDock?.VisibleDockables != null)
-                            {
-                                var rightDockables =
-                                    _rightDock.VisibleDockables.ToList();
-                                rightDockables.Add(dockable);
-                                _rightDock.VisibleDockables =
-                                    CreateList(rightDockables.ToArray());
-                                _rightDock.ActiveDockable = dockable;
-
-                                // Force UI refresh by setting focus to the active dockable
-                                if (_rightDock.ActiveDockable is IDockable
-                                    activeDockable)
-                                {
-                                    this.SetFocusedDockable(_rightDock,
-                                        activeDockable);
-                                }
-
-                                _rightDock.IsEmpty =
-                                    _rightDock.VisibleDockables.Count == 0;
-
-                                // Mark this component instance as integrated
-                                _integratedComponentInstances.Add(
-                                    tool.ComponentInstanceId);
-
-                                Logger.Info(
-                                    $"Successfully integrated {tool.Id} into right dock with UI refresh");
-                            }
-
-                            break;
-
-                        case DockComponent.Base.DockPosition.Bottom:
-                            if (_bottomDock?.VisibleDockables != null)
-                            {
-                                var bottomDockables =
-                                    _bottomDock.VisibleDockables.ToList();
-                                bottomDockables.Add(dockable);
-                                _bottomDock.VisibleDockables =
-                                    CreateList(bottomDockables.ToArray());
-                                _bottomDock.ActiveDockable = dockable;
-
-                                // Force UI refresh by setting focus to the active dockable
-                                if (_bottomDock.ActiveDockable is IDockable
-                                    activeDockable)
-                                {
-                                    this.SetFocusedDockable(_bottomDock,
-                                        activeDockable);
-                                }
-
-                                //_bottomDock.Title = "Bottom";
-                                _bottomDock.IsEmpty =
-                                    _bottomDock.VisibleDockables.Count == 0;
-
-                                // Mark this component instance as integrated
-                                _integratedComponentInstances.Add(
-                                    tool.ComponentInstanceId);
-
-                                Logger.Info(
-                                    $"Successfully integrated {tool.Id} into bottom dock with UI refresh");
-                            }
-
-                            break;
-
-                        default:
-                            Logger.Warn(
-                                $"Unknown dock position for tool {tool.Id}: {tool.Position}");
-                            break;
-                    }
-                }
-                else
-                {
-                    Logger.Warn(
-                        $"Tool {tool.Id} ViewModel is not IDockable: {tool.ViewModel?.GetType().Name}");
-                }
+                Logger.Warn($"Tool {tool.Id} ViewModel is not IDockable: {tool.ViewModel?.GetType().Name}");
+                continue;
             }
+
+            Logger.Info($"Integrating tool: {tool.Id} at position {tool.Position}");
+            AddToolToDock(tool, dockable);
+        }
+    }
+
+    private void AddToolToDock(ComponentRegistration tool, IDockable dockable)
+    {
+        switch (tool.Position)
+        {
+            case DockComponent.Base.DockPosition.Left:
+                if (AcrylicLayoutManager?.IsAcrylicLayoutActive == true &&
+                    AcrylicLayoutManager?.IsToolInAcrylicSidebar(dockable) == true)
+                {
+                    Logger.Info($"Skipping {tool.Id} from left dock — in acrylic sidebar");
+                    return;
+                }
+                AddToDock(_leftDock, dockable, tool.Id, "left");
+                break;
+
+            case DockComponent.Base.DockPosition.Right:
+                AddToDock(null, dockable, tool.Id, "right", _rightDock);
+                break;
+
+            case DockComponent.Base.DockPosition.Bottom:
+                AddToDock(_bottomDock, dockable, tool.Id, "bottom");
+                break;
+
+            default:
+                Logger.Warn($"Unknown dock position for tool {tool.Id}: {tool.Position}");
+                break;
+        }
+    }
+
+    private void AddToDock(IToolDock? toolDock, IDockable dockable, string toolId, string dockName, IProportionalDock? proportionalDock = null)
+    {
+        if (toolDock != null)
+        {
+            toolDock.VisibleDockables ??= new List<IDockable>();
+            if (toolDock.VisibleDockables != null)
+            {
+                var list = toolDock.VisibleDockables.ToList();
+                list.Add(dockable);
+                toolDock.VisibleDockables = CreateList(list.ToArray());
+                toolDock.ActiveDockable = dockable;
+                if (toolDock.ActiveDockable is IDockable active)
+                    this.SetFocusedDockable(toolDock, active);
+                toolDock.IsEmpty = toolDock.VisibleDockables.Count == 0;
+                Logger.Info($"Integrated {toolId} into {dockName} dock");
+            }
+        }
+        else if (proportionalDock?.VisibleDockables != null)
+        {
+            var list = proportionalDock.VisibleDockables.ToList();
+            list.Add(dockable);
+            proportionalDock.VisibleDockables = CreateList(list.ToArray());
+            proportionalDock.ActiveDockable = dockable;
+            if (proportionalDock.ActiveDockable is IDockable active)
+                this.SetFocusedDockable(proportionalDock, active);
+            Logger.Info($"Integrated {toolId} into {dockName} dock");
         }
     }
 

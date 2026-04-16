@@ -31,7 +31,7 @@ global.json
 project.lock.json
 project.fragment.lock.json
 artifacts/
-
+*.log
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 

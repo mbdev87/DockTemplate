@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -67,11 +67,11 @@
         <!-- Build the Blazor project -->
         <MSBuild Projects="..\FluentBlazorExample\FluentBlazorExample.csproj"
                  Targets="Build"
-                 Properties="Configuration=$(Configuration);TargetFramework=net9.0"/>
+                 Properties="Configuration=$(Configuration);TargetFramework=net10.0"/>
 
         <!-- Copy everything from Blazor bin to a folder under Avalonia -->
         <ItemGroup>
-            <BlazorFiles Include="..\FluentBlazorExample\bin\$(Configuration)\net9.0\**\*"/>
+            <BlazorFiles Include="..\FluentBlazorExample\bin\$(Configuration)\net10.0\**\*"/>
         </ItemGroup>
 
         <Copy SourceFiles="@(BlazorFiles)"

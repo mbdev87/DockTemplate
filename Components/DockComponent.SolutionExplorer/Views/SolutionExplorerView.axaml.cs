@@ -44,18 +44,22 @@ public partial class SolutionExplorerView : UserControl
             {
                 // Use a slight delay to ensure the UI has updated
                 Dispatcher.UIThread.Post(
-                    () => { ScrollToSelectedItem(viewModel.SelectedItem); },
+                    () => { using var _ = ScrollToSelectedItem(viewModel.SelectedItem); },
                     DispatcherPriority.Background);
             }
         }
     }
 
-    private void ScrollToSelectedItem(FileSystemItemViewModel selectedItem)
+    private async Task ScrollToSelectedItem(FileSystemItemViewModel selectedItem)
     {
         try
         {
             var treeView = this.FindControl<TreeView>("FileTree");
-            if (treeView != null && selectedItem.ShouldScrollIntoView)
+            if(selectedItem == null)
+            {
+                await Task.Delay(500);
+            }
+            if (treeView != null && selectedItem?.ShouldScrollIntoView == true)
             {
                 // First ensure the TreeView has focus so selection is visible
                 treeView.Focus();

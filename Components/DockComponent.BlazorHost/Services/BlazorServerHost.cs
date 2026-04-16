@@ -57,11 +57,11 @@ public class BlazorServerHost : IHostedService, IDisposable
                 Path.Combine(pluginDir, "..", "..", "FluentBlazorExample.dll"),
                 // Development build location
                 Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..",
-                    "FluentBlazorExample", "bin", "Debug", "net9.0",
+                    "FluentBlazorExample", "bin", "Debug", "net10.0",
                     "FluentBlazorExample.dll"),
                 // Built in solution
                 Path.Combine(Directory.GetCurrentDirectory(),
-                    "FluentBlazorExample", "bin", "Debug", "net9.0",
+                    "FluentBlazorExample", "bin", "Debug", "net10.0",
                     "FluentBlazorExample.dll")
             };
 
